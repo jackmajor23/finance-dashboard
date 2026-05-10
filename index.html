@@ -1143,4 +1143,386 @@ function renderISATracker(){
     const used=Math.min(matching.reduce((s,a)=>s+(a.contrib||0),0),info.limit);
     const p=Math.min((used/info.limit)*100,100);
     return`<div class="isa-card">
-      <div style="font-size:10px;color:va
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">${d.name}</div>
+      <div class="isa-name">${d.desc}</div>
+      <div class="isa-bar-outer"><div class="isa-bar-inner" style="width:${p.toFixed(1)}%;background:${info.color};"></div></div>
+      <div class="isa-stats"><span>${fmt(used)} used</span><span>${fmt(info.limit-used)} left</span></div>
+    </div>`;
+  }).join('');
+}
+
+function addAccount(){
+  const name=(document.getElementById('acc-name').value||'').trim();
+  const type=document.getElementById('acc-type').value;
+  const provider=(document.getElementById('acc-provider').value||'').trim();
+  const balance=parseFloat(document.getElementById('acc-balance').value);
+  const contrib=parseFloat(document.getElementById('acc-contrib').value)||0;
+  if(!name||isNaN(balance)){toast('Please fill name and balance.');return;}
+  S.accounts.push({name,type,provider,balance,contrib});
+  save();toast(`Added ${name}`);
+  ['acc-name','acc-provider','acc-balance','acc-contrib'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('acc-type').value='current';
+  renderAccounts();
+}
+
+function deleteAccount(i){
+  S.accounts.splice(i,1);
+  save();renderAccounts();renderOverview();toast('Deleted');
+}
+
+// ══════════════════════════════════════════════
+// PREMIUM BONDS
+// ══════════════════════════════════════════════
+function renderPremiumBonds(){
+  const pb=S.premiumBonds;
+  const summary=document.getElementById('pb-summary');
+  const wins=pb.wins||[];
+  const totalWins=wins.reduce((s,w)=>s+w.amount,0);
+  const totalValue=(pb.amount||0)+totalWins;
+  summary.innerHTML=`
+    <div class="stat-card amber"><div class="stat-label">Bonds held</div><div class="stat-val">${fmt(pb.amount||0)}</div><div class="stat-sub">${pb.date?fmtDate(pb.date):'—'}</div></div>
+    <div class="stat-card green"><div class="stat-label">Total wins</div><div class="stat-val pos">${fmt(totalWins)}</div><div class="stat-sub">${wins.length} wins</div></div>
+    <div class="stat-card accent"><div class="stat-label">Total value</div><div class="stat-val">${fmt(totalValue)}</div><div class="stat-sub">bonds + wins</div></div>`;
+  const tbody=document.getElementById('pb-wins-body');
+  if(!wins.length){tbody.innerHTML=`<tr><td colspan="4"><div class="empty-state"><div class="big">🎟</div><p>No wins logged yet.</p></div></td></tr>`;return;}
+  tbody.innerHTML=wins.map((w,i)=>`
+    <tr>
+      <td>${fmtDate(w.date)}</td>
+      <td class="tx-badge tx-win">${fmt(w.amount)}</td>
+      <td>${w.prizeType||'—'}</td>
+      <td>${fmt(wins.slice(0,i+1).reduce((s,ww)=>s+ww.amount,0))}</td>
+      <td><button class="icon-btn del" onclick="deletePBWin(${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+function updatePBHolding(){
+  const amount=parseFloat(document.getElementById('pb-amount').value);
+  const date=document.getElementById('pb-date').value;
+  if(isNaN(amount)||amount<0||amount>50000){toast('Amount must be 0-50,000.');return;}
+  S.premiumBonds.amount=amount;
+  S.premiumBonds.date=date;
+  save();renderPremiumBonds();renderOverview();toast('Updated');
+}
+
+function addPBWin(){
+  const amount=parseFloat(document.getElementById('pb-win-amount').value);
+  const date=document.getElementById('pb-win-date').value;
+  const prizeType=document.getElementById('pb-win-type').value;
+  if(isNaN(amount)||!date){toast('Please fill amount and date.');return;}
+  S.premiumBonds.wins=(S.premiumBonds.wins||[]).concat({amount,date,prizeType});
+  S.premiumBonds.wins.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  addTransaction({txtype:'win',date,desc:`Premium Bond win`,amount,pnl:amount,notes:prizeType});
+  save();toast(`Logged ${fmt(amount)} win`);
+  document.getElementById('pb-win-amount').value='';
+  document.getElementById('pb-win-date').value='';
+  renderPremiumBonds();renderTransactions();
+}
+
+function deletePBWin(i){
+  S.premiumBonds.wins.splice(i,1);
+  save();renderPremiumBonds();renderTransactions();toast('Deleted');
+}
+
+// ══════════════════════════════════════════════
+// LIVE PRICES
+// ══════════════════════════════════════════════
+function renderStocksPage(){
+  const grid=document.getElementById('stocks-grid');
+  if(!S.watchlist.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big">◬</div><p>No tickers in watchlist.</p></div>`;return;}
+  grid.innerHTML=S.watchlist.map(t=>renderStockCard(t)).join('');
+}
+
+function renderStockCard(ticker){
+  const lp=livePrices[ticker];
+  const chg=lp?lp.change:0;
+  const chgPct=lp?lp.changePercent:0;
+  return`<div class="stock-card">
+    <div class="stock-ticker">${ticker}</div>
+    <div class="stock-name">${lp?lp.name:'Loading...'}</div>
+    <div class="stock-price ${lp?cls(chg):''}">${lp?fmtD(lp.price):'—'}</div>
+    <div class="stock-chg ${lp?cls(chg):''}">${lp?(chg>=0?'+':'')+fmtD(Math.abs(chg))+' ('+(chgPct>=0?'+':'')+chgPct.toFixed(2)+'%)':'—'}</div>
+  </div>`;
+}
+
+function addWatchTicker(){
+  const ticker=(document.getElementById('watch-ticker').value||'').trim().toUpperCase();
+  if(!ticker){toast('Enter a ticker.');return;}
+  if(S.watchlist.includes(ticker)){toast('Already in watchlist.');return;}
+  S.watchlist.push(ticker);
+  save();toast(`Added ${ticker}`);
+  document.getElementById('watch-ticker').value='';
+  renderStocksPage();
+  refreshPrices();
+}
+
+async function refreshPrices(){
+  if(!S.watchlist.length)return;
+  document.getElementById('last-refresh-time').textContent='refreshing...';
+  try{
+    const res=await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${S.watchlist.join(',')}`);
+    const data=await res.json();
+    const quotes=data.quoteResponse.result;
+    quotes.forEach(q=>{
+      livePrices[q.symbol]={price:q.regularMarketPrice,name:q.shortName,change:q.regularMarketChange,changePercent:q.regularMarketChangePercent};
+    });
+    S.lastUpdated=new Date().toISOString();
+    save();
+    renderStocksPage();
+    renderHoldingsTable();
+    toast('Prices updated');
+  }catch(e){
+    toast('Failed to fetch prices');
+  }
+  updateLastUpdatedUI();
+}
+
+// ══════════════════════════════════════════════
+// SALARY
+// ══════════════════════════════════════════════
+function renderSalary(){
+  const cards=document.getElementById('salary-cards');
+  if(!S.salaries.length){cards.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big">◈</div><p>No salary data.</p></div>`;return;}
+  cards.innerHTML=S.salaries.map((s,i)=>`
+    <div class="salary-card">
+      <div class="salary-label">${s.employer}</div>
+      <div class="salary-val">${fmt(s.gross)}</div>
+      <div class="salary-sub">Gross annual</div>
+      <div class="salary-val" style="margin-top:12px;">${fmt(s.netMonthly)}</div>
+      <div class="salary-sub">Net monthly</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;">Pension: ${s.pensionPct}% (${fmt(s.employerPension)}% employer)</div>
+      <div style="margin-top:8px;"><button class="icon-btn del" onclick="deleteSalary(${i})">✕</button></div>
+    </div>`).join('');
+}
+
+function addSalary(){
+  const employer=(document.getElementById('sal-employer').value||'').trim();
+  const gross=parseFloat(document.getElementById('sal-gross').value);
+  const netMonthly=parseFloat(document.getElementById('sal-net-monthly').value);
+  const pensionPct=parseFloat(document.getElementById('sal-pension-pct').value);
+  const employerPension=parseFloat(document.getElementById('sal-employer-pension').value);
+  const date=document.getElementById('sal-date').value;
+  if(!employer||isNaN(gross)||isNaN(netMonthly)){toast('Please fill employer, gross, and net monthly.');return;}
+  S.salaries.push({employer,gross,netMonthly,pensionPct,employerPension,date});
+  save();toast(`Added ${employer}`);
+  ['sal-employer','sal-gross','sal-net-monthly','sal-pension-pct','sal-employer-pension','sal-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderSalary();
+}
+
+function deleteSalary(i){
+  S.salaries.splice(i,1);
+  save();renderSalary();toast('Deleted');
+}
+
+// ══════════════════════════════════════════════
+// DEBTS
+// ══════════════════════════════════════════════
+function renderDebts(){
+  const summary=document.getElementById('debt-summary-cards');
+  const total=S.debts.reduce((s,d)=>s+d.total,0);
+  const monthly=S.debts.reduce((s,d)=>s+d.monthly,0);
+  const paid=S.debts.reduce((s,d)=>s+(d.total-d.remaining||d.total),0);
+  summary.innerHTML=`
+    <div class="stat-card red"><div class="stat-label">Total debt</div><div class="stat-val neg">${fmt(total)}</div><div class="stat-sub">${S.debts.length} debts</div></div>
+    <div class="stat-card amber"><div class="stat-label">Monthly payments</div><div class="stat-val neu">${fmt(monthly)}</div><div class="stat-sub">total</div></div>
+    <div class="stat-card green"><div class="stat-label">Paid off</div><div class="stat-val pos">${fmt(paid)}</div><div class="stat-sub">${total?((paid/total)*100).toFixed(1):0}%</div></div>`;
+  const grid=document.getElementById('debt-grid');
+  if(!S.debts.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big">◉</div><p>No debts.</p></div>`;return;}
+  grid.innerHTML=S.debts.map((d,i)=>{
+    const remaining=d.remaining||d.total;
+    const p=((d.total-remaining)/d.total)*100;
+    return`<div class="debt-card">
+      <div class="debt-name">${d.name}</div>
+      <div class="debt-meta">${d.lender||''} · ${d.type} · ${d.rate}% interest</div>
+      <div class="debt-bar"><div class="debt-bar-fill" style="width:${p.toFixed(1)}%;"></div></div>
+      <div class="debt-stats">
+        <div class="debt-stat-lbl">Remaining</div><div class="debt-stat-val">${fmt(remaining)}</div>
+        <div class="debt-stat-lbl">Monthly</div><div class="debt-stat-val">${fmt(d.monthly)}</div>
+      </div>
+      <div style="margin-top:12px;text-align:right;"><button class="icon-btn del" onclick="deleteDebt(${i})">✕</button></div>
+    </div>`;
+  }).join('');
+}
+
+function addDebt(){
+  const name=(document.getElementById('d-name').value||'').trim();
+  const type=document.getElementById('d-type').value;
+  const total=parseFloat(document.getElementById('d-total').value);
+  const monthly=parseFloat(document.getElementById('d-monthly').value);
+  const rate=parseFloat(document.getElementById('d-rate').value);
+  const start=document.getElementById('d-start').value;
+  const end=document.getElementById('d-end').value;
+  const lender=(document.getElementById('d-lender').value||'').trim();
+  if(!name||isNaN(total)||isNaN(monthly)){toast('Please fill name, total, and monthly payment.');return;}
+  S.debts.push({name,type,total,remaining:total,monthly,rate,start,end,lender});
+  save();toast(`Added ${name}`);
+  ['d-name','d-total','d-monthly','d-rate','d-start','d-end','d-lender'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('d-type').value='loan';
+  renderDebts();renderOverview();
+}
+
+function deleteDebt(i){
+  S.debts.splice(i,1);
+  save();renderDebts();renderOverview();toast('Deleted');
+}
+
+// ══════════════════════════════════════════════
+// GOALS
+// ══════════════════════════════════════════════
+function renderGoals(){
+  const grid=document.getElementById('goals-grid');
+  if(!S.goals.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big">◐</div><p>No goals set.</p></div>`;return;}
+  grid.innerHTML=S.goals.map((g,i)=>{
+    const p=Math.min((g.saved/g.target)*100,100);
+    const remaining=g.target-g.saved;
+    const monthly=remaining/Math.max(1,Math.ceil((new Date(g.date)-new Date())/(1000*60*60*24*30)));
+    return`<div class="goal-card">
+      <div class="goal-name">${g.emoji||'🎯'} ${g.name}</div>
+      <div class="goal-meta">Target: ${fmt(g.target)} by ${fmtDate(g.date)}</div>
+      <div class="goal-bar-outer"><div class="goal-bar-inner" style="width:${p.toFixed(1)}%;"></div></div>
+      <div class="goal-stats"><span>${fmt(g.saved)} saved</span><span>${fmt(remaining)} left</span></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;">${fmt(monthly)}/month needed</div>
+      <div style="margin-top:8px;text-align:right;"><button class="icon-btn del" onclick="deleteGoal(${i})">✕</button></div>
+    </div>`;
+  }).join('');
+}
+
+function addGoal(){
+  const name=(document.getElementById('g-name').value||'').trim();
+  const target=parseFloat(document.getElementById('g-target').value);
+  const saved=parseFloat(document.getElementById('g-saved').value)||0;
+  const date=document.getElementById('g-date').value;
+  const monthly=parseFloat(document.getElementById('g-monthly').value)||0;
+  const emoji=(document.getElementById('g-emoji').value||'').trim();
+  if(!name||isNaN(target)||!date){toast('Please fill name, target, and date.');return;}
+  S.goals.push({name,target,saved,date,monthly,emoji});
+  save();toast(`Added ${name}`);
+  ['g-name','g-target','g-saved','g-date','g-monthly','g-emoji'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  renderGoals();
+}
+
+function deleteGoal(i){
+  S.goals.splice(i,1);
+  save();renderGoals();toast('Deleted');
+}
+
+// ══════════════════════════════════════════════
+// TRANSACTIONS
+// ══════════════════════════════════════════════
+function renderTransactions(){
+  const q=(document.getElementById('tx-search')||{}).value||'';
+  let tx=S.transactions;
+  if(currentTxFilter!=='all')tx=tx.filter(t=>t.txtype===currentTxFilter);
+  if(q)tx=tx.filter(t=>t.desc.toLowerCase().includes(q.toLowerCase())||t.notes.toLowerCase().includes(q.toLowerCase()));
+  tx.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const tbody=document.getElementById('tx-body');
+  if(!tx.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><div class="big">≡</div><p>No transactions.</p></div></td></tr>`;return;}
+  tbody.innerHTML=tx.map(t=>`
+    <tr>
+      <td>${fmtDate(t.date)}</td>
+      <td><span class="tx-badge tx-${t.txtype}">${t.txtype}</span></td>
+      <td>${t.desc}</td>
+      <td class="${t.amount>=0?'pos':'neg'}">${fmt(Math.abs(t.amount))}</td>
+      <td class="${cls(t.pnl||0)}">${t.pnl?fmtS(t.pnl):'—'}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;">${t.notes||'—'}</td>
+    </tr>`).join('');
+}
+
+function setTxFilter(f,el){
+  currentTxFilter=f;
+  document.querySelectorAll('#page-transactions .filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderTransactions();
+}
+
+function addTransaction(t){
+  S.transactions.push({...t,id:Date.now()});
+}
+
+// ══════════════════════════════════════════════
+// TAX SUMMARY
+// ══════════════════════════════════════════════
+function renderTax(){
+  const grid=document.getElementById('tax-grid');
+  const isaUsed=S.accounts.filter(a=>ISA_INFO[a.type]).reduce((s,a)=>s+(a.contrib||0),0);
+  const isaLimit=20000; // 2025/26
+  const isaLeft=isaLimit-isaUsed;
+  const pension=S.accounts.filter(a=>a.type==='pension').reduce((s,a)=>s+a.balance,0);
+  const salary=S.salaries.reduce((s,sal)=>s+sal.gross,0);
+  const taxFree=pension+isaUsed;
+  grid.innerHTML=`
+    <div class="tax-card"><div class="stat-label">ISA allowance used</div><div class="stat-val">${fmt(isaUsed)}</div><div class="stat-sub">of ${fmt(isaLimit)} total</div></div>
+    <div class="tax-card"><div class="stat-label">ISA allowance left</div><div class="stat-val pos">${fmt(Math.max(isaLeft,0))}</div><div class="stat-sub">2025/26 tax year</div></div>
+    <div class="tax-card"><div class="stat-label">Pension savings</div><div class="stat-val">${fmt(pension)}</div><div class="stat-sub">tax-relieved</div></div>
+    <div class="tax-card"><div class="stat-label">Annual salary</div><div class="stat-val">${fmt(salary)}</div><div class="stat-sub">gross income</div></div>`;
+  const detail=document.getElementById('tax-isa-detail');
+  const byType={};
+  S.accounts.filter(a=>ISA_INFO[a.type]).forEach(a=>{
+    byType[a.type]=(byType[a.type]||0)+(a.contrib||0);
+  });
+  detail.innerHTML=Object.keys(byType).map(t=>`
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span>${ISA_INFO[t].name}</span>
+      <span style="color:var(--green);font-weight:500;">${fmt(byType[t])}</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════
+function saveSettings(){
+  S.settings.name=(document.getElementById('set-name').value||'').trim();
+  S.settings.title=(document.getElementById('set-title').value||'').trim();
+  S.settings.currency=(document.getElementById('set-currency').value||'£').trim();
+  save();renderOverview();toast('Settings saved');
+}
+
+function clearAll(){
+  if(!confirm('Clear all data? This cannot be undone.'))return;
+  S={settings:{name:'',title:'My Wealth',currency:'£'},holdings:[],closedHoldings:[],accounts:[],premiumBonds:{amount:0,date:'',wins:[]},debts:[],goals:[],salaries:[],watchlist:[],netWorthHistory:[],transactions:[],contributions:[],lastUpdated:null};
+  save();location.reload();
+}
+
+function loadSample(){
+  S.holdings=[
+    {id:1,name:'Apple Inc.',ticker:'AAPL',type:'stocks',invested:1000,current:1200,buyPrice:'150.00',shares:'10',buyDate:'2023-01-15',notes:'Long-term hold'},
+    {id:2,name:'Vanguard FTSE All-World',ticker:'VWRL.L',type:'isa',invested:2000,current:2100,buyPrice:'85.00',shares:'23.5',buyDate:'2023-03-10',notes:'Index fund'},
+    {id:3,name:'Bitcoin',ticker:'BTC-GBP',type:'crypto',invested:500,current:450,buyPrice:'30000',shares:'0.0167',buyDate:'2024-01-01',notes:'Volatile'},
+  ];
+  S.accounts=[
+    {name:'Monzo Current',type:'current',provider:'Monzo',balance:2500,contrib:0},
+    {name:'Vanguard ISA',type:'stocks-isa',provider:'Vanguard',balance:15000,contrib:12000},
+    {name:'Santander Cash ISA',type:'cash-isa',provider:'Santander',balance:5000,contrib:5000},
+  ];
+  S.premiumBonds={amount:5000,date:'2024-01-01',wins:[{amount:25,date:'2024-06-01',prizeType:'£25'},{amount:50,date:'2024-08-15',prizeType:'£50'}]};
+  S.debts=[
+    {name:'Student Loan',type:'student',total:15000,remaining:12000,monthly:150,rate:0,start:'2020-09-01',end:'2035-09-01',lender:'SLP'},
+  ];
+  S.goals=[
+    {name:'House Deposit',target:50000,saved:15000,date:'2026-12-31',monthly:800,emoji:'🏠'},
+  ];
+  S.salaries=[
+    {employer:'Tech Corp',gross:45000,netMonthly:2900,pensionPct:5,employerPension:3,date:'2023-01-01'},
+  ];
+  S.watchlist=['AAPL','VWRL.L','BTC-GBP','^FTSE'];
+  save();toast('Sample data loaded');
+}
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),3000);
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+loadState();
+renderOverview();
+updateLastUpdatedUI();
+</script>
+</body>
+</html>
