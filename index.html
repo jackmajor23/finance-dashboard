@@ -48,9 +48,9 @@
 <style>
 :root {
   /* Color tokens */
-  --bg:       #f5f4f0;
+  --bg:       #fafafa;
   --surface:  #ffffff;
-  --surface2: #f0effe;
+  --surface2: #fafafa;
   --border:   rgba(0,0,0,0.07);
   --border2:  rgba(0,0,0,0.13);
   --text:     #18181b;
@@ -60,14 +60,14 @@
   --green:     #0a8f5c; --green-dim:  rgba(10,143,92,.1);
   --red:       #cc3333; --red-dim:    rgba(204,51,51,.09);
   --accent:    #5046e5; --accent-dim: rgba(80,70,229,.1);
-  --amber:     #b87309; --amber-dim:  rgba(184,115,9,.1);
+  --amber:     #df9c37; --amber-dim:  rgba(184,115,9,.1);
   --blue:      #1d6fca; --blue-dim:   rgba(29,111,202,.1);
   --teal:      #0b7a6e; --teal-dim:   rgba(11,122,110,.1);
   --pink:      #b03070; --pink-dim:   rgba(176,48,112,.1);
   --purple:    #7c3aed; --purple-dim: rgba(124,58,237,.1);
 
   /* Layout */
-  --sidebar-w: 238px;
+  --sidebar-w: 200px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -292,6 +292,11 @@ tbody tr:hover { background:var(--bg); }
 .ff input:focus, .ff select:focus, .ff textarea:focus { border-color:var(--accent); }
 .ff input::placeholder, .ff textarea::placeholder { color:var(--border2); }
 .ff textarea { resize:vertical; min-height:60px; }
+.ff.money-field { position: relative; }
+.ff.money-field .currency { position: absolute; left: 12px; top: 70%; transform: translateY(-50%); pointer-events: none; z-index: 1; font-size: inherit; line-height: 1.2; }
+.ff.money-field input { padding-left: 28px; }
+.ff.money-field input:placeholder-shown + .currency { color: var(--border2); }
+.ff.money-field input:not(:placeholder-shown) + .currency { color: var(--text); }
 .form-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
 .full-col { grid-column:1/-1; }
 .cb-row { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted2); cursor:pointer; }
@@ -461,7 +466,7 @@ tbody tr:hover { background:var(--bg); }
 <!-- ─── SIDEBAR ─── -->
 <nav class="sidebar" id="sidebar">
   <div class="logo">
-    <div class="logo-name" id="sidebarTitle">My Wealth</div>
+    <div class="logo-name" id="sidebarTitle">Financial Tracker</div>
     <div class="logo-sub">personal finance dashboard</div>
   </div>
 
@@ -498,7 +503,7 @@ tbody tr:hover { background:var(--bg); }
     <div class="user-chip">
       <div class="user-avatar" id="userAvatar">W</div>
       <div class="user-info">
-        <div class="user-name" id="userName">My Wealth</div>
+        <div class="user-name" id="userName">Financial Tracker</div>
         <div class="user-sub" id="lastUpdated">never saved</div>
       </div>
     </div>
@@ -529,12 +534,21 @@ tbody tr:hover { background:var(--bg); }
       <div class="legend-list" id="donutLegend"></div>
     </div>
     <div class="card">
-      <div class="card-header">
-        <span class="card-title">Net worth over time</span>
-        <span class="card-sub" id="nwSub"></span>
-      </div>
-      <div class="nw-wrap"><canvas id="nwChart"></canvas></div>
-    </div>
+  <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+    <span class="card-title">Net worth over time</span>
+    <select id="nwPeriod" onchange="renderOverview()" style="font-size:12.5px;padding:5px 10px;border:1px solid var(--border2);border-radius:6px;">
+      <option value="1w">1 Week</option>
+      <option value="1m">1 Month</option>
+      <option value="3m">3 Months</option>
+      <option value="6m" selected>6 Months</option>
+      <option value="1y">1 Year</option>
+      <option value="5y">5 Years</option>
+      <option value="all">All Time</option>
+    </select>
+  </div>
+  <div class="nw-wrap"><canvas id="nwChart"></canvas></div>
+  <div id="nwSub" style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted2);"></div>
+</div>
   </div>
   <div class="charts-equal">
     <div class="card">
@@ -600,9 +614,9 @@ tbody tr:hover { background:var(--bg); }
             <option value="pension">Pension</option><option value="property">Property</option><option value="other">Other</option>
           </select>
         </div>
-        <div class="ff"><label>Amount invested (£)</label><input type="number" id="hInvested" placeholder="£1,000" min="0"/></div>
-        <div class="ff"><label>Current value (£)</label><input type="number" id="hCurrent" placeholder="£1,200" min="0"/></div>
-        <div class="ff"><label>Buy price / unit (£)</label><input type="number" id="hBuyPrice" placeholder="£150.00" step="any"/></div>
+        <div class="ff money-field"><label>Amount invested</label><input type="text" id="hInvested" placeholder="1,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+        <div class="ff money-field"><label>Current value</label><input type="text" id="hCurrent" placeholder="1,200" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+        <div class="ff money-field"><label>Buy price / unit</label><input type="text" id="hBuyPrice" placeholder="150.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
         <div class="ff"><label>Shares / units</label><input type="number" id="hShares" placeholder="10" step="any"/></div>
         <div class="ff"><label>Buy date</label><input type="date" id="hBuyDate"/></div>
         <div class="ff"><label>Wrapper</label>
@@ -659,8 +673,8 @@ tbody tr:hover { background:var(--bg); }
         </select>
       </div>
       <div class="ff"><label>Provider</label><input type="text" id="accProvider" placeholder="e.g. Vanguard"/></div>
-      <div class="ff"><label>Balance (£)</label><input type="number" id="accBalance" placeholder="£5,000" min="0"/></div>
-      <div class="ff"><label>Contributed this tax year (£)</label><input type="number" id="accContrib" placeholder="£0" min="0"/></div>
+      <div class="ff money-field"><label>Balance</label><input type="text" id="accBalance" placeholder="5,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <div class="ff money-field"><label>Contributed this tax year</label><input type="text" id="accContrib" placeholder="0" oninput="formatMoney(this)"/><span class="currency">£</span></div>
     </div>
     <div class="form-actions"><button class="btn btn-primary" onclick="addAccount()">Add account</button></div>
   </div>
@@ -677,7 +691,7 @@ tbody tr:hover { background:var(--bg); }
     <div class="form-box" style="margin-bottom:0;">
       <h3>Update bond holding</h3>
       <div class="form-grid">
-        <div class="ff"><label>Total bonds held (£)</label><input type="number" id="pbAmount" placeholder="£50,000" min="0" max="50000"/></div>
+        <div class="ff money-field"><label>Total bonds held</label><input type="text" id="pbAmount" placeholder="50,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
         <div class="ff"><label>Date purchased / updated</label><input type="date" id="pbDate"/></div>
       </div>
       <div class="form-actions"><button class="btn btn-primary" onclick="updatePB()">Update</button></div>
@@ -713,7 +727,10 @@ tbody tr:hover { background:var(--bg); }
       <div class="form-actions"><button class="btn btn-primary" onclick="addPBWin()">Log win 🎉</button></div>
     </div>
   </div>
-  <div class="section-label">Winnings history</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div class="section-label">Winnings history</div>
+    <button class="icon-btn" title="Undo last deletion" id="pbUndoBtn" onclick="undoLastPBDelete()" style="opacity:0;pointer-events:none;transition:opacity .15s;font-size:14px;">↺</button>
+  </div>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Month / year</th><th>Amount</th><th>Cumulative total</th><th>Where went</th><th></th></tr></thead>
@@ -742,23 +759,31 @@ tbody tr:hover { background:var(--bg); }
 <!-- ─── PAGE: SALARY ─── -->
 <div class="page" id="page-salary">
   <div class="page-header">
-    <h2>Salary &amp; income</h2>
-    <p>UK tax calculation · household incomes · breakdown</p>
-  </div>
+  <h2>Salary &amp; Income</h2>
+  <p>
+    Country: 
+    <select id="countrySelect" onchange="saveSettings()" style="padding:4px 8px;border-radius:6px;">
+      <option value="UK">United Kingdom</option>
+    </select>
+  </p>
+</div>
   <div class="person-tab" id="personTabs"></div>
   <div id="salaryContent"></div>
   <div class="form-box" id="salaryAddForm">
-    <h3>Add salary</h3>
+    <h3>Manage people</h3>
+    <div id="personManagement" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;"></div>
+    <div class="form-actions" style="margin-bottom:20px;">
+      <button class="btn btn-secondary" onclick="addNewPerson()">+ Add person</button>
+    </div>
+    <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);">
+    <h3 style="margin-top:20px;">Add salary</h3>
     <div class="form-grid wide">
       <div class="ff"><label>Person</label>
-        <select id="salPerson">
-          <option value="0">Person 1</option>
-          <option value="1">Person 2</option>
-        </select>
+        <select id="salPerson"></select>
       </div>
       <div class="ff"><label>Employer</label><input type="text" id="salEmployer" placeholder="e.g. Acme Ltd"/></div>
-      <div class="ff"><label>Gross annual salary (£)</label><input type="number" id="salGross" placeholder="£45,000" min="0"/></div>
-      <div class="ff"><label>Annual bonus (£, optional)</label><input type="number" id="salBonus" placeholder="£0" min="0"/></div>
+      <div class="ff money-field"><label>Gross annual salary</label><input type="text" id="salGross" placeholder="45,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <div class="ff money-field"><label>Annual bonus</label><input type="text" id="salBonus" placeholder="0" oninput="formatMoney(this)"/><span class="currency">£</span></div>
       <div class="ff"><label>Your pension (%)</label><input type="number" id="salPensionPct" placeholder="5%" min="0" max="100" step=".5"/></div>
       <div class="ff"><label>Employer pension (%)</label><input type="number" id="salEmployerPension" placeholder="3%" min="0" max="100" step=".5"/></div>
       <div class="ff"><label>Student loan plan</label>
@@ -780,12 +805,6 @@ tbody tr:hover { background:var(--bg); }
     </div>
     <div class="form-actions">
       <button class="btn btn-primary" onclick="addSalary()">Save salary</button>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-        <span style="font-size:12px;color:var(--muted);">2nd person?</span>
-        <label class="toggle-wrap">
-          <label class="toggle"><input type="checkbox" id="householdToggle" onchange="toggleHousehold()"><span class="toggle-track"></span></label>
-        </label>
-      </div>
     </div>
   </div>
 </div>
@@ -809,9 +828,9 @@ tbody tr:hover { background:var(--bg); }
           <option value="car">Car finance</option><option value="other">Other</option>
         </select>
       </div>
-      <div class="ff"><label>Original total (£)</label><input type="number" id="dTotal" placeholder="£8,000" min="0"/></div>
-      <div class="ff"><label>Remaining balance (£)</label><input type="number" id="dRemaining" placeholder="£6,500" min="0"/></div>
-      <div class="ff"><label>Monthly payment (£)</label><input type="number" id="dMonthly" placeholder="£250" min="0"/></div>
+      <div class="ff money-field"><label>Original total</label><input type="text" id="dTotal" placeholder="8,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <div class="ff money-field"><label>Remaining balance</label><input type="text" id="dRemaining" placeholder="6,500" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <div class="ff money-field"><label>Monthly payment</label><input type="text" id="dMonthly" placeholder="250" oninput="formatMoney(this)"/><span class="currency">£</span></div>
       <div class="ff"><label>Interest rate (%)</label><input type="number" id="dRate" placeholder="6.5%" step=".1" min="0"/></div>
       <div class="ff"><label>Start date</label><input type="date" id="dStart"/></div>
       <div class="ff"><label>End / payoff date</label><input type="date" id="dEnd"/></div>
@@ -833,11 +852,32 @@ tbody tr:hover { background:var(--bg); }
     <h3>Add goal</h3>
     <div class="form-grid">
       <div class="ff"><label>Goal name</label><input type="text" id="gName" placeholder="e.g. House deposit"/></div>
-      <div class="ff"><label>Target (£)</label><input type="number" id="gTarget" placeholder="£40,000" min="0"/></div>
-      <div class="ff"><label>Currently saved (£)</label><input type="number" id="gSaved" placeholder="£12,000" min="0"/></div>
+      <div class="ff money-field"><label>Target</label><input type="text" id="gTarget" placeholder="40,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <div class="ff money-field"><label>Currently saved</label><input type="text" id="gSaved" placeholder="12,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
       <div class="ff"><label>Target date</label><input type="date" id="gDate"/></div>
-      <div class="ff"><label>Monthly contribution (£)</label><input type="number" id="gMonthly" placeholder="£500" min="0"/></div>
-      <div class="ff"><label>Icon / emoji</label><input type="text" id="gEmoji" placeholder="🏠" maxlength="4"/></div>
+      <div class="ff money-field"><label>Monthly contribution</label><input type="text" id="gMonthly" placeholder="500" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <div class="ff"><label>Icon / emoji</label><select id="gEmoji">
+        <option value="🏠" selected>🏠 House</option>
+        <option value="🚗">🚗 Car</option>
+        <option value="✈️">✈️ Vacation</option>
+        <option value="🎓">🎓 Education</option>
+        <option value="🏖️">🏖️ Retirement</option>
+        <option value="💰">💰 Savings</option>
+        <option value="🏦">🏦 Bank</option>
+        <option value="📈">📈 Investment</option>
+        <option value="🎯">🎯 Goal</option>
+        <option value="🏆">🏆 Achievement</option>
+        <option value="💍">💍 Wedding</option>
+        <option value="🏥">🏥 Health</option>
+        <option value="📚">📚 Books</option>
+        <option value="🎮">🎮 Gaming</option>
+        <option value="🍔">🍔 Food</option>
+        <option value="🛡️">🛡️ Emergency</option>
+        <option value="🎁">🎁 Gift</option>
+        <option value="🏃">🏃 Fitness</option>
+        <option value="🎨">🎨 Hobby</option>
+        <option value="◐">◐ Default</option>
+      </select></div>
     </div>
     <div class="form-actions"><button class="btn btn-primary" onclick="addGoal()">Add goal</button></div>
   </div>
@@ -910,9 +950,9 @@ tbody tr:hover { background:var(--bg); }
     <div class="modal-section">
       <div class="modal-section-title">Mark as sold</div>
       <div class="form-grid">
-        <div class="ff"><label>Sell price / unit (£)</label><input type="number" id="editSellPrice" placeholder="£200.00" step="any"/></div>
+        <div class="ff money-field"><label>Sell price / unit</label><input type="text" id="editSellPrice" placeholder="200.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
         <div class="ff"><label>Sell date</label><input type="date" id="editSellDate"/></div>
-        <div class="ff"><label>Total sold for (£)</label><input type="number" id="editSellTotal" placeholder="£2,000" min="0"/></div>
+        <div class="ff money-field"><label>Total sold for</label><input type="text" id="editSellTotal" placeholder="2,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
       </div>
     </div>
     <div class="modal-actions">
@@ -957,7 +997,7 @@ const SK = 'wealth_v4';
 
 // Default state shape — add new keys here as features grow
 let S = {
-  settings:  { name:'', title:'My Wealth', currency:'£', household:false },
+  settings:  { name:'', title:'Financial Tracker', currency:'£', household:false, personNames:['Person 1','Person 2'] },
   holdings:  [], closedHoldings: [], accounts: [],
   premiumBonds: { amount:0, date:'', wins:[] },
   debts:     [], goals:    [], salaries: [],
@@ -984,7 +1024,7 @@ function loadState(){
     if(raw){
       const p = JSON.parse(raw);
       S = { ...S, ...p };
-      S.settings = Object.assign({ name:'',title:'My Wealth',currency:'£',household:false }, p.settings||{} );
+      S.settings = Object.assign({ name:'',title:'Financial Tracker',currency:'£',household:false,personNames:['Person 1','Person 2'] }, p.settings||{} );
     }
   } catch(e){}
   // Guard all arrays
@@ -995,8 +1035,8 @@ function loadState(){
 }
 
 function _updateSidebarMeta(){
-  const name = S.settings.name || S.settings.title || 'My Wealth';
-  document.getElementById('sidebarTitle').textContent = S.settings.title || 'My Wealth';
+  const name = S.settings.name || S.settings.title || 'Financial Tracker';
+  document.getElementById('sidebarTitle').textContent = S.settings.title || 'Financial Tracker';
   document.getElementById('userName').textContent = name;
   document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
   if(S.lastUpdated){
@@ -1030,6 +1070,22 @@ function closeModal(id){ document.getElementById(id).classList.add('hidden'); ed
 function toggleHide(){
   document.body.classList.toggle('hidden-vals');
   document.getElementById('eyeBtn').textContent = document.body.classList.contains('hidden-vals') ? '🙈' : '👁';
+}
+
+// Money formatting utilities
+function formatMoney(input) {
+  let value = input.value.replace(/[^0-9.]/g, ''); // Remove non-numeric except decimal
+  if (value) {
+    // Format with commas
+    const parts = value.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    value = parts.join('.');
+  }
+  input.value = value;
+}
+
+function parseMoney(value) {
+  return parseFloat(value.replace(/,/g, '')) || 0;
 }
 
 // ═══════════════════════════════════════════════════
@@ -1080,7 +1136,7 @@ function renderOverview(){
   const greet = hr<12?'Good morning':'Good afternoon';
   document.getElementById('overviewGreeting').textContent = name ? `${greet}, ${name}` : 'Overview';
   document.getElementById('overviewDate').textContent = now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('sidebarTitle').textContent = S.settings.title||'My Wealth';
+  document.getElementById('sidebarTitle').textContent = S.settings.title||'Financial Tracker';
 
   const H=S.holdings, A=S.accounts;
   const totInv  = H.reduce((s,h)=>s+h.invested,0);
@@ -1205,7 +1261,7 @@ function _renderISAMini(){
       <div class="prog-outer"><div class="prog-fill" style="width:${p.toFixed(1)}%;background:${info.color};"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:11px;">
         <span style="color:${info.color};font-variation-settings:'wght' 600;" class="val">${fmt(used)} used</span>
-        <span style="color:var(--muted);">${fmt(info.limit-used)} left</span>
+        <span style="color:var(--muted);"><span class="val">${fmt(info.limit-used)}</span> left</span>
       </div>
     </div>`;
   }).join('');
@@ -1234,7 +1290,7 @@ function renderHoldings(){
     return`<tr>
       <td><span style="font-variation-settings:'wght' 600;">${h.name}</span>${h.ticker?`<span class="ticker-badge">${h.ticker}</span>`:''}</td>
       <td><span class="pill p-${h.type}">${h.type}</span></td>
-      <td>${h.buyPrice?CUR()+parseFloat(h.buyPrice).toFixed(2):'—'}</td>
+      <td class="val">${h.buyPrice?CUR()+parseFloat(h.buyPrice).toFixed(2):'—'}</td>
       <td>${fmtDate(h.buyDate)}</td>
       <td class="val">${fmt(h.invested)}</td>
       <td class="val">${fmt(h.current)}${lp?` <span style="font-size:10px;color:var(--muted);">(live)</span>`:''}</td>
@@ -1257,9 +1313,9 @@ function renderClosed(){
     return`<tr>
       <td><span style="font-variation-settings:'wght' 600;">${h.name}</span>${h.ticker?`<span class="ticker-badge">${h.ticker}</span>`:''}</td>
       <td><span class="pill p-${h.type}">${h.type}</span></td>
-      <td>${h.buyPrice?CUR()+parseFloat(h.buyPrice).toFixed(2):'—'}</td>
+      <td class="val">${h.buyPrice?CUR()+parseFloat(h.buyPrice).toFixed(2):'—'}</td>
       <td>${fmtDate(h.buyDate)}</td>
-      <td>${h.sellPrice?CUR()+parseFloat(h.sellPrice).toFixed(2):'—'}</td>
+      <td class="val">${h.sellPrice?CUR()+parseFloat(h.sellPrice).toFixed(2):'—'}</td>
       <td>${fmtDate(h.sellDate)}</td>
       <td class="val">${fmt(h.invested)}</td>
       <td class="val">${fmt(h.soldFor||0)}</td>
@@ -1274,8 +1330,8 @@ function addHolding(){
   const name=(document.getElementById('hName').value||'').trim();
   const ticker=(document.getElementById('hTicker').value||'').trim().toUpperCase();
   const type=document.getElementById('hType').value;
-  const invested=parseFloat(document.getElementById('hInvested').value);
-  const current=parseFloat(document.getElementById('hCurrent').value);
+  const invested=parseMoney(document.getElementById('hInvested').value);
+  const current=parseMoney(document.getElementById('hCurrent').value);
   const buyPrice=document.getElementById('hBuyPrice').value;
   const shares=document.getElementById('hShares').value;
   const buyDate=document.getElementById('hBuyDate').value;
@@ -1308,9 +1364,9 @@ function openEditHolding(id){
     <div class="ff"><label>Type</label>
       <select id="em-type">${['stocks','isa','crypto','cash','pension','property','other'].map(t=>`<option value="${t}"${h.type===t?' selected':''}>${t}</option>`).join('')}</select>
     </div>
-    <div class="ff"><label>Invested (${CUR()})</label><input type="number" id="em-invested" value="${h.invested}"/></div>
-    <div class="ff"><label>Current value (${CUR()})</label><input type="number" id="em-current" value="${h.current}"/></div>
-    <div class="ff"><label>Buy price / unit</label><input type="number" id="em-buyprice" value="${h.buyPrice||''}" step="any"/></div>
+    <div class="ff money-field"><label>Invested</label><input type="text" id="em-invested" value="${h.invested.toLocaleString('en-GB')}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+    <div class="ff money-field"><label>Current value</label><input type="text" id="em-current" value="${h.current.toLocaleString('en-GB')}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+    <div class="ff money-field"><label>Buy price / unit</label><input type="text" id="em-buyprice" value="${h.buyPrice ? h.buyPrice.toLocaleString('en-GB') : ''}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
     <div class="ff"><label>Shares / units</label><input type="number" id="em-shares" value="${h.shares||''}" step="any"/></div>
     <div class="ff"><label>Buy date</label><input type="date" id="em-buydate" value="${h.buyDate||''}"/></div>
     <div class="ff full-col"><label>Notes</label><textarea id="em-notes">${h.notes||''}</textarea></div>`;
@@ -1324,8 +1380,8 @@ function saveEditHolding(){
   h.name    = document.getElementById('em-name').value;
   h.ticker  = (document.getElementById('em-ticker').value||'').toUpperCase();
   h.type    = document.getElementById('em-type').value;
-  h.invested= parseFloat(document.getElementById('em-invested').value)||h.invested;
-  h.current = parseFloat(document.getElementById('em-current').value)||h.current;
+  h.invested= parseMoney(document.getElementById('em-invested').value)||h.invested;
+  h.current = parseMoney(document.getElementById('em-current').value)||h.current;
   h.buyPrice= document.getElementById('em-buyprice').value;
   h.shares  = document.getElementById('em-shares').value;
   h.buyDate = document.getElementById('em-buydate').value;
@@ -1338,7 +1394,7 @@ function sellHolding(){
   if(!h) return;
   const sellPrice=document.getElementById('editSellPrice').value;
   const sellDate =document.getElementById('editSellDate').value||new Date().toISOString().split('T')[0];
-  const sellTotal=parseFloat(document.getElementById('editSellTotal').value)||h.current;
+  const sellTotal=parseMoney(document.getElementById('editSellTotal').value)||h.current;
   const pl=sellTotal-h.invested;
   S.closedHoldings.push({...h,sellPrice,sellDate,soldFor:sellTotal});
   S.holdings=S.holdings.filter(x=>x.id!==editingId);
@@ -1376,7 +1432,7 @@ function renderAccounts(){
       <div class="prog-outer"><div class="prog-fill" style="width:${p.toFixed(1)}%;background:${info.color};"></div></div>
       <div class="isa-stats">
         <span style="color:${info.color};font-variation-settings:'wght' 600;" class="val">${fmt(used)} used</span>
-        <span style="color:var(--muted);">${fmt(info.limit-used)} of ${fmt(info.limit)} left</span>
+        <span style="color:var(--muted);"><span class="val">${fmt(info.limit-used)}</span> of <span class="val">${fmt(info.limit)}</span> left</span>
       </div>
     </div>`;
   }).join('');
@@ -1403,7 +1459,7 @@ function renderAccounts(){
       <div class="acc-bal val" style="color:${col};">${fmt(a.balance)}</div>
       ${info?`<div style="font-size:11px;color:var(--muted);margin-top:2px;">Contributed: <span class="val">${fmt(contrib)}</span></div>
         <div class="acc-bar"><div class="acc-bar-fill" style="width:${pf.toFixed(1)}%;background:${col};"></div></div>
-        <div class="acc-bar-lbl"><span class="val">${fmt(contrib)} used</span><span>${fmt(limit-contrib)} left of ${fmt(limit)}</span></div>`
+        <div class="acc-bar-lbl"><span class="val">${fmt(contrib)} used</span><span><span class="val">${fmt(limit-contrib)}</span> left of <span class="val">${fmt(limit)}</span></span></div>`
       :`<div style="font-size:11px;color:var(--muted);margin-top:2px;">${a.type.includes('pension')?'Pension pot':'Account balance'}</div>`}
     </div>`;
   }).join('');
@@ -1413,8 +1469,8 @@ function addAccount(){
   const name=(document.getElementById('accName').value||'').trim();
   const type=document.getElementById('accType').value;
   const provider=(document.getElementById('accProvider').value||'').trim();
-  const balance=parseFloat(document.getElementById('accBalance').value)||0;
-  const contrib=parseFloat(document.getElementById('accContrib').value)||0;
+  const balance=parseMoney(document.getElementById('accBalance').value)||0;
+  const contrib=parseMoney(document.getElementById('accContrib').value)||0;
   if(!name){ toast('Please enter an account name.'); return; }
   S.accounts.push({name,type,provider,balance,contrib});
   save(); toast(`Added ${name}`);
@@ -1439,7 +1495,7 @@ function renderPremiumBonds(){
 }
 
 function updatePB(){
-  const amount=parseFloat(document.getElementById('pbAmount').value)||0;
+  const amount=parseMoney(document.getElementById('pbAmount').value)||0;
   const date=document.getElementById('pbDate').value;
   if(amount>50000){ toast('Maximum holding is £50,000.'); return; }
   S.premiumBonds.amount=amount;
@@ -1475,7 +1531,33 @@ function _renderPBWins(){
     </tr>`).join('');
 }
 
-function deletePBWin(i){ S.premiumBonds.wins.splice(i,1); save(); _renderPBWins(); toast('Removed'); }
+function deletePBWin(i){ 
+  const deleted=S.premiumBonds.wins.splice(i,1)[0];
+  window._lastDeletedPBWin={item:deleted,index:i};
+  updatePBUndoButton();
+  save(); renderPremiumBonds(); toast('Removed'); 
+}
+
+function undoLastPBDelete(){
+  if(!window._lastDeletedPBWin) return;
+  const {item,index}=window._lastDeletedPBWin;
+  S.premiumBonds.wins.splice(index,0,item);
+  window._lastDeletedPBWin=null;
+  updatePBUndoButton();
+  save(); renderPremiumBonds(); toast('Restored');
+}
+
+function updatePBUndoButton(){
+  const btn=document.getElementById('pbUndoBtn');
+  if(!btn) return;
+  if(window._lastDeletedPBWin){
+    btn.style.opacity='1';
+    btn.style.pointerEvents='auto';
+  } else {
+    btn.style.opacity='0';
+    btn.style.pointerEvents='none';
+  }
+}
 
 // ═══════════════════════════════════════════════════
 // 15. JS: SALARY (UK tax calculation)
@@ -1537,32 +1619,87 @@ function calcUKTax(gross, pensionPct, bonus, studentLoanPlan){
 
 let currentPersonIdx=0;
 
-function toggleHousehold(){
-  S.settings.household=document.getElementById('householdToggle').checked;
+function addNewPerson(){
+  const newPerson='Person '+(S.settings.personNames.length+1);
+  S.settings.personNames.push(newPerson);
   save(); renderSalary();
 }
 
-function renderSalary(){
-  document.getElementById('householdToggle').checked=!!S.settings.household;
-  const numPersons=S.settings.household?2:1;
+function removePerson(idx){
+  if(S.settings.personNames.length<=1){ toast('You must have at least one person.'); return; }
+  S.settings.personNames.splice(idx,1);
+  S.salaries=S.salaries.filter(s=>(s.person||0)!==idx);
+  S.salaries.forEach(s=>{ if((s.person||0)>idx) s.person--; });
+  currentPersonIdx=Math.min(currentPersonIdx,S.settings.personNames.length-1);
+  save(); renderSalary();
+}
 
-  // Person tabs
+function editPersonName(idx){
+  const current=S.settings.personNames[idx];
+  const newName=prompt('Edit person name:',current);
+  if(newName && newName.trim()){
+    S.settings.personNames[idx]=newName.trim();
+    save(); renderSalary();
+  }
+}
+
+function renderSalary(){
+  // Populate person dropdown
+  const personSel=document.getElementById('salPerson');
+  personSel.innerHTML=S.settings.personNames.map((p,i)=>`<option value="${i}">${p}</option>`).join('');
+  personSel.value=currentPersonIdx;
+
+  // Render person management cards
+  const pmEl=document.getElementById('personManagement');
+  pmEl.innerHTML=S.settings.personNames.map((p,i)=>`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;cursor:pointer;" onclick="switchPerson(${i})">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-weight:600;font-size:13px;">${p}</span>
+        <div style="display:flex;gap:6px;">
+          <button class="icon-btn edit" style="width:24px;height:24px;padding:0;font-size:11px;" onclick="editPersonName(${i}); event.stopPropagation();">✎</button>
+          ${S.settings.personNames.length>1?`<button class="icon-btn del" style="width:24px;height:24px;padding:0;font-size:11px;" onclick="removePerson(${i}); event.stopPropagation();">✕</button>`:''}
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);">${S.salaries.filter(s=>(s.person||0)===i).length} salary record${S.salaries.filter(s=>(s.person||0)===i).length!==1?'s':''}</div>
+    </div>
+  `).join('');
+
+  // Render person tabs
   const tabsEl=document.getElementById('personTabs');
-  if(numPersons>1){
-    tabsEl.innerHTML=['Person 1','Person 2'].map((p,i)=>`
-      <button class="person-btn ${currentPersonIdx===i?'active':''}" onclick="switchPerson(${i})">${p}</button>`).join('');
+  const allPeople=[...S.settings.personNames];
+  if(allPeople.length>1) allPeople.push('Household');
+  
+  if(allPeople.length>1){
+    tabsEl.innerHTML=allPeople.map((p,i)=>{
+      const isHousehold=i===allPeople.length-1;
+      return`<button class="person-btn ${currentPersonIdx===i?'active':''}" onclick="switchPerson(${i})">${isHousehold?'📊 '+p:p}</button>`;
+    }).join('');
   } else { tabsEl.innerHTML=''; currentPersonIdx=0; }
 
-  // Get salaries for current person
-  const personSals=S.salaries.filter(s=>(s.person||0)===currentPersonIdx);
-
+  // Get content based on current view
   const el=document.getElementById('salaryContent');
+  const isHousehold=S.settings.personNames.length>1 && currentPersonIdx===S.settings.personNames.length;
+  
+  if(isHousehold){
+    renderHouseholdSalary(el);
+  } else {
+    renderPersonSalary(el,currentPersonIdx);
+  }
+}
+
+function switchPerson(idx){
+  currentPersonIdx=idx;
+  renderSalary();
+}
+
+function renderPersonSalary(el,personIdx){
+  const personSals=S.salaries.filter(s=>(s.person||0)===personIdx);
+  
   if(!personSals.length){
-    el.innerHTML=`<div class="empty"><div class="ei">◈</div><p>No salary added for this person yet.</p></div>`;
+    el.innerHTML=`<div class="empty"><div class="ei">◈</div><p>No salary added for ${S.settings.personNames[personIdx]} yet.</p></div>`;
     return;
   }
 
-  // Show latest salary's breakdown
   const sal=personSals[personSals.length-1];
   const calc=calcUKTax(sal.gross||0, sal.pensionPct||0, sal.bonus||0, sal.studentLoan||'none');
 
@@ -1575,7 +1712,7 @@ function renderSalary(){
       <div class="sal-card"><div class="sal-label">National Insurance</div><div class="sal-val neg val">${fmt(calc.ni)}</div><div class="sal-sub">employee NI</div></div>
       <div class="sal-card"><div class="sal-label">Pension (yours)</div><div class="sal-val val">${fmt(calc.pensionAmt)}</div><div class="sal-sub">${sal.pensionPct||0}% of gross</div></div>
       ${calc.slRepayment>0?`<div class="sal-card"><div class="sal-label">Student loan</div><div class="sal-val neg val">${fmt(calc.slRepayment)}</div><div class="sal-sub">${sal.studentLoan} plan</div></div>`:''}
-      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Take-home (annual)</div><div class="sal-val pos val">${fmt(calc.takeHome)}</div><div class="sal-sub">${fmt(calc.takeHomeMonthly)}/month</div></div>
+      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Take-home (annual)</div><div class="sal-val pos val">${fmt(calc.takeHome)}</div><div class="sal-sub"><span class="val">${fmt(calc.takeHomeMonthly)}</span>/month</div></div>
       <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Take-home (monthly)</div><div class="sal-val pos val">${fmt(calc.takeHomeMonthly)}</div><div class="sal-sub">estimated net</div></div>
     </div>
 
@@ -1603,8 +1740,7 @@ function renderSalary(){
       </div>
     </div>
 
-    <!-- Salary history for this person -->
-    <div class="section-label">Salary history · Person ${currentPersonIdx+1}</div>
+    <div class="section-label">Salary history · ${S.settings.personNames[personIdx]}</div>
     <div class="table-wrap">
       <table>
         <thead><tr><th>Employer</th><th>Gross</th><th>Bonus</th><th>Take-home/mo</th><th>Started</th><th>Status</th><th></th></tr></thead>
@@ -1619,8 +1755,8 @@ function renderSalary(){
               <td>${fmtDate(s.startDate)}</td>
               <td><span class="pill ${s.ongoing!==false?'p-income':'p-payment'}">${s.ongoing!==false?'Ongoing':fmtDate(s.endDate)}</span></td>
               <td>
-                <button class="icon-btn edit" onclick="openEditSalary(${i})">✎</button>
-                <button class="icon-btn del"  onclick="deleteSalary(${i})">✕</button>
+                <button class="icon-btn edit" onclick="openEditSalary(${S.salaries.indexOf(s)})">✎</button>
+                <button class="icon-btn del" onclick="deleteSalary(${S.salaries.indexOf(s)})">✕</button>
               </td>
             </tr>`;
           }).join('')}
@@ -1629,7 +1765,6 @@ function renderSalary(){
     </div>
     ${sal.notes?`<div style="padding:10px 14px;background:var(--surface2);border-radius:var(--radius-sm);font-size:12px;color:var(--muted2);margin-bottom:16px;">📝 ${sal.notes}</div>`:''}`;
 
-  // Render salary doughnut chart
   setTimeout(()=>{
     const ctx=document.getElementById('salChart');
     if(!ctx) return;
@@ -1645,16 +1780,69 @@ function renderSalary(){
   },50);
 }
 
-function switchPerson(idx){
-  currentPersonIdx=idx;
-  renderSalary();
+function renderHouseholdSalary(el){
+  const hhSals=S.salaries;
+  if(!hhSals.length){
+    el.innerHTML=`<div class="empty"><div class="ei">◈</div><p>No salaries added yet.</p></div>`;
+    return;
+  }
+
+  const totals={gross:0,bonus:0,incomeTax:0,ni:0,pensionAmt:0,slRepayment:0,takeHome:0};
+  const breakdowns=[];
+  
+  S.settings.personNames.forEach((p,i)=>{
+    const personSals=S.salaries.filter(s=>(s.person||0)===i);
+    if(!personSals.length) return;
+    const sal=personSals[personSals.length-1];
+    const calc=calcUKTax(sal.gross||0,sal.pensionPct||0,sal.bonus||0,sal.studentLoan||'none');
+    totals.gross+=calc.gross;
+    totals.bonus+=calc.bonus;
+    totals.incomeTax+=calc.incomeTax;
+    totals.ni+=calc.ni;
+    totals.pensionAmt+=calc.pensionAmt;
+    totals.slRepayment+=calc.slRepayment;
+    totals.takeHome+=calc.takeHome;
+    breakdowns.push({person:p,calc});
+  });
+
+  el.innerHTML=`
+    <div class="sal-breakdown-grid">
+      <div class="sal-card"><div class="sal-label">Combined gross</div><div class="sal-val val">${fmt(totals.gross)}</div><div class="sal-sub">per year</div></div>
+      <div class="sal-card"><div class="sal-label">Combined bonus</div><div class="sal-val val">${fmt(totals.bonus)}</div><div class="sal-sub">annual</div></div>
+      <div class="sal-card"><div class="sal-label">Combined income</div><div class="sal-val val">${fmt(totals.gross+totals.bonus)}</div><div class="sal-sub">salary + bonus</div></div>
+      <div class="sal-card"><div class="sal-label">Income tax</div><div class="sal-val neg val">${fmt(totals.incomeTax)}</div><div class="sal-sub">combined PAYE</div></div>
+      <div class="sal-card"><div class="sal-label">National Insurance</div><div class="sal-val neg val">${fmt(totals.ni)}</div><div class="sal-sub">combined NI</div></div>
+      <div class="sal-card"><div class="sal-label">Pensions</div><div class="sal-val val">${fmt(totals.pensionAmt)}</div><div class="sal-sub">combined</div></div>
+      ${totals.slRepayment>0?`<div class="sal-card"><div class="sal-label">Student loans</div><div class="sal-val neg val">${fmt(totals.slRepayment)}</div><div class="sal-sub">combined repayment</div></div>`:''}
+      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Combined take-home (annual)</div><div class="sal-val pos val">${fmt(totals.takeHome)}</div><div class="sal-sub"><span class="val">${fmt(totals.takeHome/12)}</span>/month</div></div>
+      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Combined take-home (monthly)</div><div class="sal-val pos val">${fmt(totals.takeHome/12)}</div><div class="sal-sub">estimated combined net</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><span class="card-title">Household breakdown</span></div>
+      <table class="tax-band-table">
+        <thead><tr><th>Person</th><th>Gross</th><th>Take-home/mo</th></tr></thead>
+        <tbody>
+          ${breakdowns.map(bd=>`<tr>
+            <td style="font-variation-settings:'wght' 600;">${bd.person}</td>
+            <td class="val">${fmt(bd.calc.gross)}</td>
+            <td class="pos val">${fmt(bd.calc.takeHomeMonthly)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function toggleHousehold(){
+  S.settings.household=document.getElementById('householdToggle').checked;
+  save(); renderSalary();
 }
 
 function addSalary(){
   const person=parseInt(document.getElementById('salPerson').value)||0;
   const employer=(document.getElementById('salEmployer').value||'').trim();
-  const gross=parseFloat(document.getElementById('salGross').value)||0;
-  const bonus=parseFloat(document.getElementById('salBonus').value)||0;
+  const gross=parseMoney(document.getElementById('salGross').value)||0;
+  const bonus=parseMoney(document.getElementById('salBonus').value)||0;
   const pensionPct=parseFloat(document.getElementById('salPensionPct').value)||0;
   const employerPension=parseFloat(document.getElementById('salEmployerPension').value)||0;
   const studentLoan=document.getElementById('salStudentLoan').value;
@@ -1664,25 +1852,23 @@ function addSalary(){
   const notes=document.getElementById('salNotes').value;
   if(!gross){ toast('Please enter a gross salary.'); return; }
   S.salaries.push({person,employer,gross,bonus,pensionPct,employerPension,studentLoan,startDate,endDate,ongoing,notes});
-  _addTx({txtype:'income',date:startDate||new Date().toISOString().split('T')[0],desc:`Salary: ${employer}`,amount:gross,pnl:0,notes:`Person ${person+1} · Net/mo ~${fmt(calcUKTax(gross,pensionPct,bonus,studentLoan).takeHomeMonthly)}`});
+  const personName=S.settings.personNames[person]||'Person '+(person+1);
+  _addTx({txtype:'income',date:startDate||new Date().toISOString().split('T')[0],desc:`Salary: ${employer}`,amount:gross,pnl:0,notes:`${personName} · Net/mo ~${fmt(calcUKTax(gross,pensionPct,bonus,studentLoan).takeHomeMonthly)}`});
   save(); toast('Salary saved'); renderSalary();
 }
 
 function deleteSalary(i){
-  const personSals=S.salaries.filter(s=>(s.person||0)===currentPersonIdx);
-  const sal=personSals[i];
-  S.salaries=S.salaries.filter(s=>s!==sal);
+  S.salaries.splice(i,1);
   save(); renderSalary(); toast('Deleted');
 }
 
 function openEditSalary(i){
-  const personSals=S.salaries.filter(s=>(s.person||0)===currentPersonIdx);
-  const sal=personSals[i];
-  editingSalaryIdx=S.salaries.indexOf(sal);
+  const sal=S.salaries[i];
+  editingSalaryIdx=i;
   document.getElementById('editSalaryGrid').innerHTML=`
     <div class="ff"><label>Employer</label><input type="text" id="es-employer" value="${sal.employer||''}"/></div>
-    <div class="ff"><label>Gross (£)</label><input type="number" id="es-gross" value="${sal.gross||''}"/></div>
-    <div class="ff"><label>Bonus (£)</label><input type="number" id="es-bonus" value="${sal.bonus||''}"/></div>
+    <div class="ff money-field"><label>Gross</label><input type="text" id="es-gross" value="${sal.gross ? sal.gross.toLocaleString('en-GB') : ''}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+    <div class="ff money-field"><label>Bonus</label><input type="text" id="es-bonus" value="${sal.bonus ? sal.bonus.toLocaleString('en-GB') : ''}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
     <div class="ff"><label>Your pension (%)</label><input type="number" id="es-pension" value="${sal.pensionPct||''}"/></div>
     <div class="ff"><label>Student loan</label>
       <select id="es-sl">
@@ -1698,8 +1884,8 @@ function saveEditSalary(){
   if(editingSalaryIdx===null) return;
   const sal=S.salaries[editingSalaryIdx];
   sal.employer=document.getElementById('es-employer').value;
-  sal.gross=parseFloat(document.getElementById('es-gross').value)||sal.gross;
-  sal.bonus=parseFloat(document.getElementById('es-bonus').value)||0;
+  sal.gross=parseMoney(document.getElementById('es-gross').value)||sal.gross;
+  sal.bonus=parseMoney(document.getElementById('es-bonus').value)||0;
   sal.pensionPct=parseFloat(document.getElementById('es-pension').value)||0;
   sal.studentLoan=document.getElementById('es-sl').value;
   sal.startDate=document.getElementById('es-start').value;
@@ -1743,7 +1929,7 @@ function renderDebts(){
         </div>
       </div>
       <div class="debt-owed val">${fmt(remaining)}</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">of ${fmt(original)} original · ${paidPct.toFixed(0)}% paid</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">of <span class="val">${fmt(original)}</span> original · ${paidPct.toFixed(0)}% paid</div>
       <div class="prog-outer"><div class="prog-fill" style="width:${paidPct.toFixed(1)}%;background:var(--green);"></div></div>
       <div class="debt-stats">
         <div><div class="ds-lbl">Monthly</div><div class="ds-val val">${fmt(d.monthly||0)}</div></div>
@@ -1759,9 +1945,9 @@ function renderDebts(){
 function addDebt(){
   const name=(document.getElementById('dName').value||'').trim();
   const type=document.getElementById('dType').value;
-  const total=parseFloat(document.getElementById('dTotal').value)||0;
-  const remaining=parseFloat(document.getElementById('dRemaining').value)||total;
-  const monthly=parseFloat(document.getElementById('dMonthly').value)||0;
+  const total=parseMoney(document.getElementById('dTotal').value)||0;
+  const remaining=parseMoney(document.getElementById('dRemaining').value)||total;
+  const monthly=parseMoney(document.getElementById('dMonthly').value)||0;
   const rate=parseFloat(document.getElementById('dRate').value)||0;
   const start=document.getElementById('dStart').value;
   const end=document.getElementById('dEnd').value;
@@ -1784,9 +1970,9 @@ function openEditDebt(i){
     <div class="ff"><label>Type</label>
       <select id="ed-type">${['loan','mortgage','credit-card','student','car','other'].map(t=>`<option value="${t}"${d.type===t?' selected':''}>${t}</option>`).join('')}</select>
     </div>
-    <div class="ff"><label>Original total (£)</label><input type="number" id="ed-total" value="${d.total||''}"/></div>
-    <div class="ff"><label>Remaining (£)</label><input type="number" id="ed-remaining" value="${d.remaining??d.total??''}"/></div>
-    <div class="ff"><label>Monthly payment (£)</label><input type="number" id="ed-monthly" value="${d.monthly||''}"/></div>
+    <div class="ff money-field"><label>Original total</label><input type="text" id="ed-total" value="${d.total ? d.total.toLocaleString('en-GB') : ''}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+    <div class="ff money-field"><label>Remaining</label><input type="text" id="ed-remaining" value="${d.remaining ? d.remaining.toLocaleString('en-GB') : (d.total ? d.total.toLocaleString('en-GB') : '')}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+    <div class="ff money-field"><label>Monthly payment</label><input type="text" id="ed-monthly" value="${d.monthly ? d.monthly.toLocaleString('en-GB') : ''}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
     <div class="ff"><label>Interest rate (%)</label><input type="number" id="ed-rate" value="${d.rate||''}" step=".1"/></div>
     <div class="ff"><label>Start date</label><input type="date" id="ed-start" value="${d.start||''}"/></div>
     <div class="ff"><label>End date</label><input type="date" id="ed-end" value="${d.end||''}"/></div>
@@ -1800,9 +1986,9 @@ function saveEditDebt(){
   const d=S.debts[editingDebtIdx];
   d.name=document.getElementById('ed-name').value;
   d.type=document.getElementById('ed-type').value;
-  d.total=parseFloat(document.getElementById('ed-total').value)||d.total;
-  d.remaining=parseFloat(document.getElementById('ed-remaining').value)??d.remaining;
-  d.monthly=parseFloat(document.getElementById('ed-monthly').value)||0;
+  d.total=parseMoney(document.getElementById('ed-total').value)||d.total;
+  d.remaining=parseMoney(document.getElementById('ed-remaining').value)??d.remaining;
+  d.monthly=parseMoney(document.getElementById('ed-monthly').value)||0;
   d.rate=parseFloat(document.getElementById('ed-rate').value)||0;
   d.start=document.getElementById('ed-start').value;
   d.end=document.getElementById('ed-end').value;
@@ -1838,7 +2024,7 @@ function renderGoals(){
       <div class="prog-outer" style="margin:8px 0 5px;"><div class="prog-fill" style="width:${(p*100).toFixed(1)}%;background:${col};"></div></div>
       <div class="goal-stats">
         <span style="color:${col};font-variation-settings:'wght' 600;">${Math.round(p*100)}% complete</span>
-        <span style="color:var(--muted);">${fmt(rem)} to go${g.monthly?' · '+fmt(g.monthly)+'/mo':''}</span>
+        <span style="color:var(--muted);"><span class="val">${fmt(rem)}</span> to go${g.monthly?' · <span class="val">'+fmt(g.monthly)+'</span>/mo':''}</span>
       </div>
     </div>`;
   }).join('');
@@ -1846,10 +2032,10 @@ function renderGoals(){
 
 function addGoal(){
   const name=(document.getElementById('gName').value||'').trim();
-  const target=parseFloat(document.getElementById('gTarget').value);
-  const saved=parseFloat(document.getElementById('gSaved').value)||0;
+  const target=parseMoney(document.getElementById('gTarget').value);
+  const saved=parseMoney(document.getElementById('gSaved').value)||0;
   const date=document.getElementById('gDate').value;
-  const monthly=parseFloat(document.getElementById('gMonthly').value)||0;
+  const monthly=parseMoney(document.getElementById('gMonthly').value)||0;
   const emoji=document.getElementById('gEmoji').value||'◐';
   if(!name||isNaN(target)||!date){ toast('Please fill name, target, and date.'); return; }
   S.goals.push({name,target,saved,date,monthly,emoji});
@@ -1954,7 +2140,7 @@ function renderTransactions(){
       <td><span class="pill p-${t.txtype}">${t.txtype}</span></td>
       <td>${t.desc||'—'}</td>
       <td class="${t.amount>=0?'pos':'neg'} val">${fmt(Math.abs(t.amount))}</td>
-      <td class="${cls(t.pnl||0)}">${t.pnl?fmtS(t.pnl):'—'}</td>
+      <td class="${cls(t.pnl||0)} val">${t.pnl?fmtS(t.pnl):'—'}</td>
       <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;">${t.notes||'—'}</td>
     </tr>`).join('');
 }
@@ -1976,7 +2162,7 @@ function renderTax(){
   document.getElementById('taxGrid').innerHTML=`
     <div class="tax-card"><div class="stat-label">Realised P&amp;L (total)</div><div class="stat-val ${cls(netGain)} val">${fmtS(netGain)}</div><div class="stat-sub val">Gains: ${fmt(realisedGains)} · Losses: ${fmt(realisedLosses)}</div></div>
     <div class="tax-card"><div class="stat-label">CGT allowance 2025/26</div><div class="stat-val val">${fmt(CGT_ALLOWANCE)}</div><div class="stat-sub ${cgtLiable>0?'neg':'pos'}">${cgtLiable>0?fmt(cgtLiable)+' potentially liable':'Within allowance ✓'}</div></div>
-    <div class="tax-card"><div class="stat-label">ISA allowance left</div><div class="stat-val pos val">${fmt(isaLeft)}</div><div class="stat-sub">of ${fmt(isaLimit)} · ${fmt(isaUsed)} used</div></div>
+    <div class="tax-card"><div class="stat-label">ISA allowance left</div><div class="stat-val pos val">${fmt(isaLeft)}</div><div class="stat-sub">of <span class="val">${fmt(isaLimit)}</span> · <span class="val">${fmt(isaUsed)}</span> used</div></div>
     <div class="tax-card"><div class="stat-label">Premium bond wins</div><div class="stat-val pos val">${fmt(pbWins)}</div><div class="stat-sub">Tax-free ✓</div></div>
     <div class="tax-card"><div class="stat-label">Unrealised P&amp;L</div><div class="stat-val ${cls(S.holdings.reduce((s,h)=>s+(h.current-h.invested),0))} val">${fmtS(S.holdings.reduce((s,h)=>s+(h.current-h.invested),0))}</div><div class="stat-sub">Not yet taxable</div></div>
     <div class="tax-card"><div class="stat-label">Gross salary</div><div class="stat-val val">${sal?fmt(sal.gross):'—'}</div><div class="stat-sub">Personal allowance: ${fmt(UK_TAX.personalAllowance)}</div></div>`;
@@ -1990,7 +2176,7 @@ function renderTax(){
       <div style="width:130px;font-size:12px;color:var(--muted2);">${info.name}</div>
       <div style="flex:1;" class="prog-outer"><div class="prog-fill" style="width:${p.toFixed(1)}%;background:${info.color};"></div></div>
       <div style="font-size:12px;font-variation-settings:'wght' 600;width:70px;text-align:right;color:${info.color};" class="val">${fmt(used)}</div>
-      <div style="font-size:11px;color:var(--muted);width:90px;text-align:right;">${fmt(info.limit-used)} left</div>
+      <div style="font-size:11px;color:var(--muted);width:90px;text-align:right;"><span class="val">${fmt(info.limit-used)}</span> left</div>
     </div>`;
   }).join('');
 }
