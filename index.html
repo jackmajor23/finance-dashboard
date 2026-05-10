@@ -1968,7 +1968,7 @@ function openEditDebt(i){
   document.getElementById('editDebtGrid').innerHTML=`
     <div class="ff"><label>Name</label><input type="text" id="ed-name" value="${d.name}"/></div>
     <div class="ff"><label>Type</label>
-      <select id="ed-type">${['loan','mortgage','credit-card','student','car','other'].map(t=>`<option value="${t}"${d.type===t?' selected':''}>${t}</option>`).join('')}</select>
+      <select id="ed-type">${['Loan','Mortgage','Credit-card','Student','Car','Other'].map(t=>`<option value="${t}"${d.type===t?' selected':''}>${t}</option>`).join('')}</select>
     </div>
     <div class="ff money-field"><label>Original total</label><input type="text" id="ed-total" value="${d.total ? d.total.toLocaleString('en-GB') : ''}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
     <div class="ff money-field"><label>Remaining</label><input type="text" id="ed-remaining" value="${d.remaining ? d.remaining.toLocaleString('en-GB') : (d.total ? d.total.toLocaleString('en-GB') : '')}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
