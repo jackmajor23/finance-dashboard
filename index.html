@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Wealth Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface2: #f0eff9;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #1a1a24;
+  --muted: #888799;
+  --muted2: #5a5970;
+  --green: #0e9e6a;
+  --green-dim: rgba(14,158,106,0.1);
+  --red: #d94040;
+  --red-dim: rgba(217,64,64,0.09);
+  --accent: #5b4ef5;
+  --accent-dim: rgba(91,78,245,0.1);
+  --amber: #c47f0a;
+  --amber-dim: rgba(196,127,10,0.1);
+  --blue: #2378d5;
+  --blue-dim: rgba(35,120,213,0.1);
+  --teal: #0e8f85;
+  --teal-dim: rgba(14,143,133,0.1);
+  --pink: #c2407a;
+  --pink-dim: rgba(194,64,122,0.1);
+  --sidebar-w: 230px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+h1,h2,h3,h4,h5{font-family:'Syne',sans-serif;}
+a{color:var(--accent);text-decoration:none;}
+input,select,textarea{font-family:'DM Mono',monospace;}
+
+/* ── Layout ── */
+.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;min-height:100vh;}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.main{padding:28px 32px;overflow-y:auto;max-width:1200px;}
+
+/* ── Sidebar ── */
+.logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.logo-name{font-size:20px;font-weight:800;letter-spacing:-0.5px;color:var(--text);}
+.logo-sub{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;}
+.nav-section{padding:0 12px;margin-bottom:4px;}
+.nav-label{font-size:10px;letter-spacing:.1em;color:var(--muted);padding:0 8px;margin-bottom:4px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted2);transition:all .15s;font-size:12px;border:none;background:none;width:100%;text-align:left;font-family:'DM Mono',monospace;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:var(--accent-dim);color:var(--accent);font-weight:500;}
+.nav-divider{height:1px;background:var(--border);margin:10px 12px;}
+.sidebar-footer{margin-top:auto;padding:14px 12px;}
+.refresh-btn{width:100%;padding:9px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all .2s;font-weight:500;}
+.refresh-btn:hover{opacity:.85;}
+.last-refresh{text-align:center;font-size:10px;color:var(--muted);margin-top:6px;}
+.last-updated-global{font-size:10px;color:var(--muted);text-align:center;margin-top:4px;}
+
+/* ── Pages ── */
+.page{display:none;}
+.page.active{display:block;}
+.page-header{margin-bottom:24px;}
+.page-header h2{font-size:24px;font-weight:800;letter-spacing:-1px;margin-bottom:3px;}
+.page-header p{color:var(--muted2);font-size:12px;}
+
+/* ── Stat cards ── */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;height:3px;width:100%;}
+.stat-card.green::after{background:var(--green);}
+.stat-card.red::after{background:var(--red);}
+.stat-card.accent::after{background:var(--accent);}
+.stat-card.amber::after{background:var(--amber);}
+.stat-card.blue::after{background:var(--blue);}
+.stat-label{font-size:10px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.stat-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;letter-spacing:-1px;line-height:1;}
+.stat-sub{font-size:11px;margin-top:5px;color:var(--muted2);}
+.pos{color:var(--green)!important;}
+.neg{color:var(--red)!important;}
+.neu{color:var(--muted2);}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;}
+.card-sub{font-size:11px;color:var(--muted);}
+.charts-row{display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px;}
+
+/* ── Donut ── */
+.donut-wrap{position:relative;width:100%;height:170px;}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+.donut-center .big{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;letter-spacing:-1px;}
+.donut-center .sm{font-size:10px;color:var(--muted);}
+.legend-list{margin-top:12px;display:flex;flex-direction:column;gap:5px;}
+.legend-row{display:flex;align-items:center;justify-content:space-between;}
+.legend-left{display:flex;align-items:center;gap:7px;}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.legend-name{font-size:11px;color:var(--muted2);}
+.legend-val{font-size:11px;font-weight:500;}
+
+/* ── Table ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;}
+.table-toolbar{display:flex;gap:8px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.search-box{flex:1;min-width:140px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;}
+.search-box:focus{border-color:var(--accent);}
+.filter-btn{padding:6px 12px;background:transparent;border:1px solid var(--border2);border-radius:7px;color:var(--muted2);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.filter-btn:hover,.filter-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:9px 12px;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;font-weight:500;background:var(--surface);}
+tbody td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;font-size:12px;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--bg);}
+
+/* ── Badges ── */
+.ticker-badge{font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:2px 5px;color:var(--muted2);margin-left:5px;}
+.type-pill{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;}
+.tp-stocks{background:var(--blue-dim);color:var(--blue);}
+.tp-isa{background:var(--green-dim);color:var(--green);}
+.tp-crypto{background:var(--amber-dim);color:var(--amber);}
+.tp-cash{background:rgba(0,0,0,0.05);color:var(--muted2);}
+.tp-pension{background:var(--accent-dim);color:var(--accent);}
+.tp-property{background:var(--pink-dim);color:var(--pink);}
+.tp-debt{background:var(--red-dim);color:var(--red);}
+.tp-other{background:var(--teal-dim);color:var(--teal);}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── Buttons ── */
+.icon-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--muted);cursor:pointer;font-size:12px;transition:all .15s;line-height:1;font-family:'DM Mono',monospace;}
+.icon-btn:hover{border-color:var(--border2);color:var(--text);background:var(--bg);}
+.icon-btn.del:hover{border-color:var(--red);color:var(--red);background:var(--red-dim);}
+.icon-btn.edit:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.btn-primary{padding:9px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;font-weight:500;transition:all .15s;}
+.btn-primary:hover{opacity:.85;}
+.btn-secondary{padding:9px 14px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--muted2);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all .15s;}
+.btn-secondary:hover{border-color:var(--text);color:var(--text);}
+
+/* ── Forms ── */
+.add-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:18px;}
+.add-form h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;margin-bottom:14px;}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px;}
+.form-field{display:flex;flex-direction:column;gap:4px;}
+.form-field label{font-size:10px;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;}
+.form-field input,.form-field select,.form-field textarea{background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 9px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border .15s;}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--accent);}
+.form-field input::placeholder{color:var(--muted);}
+.form-field textarea{resize:vertical;min-height:60px;}
+.form-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal-overlay.hidden{display:none;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;}
+.modal h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:16px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+/* ── Date picker ── */
+input[type="date"]{cursor:pointer;}
+.datepicker-wrap{position:relative;}
+
+/* ── Accounts ── */
+.accounts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px;}
+.account-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;transition:border .15s;}
+.account-card:hover{border-color:var(--border2);}
+.account-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
+.account-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;}
+.account-type-label{font-size:10px;color:var(--muted);margin-top:2px;}
+.account-balance{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;letter-spacing:-1px;margin-bottom:4px;}
+.acc-bar{height:4px;background:var(--border);border-radius:2px;margin-top:12px;overflow:hidden;}
+.acc-bar-fill{height:100%;border-radius:2px;transition:width .5s;}
+.acc-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px;}
+
+/* ── ISA ── */
+.isa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:20px;}
+.isa-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.isa-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:3px;}
+.isa-desc{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;}
+.isa-bar-outer{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px;}
+.isa-bar-inner{height:100%;border-radius:3px;transition:width .6s;}
+.isa-stats{display:flex;justify-content:space-between;font-size:11px;}
+
+/* ── Stocks ── */
+.stocks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
+.stock-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;}
+.stock-card:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.stock-ticker{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;}
+.stock-name{font-size:11px;color:var(--muted);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stock-price{font-size:20px;font-weight:500;font-family:'Syne',sans-serif;letter-spacing:-.5px;}
+.stock-chg{font-size:12px;margin-top:3px;}
+
+/* ── Debt ── */
+.debt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px;}
+.debt-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.debt-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:2px;}
+.debt-meta{font-size:11px;color:var(--muted);margin-bottom:12px;}
+.debt-bar{height:5px;background:var(--border);border-radius:3px;margin:10px 0 5px;overflow:hidden;}
+.debt-bar-fill{height:100%;border-radius:3px;background:var(--red);}
+.debt-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;}
+.debt-stat-lbl{color:var(--muted);}
+.debt-stat-val{font-weight:500;}
+
+/* ── Premium Bonds ── */
+.pb-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.pb-wins-table tbody td{vertical-align:middle;}
+
+/* ── Salary ── */
+.salary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
+.salary-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.salary-label{font-size:10px;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+.salary-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;letter-spacing:-1px;}
+.salary-sub{font-size:11px;color:var(--muted2);margin-top:4px;}
+
+/* ── Goals ── */
+.goals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px;}
+.goal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.goal-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:2px;}
+.goal-meta{font-size:11px;color:var(--muted);margin-bottom:10px;}
+.goal-bar-outer{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px;}
+.goal-bar-inner{height:100%;border-radius:4px;transition:width .6s;}
+.goal-stats{display:flex;justify-content:space-between;font-size:11px;}
+
+/* ── Tax summary ── */
+.tax-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:20px;}
+.tax-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
+
+/* ── Net worth chart ── */
+.nw-chart-wrap{position:relative;width:100%;height:220px;}
+
+/* ── Contributions ── */
+.contrib-chart-wrap{position:relative;width:100%;height:200px;}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--text);border-radius:10px;padding:11px 16px;font-size:12px;color:#fff;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* ── Empty ── */
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-state .big{font-size:28px;margin-bottom:10px;}
+
+/* ── Section divider ── */
+.section-label{font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;margin-top:22px;}
+
+/* ── Tabs ── */
+.tab-row{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:18px;}
+.tab-btn{padding:8px 14px;background:none;border:none;border-bottom:2px solid transparent;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted2);cursor:pointer;transition:all .15s;margin-bottom:-1px;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-btn:hover{color:var(--text);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* ── Inline edit ── */
+.editable-row td{transition:background .1s;}
+.edit-input{background:var(--bg);border:1px solid var(--accent);border-radius:5px;padding:3px 6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);outline:none;width:90px;}
+
+/* ── Transaction history ── */
+.tx-badge{font-size:10px;padding:2px 7px;border-radius:20px;}
+.tx-buy{background:var(--blue-dim);color:var(--blue);}
+.tx-sell{background:var(--green-dim);color:var(--green);}
+.tx-win{background:var(--amber-dim);color:var(--amber);}
+.tx-income{background:var(--teal-dim);color:var(--teal);}
+.tx-payment{background:var(--red-dim);color:var(--red);}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .app{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .summary-grid{grid-template-columns:1fr 1fr;}
+  .charts-row{grid-template-columns:1fr;}
+}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-name" id="sidebar-name">My Wealth</div>
+    <div class="logo-sub">personal finance dashboard</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <button class="nav-item active" onclick="nav('overview',this)">▣ &nbsp;Overview</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Assets</div>
+    <button class="nav-item" onclick="nav('holdings',this)">◫ &nbsp;Holdings</button>
+    <button class="nav-item" onclick="nav('accounts',this)">◳ &nbsp;Accounts & ISAs</button>
+    <button class="nav-item" onclick="nav('premium-bonds',this)">◎ &nbsp;Premium Bonds</button>
+    <button class="nav-item" onclick="nav('stocks-page',this)">◬ &nbsp;Live Prices</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Finances</div>
+    <button class="nav-item" onclick="nav('salary',this)">◈ &nbsp;Salary</button>
+    <button class="nav-item" onclick="nav('debts',this)">◉ &nbsp;Debts</button>
+    <button class="nav-item" onclick="nav('goals',this)">◐ &nbsp;Goals</button>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">History</div>
+    <button class="nav-item" onclick="nav('transactions',this)">≡ &nbsp;Transactions</button>
+    <button class="nav-item" onclick="nav('tax',this)">◷ &nbsp;Tax Summary</button>
+  </div>
+  <div class="nav-divider"></div>
+  <div class="nav-section">
+    <button class="nav-item" onclick="nav('settings',this)">⚙ &nbsp;Settings</button>
+  </div>
+  <div class="sidebar-footer">
+    <button class="refresh-btn" onclick="refreshPrices()">↻ &nbsp;Refresh prices</button>
+    <div class="last-refresh" id="last-refresh-time">prices never refreshed</div>
+    <div class="last-updated-global" id="last-updated-global"></div>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+
+<!-- ── OVERVIEW ── -->
+<div class="page active" id="page-overview">
+  <div class="page-header">
+    <h2 id="overview-greeting">Overview</h2>
+    <p id="overview-date"></p>
+  </div>
+  <div class="summary-grid" id="summary-cards"></div>
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Allocation</span></div>
+      <div class="donut-wrap">
+        <canvas id="donutChart" role="img" aria-label="Portfolio allocation"></canvas>
+        <div class="donut-center">
+          <div class="big" id="donut-center-val">—</div>
+          <div class="sm">total value</div>
+        </div>
+      </div>
+      <div class="legend-list" id="donut-legend"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Net worth over time</span><span class="card-sub" id="nw-sub"></span></div>
+      <div class="nw-chart-wrap"><canvas id="nwChart" role="img" aria-label="Net worth over time"></canvas></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header"><span class="card-title">P&amp;L by holding</span></div>
+      <div style="position:relative;height:200px;"><canvas id="barChart" role="img" aria-label="P&L per holding"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Monthly contributions</span></div>
+      <div class="contrib-chart-wrap"><canvas id="contribChart" role="img" aria-label="Monthly contributions"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><span class="card-title">ISA allowances 2025/26</span></div>
+    <div id="isa-mini-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;"></div>
+  </div>
+</div>
+
+<!-- ── HOLDINGS ── -->
+<div class="page" id="page-holdings">
+  <div class="page-header">
+    <h2>Holdings</h2>
+    <p>Track investments — add buy/sell prices to see realised P&amp;L</p>
+  </div>
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="holdingsTab('open',this)">Open positions</button>
+    <button class="tab-btn" onclick="holdingsTab('closed',this)">Closed / sold</button>
+    <button class="tab-btn" onclick="holdingsTab('add',this)">+ Add holding</button>
+  </div>
+  <!-- Open positions -->
+  <div class="tab-content active" id="htab-open">
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <input class="search-box" id="holdings-search" placeholder="Search..." oninput="renderHoldingsTable()"/>
+        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setFilter('stocks',this)">Stocks</button>
+        <button class="filter-btn" onclick="setFilter('isa',this)">ISA</button>
+        <button class="filter-btn" onclick="setFilter('crypto',this)">Crypto</button>
+        <button class="filter-btn" onclick="setFilter('pension',this)">Pension</button>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Invested</th><th>Value</th><th>Unreal. P&amp;L</th><th>Return</th><th>Notes</th><th></th>
+        </tr></thead>
+        <tbody id="holdings-body"></tbody>
+      </table>
+    </div>
+  </div>
+  <!-- Closed -->
+  <div class="tab-content" id="htab-closed">
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Sell price</th><th>Sell date</th><th>Invested</th><th>Sold for</th><th>Realised P&amp;L</th><th>Return</th><th></th>
+        </tr></thead>
+        <tbody id="closed-body"></tbody>
+      </table>
+    </div>
+  </div>
+  <!-- Add -->
+  <div class="tab-content" id="htab-add">
+    <div class="add-form">
+      <h3>Add holding</h3>
+      <div class="form-grid">
+        <div class="form-field"><label>Name</label><input type="text" id="h-name" placeholder="e.g. Apple Inc."/></div>
+        <div class="form-field"><label>Ticker (optional)</label><input type="text" id="h-ticker" placeholder="AAPL"/></div>
+        <div class="form-field"><label>Asset type</label>
+          <select id="h-type">
+            <option value="stocks">Stock</option>
+            <option value="isa">ISA holding</option>
+            <option value="crypto">Crypto</option>
+            <option value="cash">Cash</option>
+            <option value="pension">Pension</option>
+            <option value="property">Property</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Amount invested (£)</label><input type="number" id="h-invested" placeholder="1000" min="0"/></div>
+        <div class="form-field"><label>Current value (£)</label><input type="number" id="h-current" placeholder="1200" min="0"/></div>
+        <div class="form-field"><label>Buy price per unit (£)</label><input type="number" id="h-buyprice" placeholder="150.00" step="any"/></div>
+        <div class="form-field"><label>Shares / units</label><input type="number" id="h-shares" placeholder="10" step="any"/></div>
+        <div class="form-field"><label>Buy date</label><input type="date" id="h-buydate"/></div>
+        <div class="form-field"><label>Held in wrapper</label>
+          <select id="h-wrapper">
+            <option value="">— none —</option>
+            <option value="stocks-isa">Stocks &amp; Shares ISA</option>
+            <option value="cash-isa">Cash ISA</option>
+            <option value="lifetime-isa">Lifetime ISA</option>
+            <option value="pension">Pension/SIPP</option>
+            <option value="gia">General Investment Account</option>
+          </select>
+        </div>
+        <div class="form-field" style="grid-column:1/-1;"><label>Notes</label><textarea id="h-notes" placeholder="e.g. Long-term hold, bought the dip..."></textarea></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="addHolding()">Save holding</button>
+        <button class="btn-secondary" onclick="loadSample()">Load sample data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ACCOUNTS & ISA ── -->
+<div class="page" id="page-accounts">
+  <div class="page-header">
+    <h2>Accounts &amp; ISAs</h2>
+    <p>Bank accounts, ISAs and wrappers · 2025/26 ISA allowance: <strong style="color:var(--green)">£20,000</strong></p>
+  </div>
+  <div class="section-label" style="margin-top:0">ISA allowance tracker</div>
+  <div class="isa-grid" id="isa-tracker"></div>
+  <div class="section-label">Your accounts</div>
+  <div class="accounts-grid" id="accounts-grid"></div>
+  <div class="add-form">
+    <h3>+ Add account or ISA</h3>
+    <div class="form-grid">
+      <div class="form-field"><label>Account name</label><input type="text" id="acc-name" placeholder="e.g. Vanguard ISA"/></div>
+      <div class="form-field"><label>Type</label>
+        <select id="acc-type">
+          <optgroup label="Bank Accounts">
+            <option value="current">Current account</option>
+            <option value="savings">Savings account</option>
+            <option value="joint">Joint account</option>
+          </optgroup>
+          <optgroup label="ISAs">
+            <option value="stocks-isa">Stocks &amp; Shares ISA</option>
+            <option value="cash-isa">Cash ISA</option>
+            <option value="lifetime-isa">Lifetime ISA (LISA)</option>
+            <option value="help-to-buy-isa">Help to Buy ISA</option>
+            <option value="innovative-isa">Innovative Finance ISA</option>
+            <option value="junior-isa">Junior ISA</option>
+          </optgroup>
+          <optgroup label="Other">
+            <option value="pension">Pension / SIPP</option>
+            <option value="premium-bonds-acc">Premium Bonds</option>
+            <option value="other">Other</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="form-field"><label>Provider</label><input type="text" id="acc-provider" placeholder="e.g. Vanguard"/></div>
+      <div class="form-field"><label>Balance (£)</label><input type="number" id="acc-balance" placeholder="5000" min="0"/></div>
+      <div class="form-field"><label>Contributed this tax year (£)</label><input type="number" id="acc-contrib" placeholder="0" min="0"/></div>
+    </div>
+    <div class="form-actions"><button class="btn-primary" onclick="addAccount()">Add account</button></div>
+  </div>
+</div>
+
+<!-- ── PREMIUM BONDS ── -->
+<div class="page" id="page-premium-bonds">
+  <div class="page-header">
+    <h2>Premium Bonds</h2>
+    <p>Track your NS&amp;I premium bonds, winnings history and total return</p>
+  </div>
+  <div class="pb-summary" id="pb-summary"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+    <div class="add-form" style="margin-bottom:0;">
+      <h3>Update bond holding</h3>
+      <div class="form-grid">
+        <div class="form-field"><label>Total bonds held (£)</label><input type="number" id="pb-amount" placeholder="50000" min="0" max="50000"/></div>
+        <div class="form-field"><label>Date purchased/updated</label><input type="date" id="pb-date"/></div>
+      </div>
+      <div class="form-actions"><button class="btn-primary" onclick="updatePBHolding()">Update</button></div>
+    </div>
+    <div class="add-form" style="margin-bottom:0;">
+      <h3>Log a win</h3>
+      <div class="form-grid">
+        <div class="form-field"><label>Win amount (£)</label><input type="number" id="pb-win-amount" placeholder="25" min="0"/></div>
+        <div class="form-field"><label>Win date</label><input type="date" id="pb-win-date"/></div>
+        <div class="form-field"><label>Prize type</label>
+          <select id="pb-win-type">
+            <option value="£25">£25</option>
+            <option value="£50">£50</option>
+            <option value="£100">£100</option>
+            <option value="£500">£500</option>
+            <option value="£1000">£1,000</option>
+            <option value="£5000">£5,000</option>
+            <option value="£25000">£25,000</option>
+            <option value="£50000">£50,000</option>
+            <option value="£1000000">£1,000,000</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions"><button class="btn-primary" onclick="addPBWin()">Log win</button></div>
+    </div>
+  </div>
+  <div class="section-label">Winnings history</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Amount</th><th>Prize tier</th><th>Running total</th><th></th></tr></thead>
+      <tbody id="pb-wins-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── LIVE PRICES ── -->
+<div class="page" id="page-stocks-page">
+  <div class="page-header">
+    <h2>Live prices</h2>
+    <p>Yahoo Finance · 15-min delayed · UK stocks: add .L suffix (e.g. LLOY.L)</p>
+  </div>
+  <div style="background:var(--amber-dim);border:1px solid rgba(196,127,10,.3);border-radius:10px;padding:11px 14px;margin-bottom:18px;font-size:12px;color:var(--amber);">
+    ⚠ Prices are 15-min delayed. US stocks: <code>AAPL</code> · UK stocks: <code>VUSA.L</code> · Crypto: <code>BTC-GBP</code> · Indices: <code>^FTSE</code>
+  </div>
+  <div class="add-form" style="margin-bottom:18px;">
+    <h3>Add to watchlist</h3>
+    <div style="display:flex;gap:10px;align-items:flex-end;">
+      <div class="form-field" style="flex:1;"><label>Ticker</label><input type="text" id="watch-ticker" placeholder="NVDA, BTC-GBP, ^FTSE..." style="width:100%;" onkeydown="if(event.key==='Enter')addWatchTicker()"/></div>
+      <button class="btn-primary" onclick="addWatchTicker()">Add</button>
+    </div>
+  </div>
+  <div class="stocks-grid" id="stocks-grid"></div>
+</div>
+
+<!-- ── SALARY ── -->
+<div class="page" id="page-salary">
+  <div class="page-header"><h2>Salary</h2><p>Track your income and take-home pay</p></div>
+  <div class="salary-grid" id="salary-cards"></div>
+  <div class="add-form">
+    <h3>Add / update salary</h3>
+    <div class="form-grid">
+      <div class="form-field"><label>Employer</label><input type="text" id="sal-employer" placeholder="e.g. Acme Ltd"/></div>
+      <div class="form-field"><label>Gross annual salary (£)</label><input type="number" id="sal-gross" placeholder="45000" min="0"/></div>
+      <div class="form-field"><label>Net monthly take-home (£)</label><input type="number" id="sal-net-monthly" placeholder="2900" min="0"/></div>
+      <div class="form-field"><label>Pension contribution (%)</label><input type="number" id="sal-pension-pct" placeholder="5" min="0" max="100" step=".5"/></div>
+      <div class="form-field"><label>Employer pension (%)</label><input type="number" id="sal-employer-pension" placeholder="3" min="0" max="100" step=".5"/></div>
+      <div class="form-field"><label>Start date</label><input type="date" id="sal-date"/></div>
+    </div>
+    <div class="form-actions"><button class="btn-primary" onclick="addSalary()">Save</button></div>
+  </div>
+</div>
+
+<!-- ── DEBTS ── -->
+<div class="page" id="page-debts">
+  <div class="page-header"><h2>Debts</h2><p>Track what you owe, monthly payments and payoff dates</p></div>
+  <div class="summary-grid" id="debt-summary-cards" style="grid-template-columns:repeat(3,1fr);"></div>
+  <div class="debt-grid" id="debt-grid" style="margin-top:18px;"></div>
+  <div class="add-form">
+    <h3>Add debt</h3>
+    <div class="form-grid">
+      <div class="form-field"><label>Name</label><input type="text" id="d-name" placeholder="e.g. Car loan"/></div>
+      <div class="form-field"><label>Type</label>
+        <select id="d-type">
+          <option value="loan">Personal loan</option>
+          <option value="mortgage">Mortgage</option>
+          <option value="credit-card">Credit card</option>
+          <option value="student">Student loan</option>
+          <option value="car">Car finance</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-field"><label>Total owed (£)</label><input type="number" id="d-total" placeholder="8000" min="0"/></div>
+      <div class="form-field"><label>Monthly payment (£)</label><input type="number" id="d-monthly" placeholder="250" min="0"/></div>
+      <div class="form-field"><label>Interest rate (%)</label><input type="number" id="d-rate" placeholder="6.5" step=".1" min="0"/></div>
+      <div class="form-field"><label>Start date</label><input type="date" id="d-start"/></div>
+      <div class="form-field"><label>End / payoff date</label><input type="date" id="d-end"/></div>
+      <div class="form-field"><label>Lender</label><input type="text" id="d-lender" placeholder="e.g. Halifax"/></div>
+    </div>
+    <div class="form-actions"><button class="btn-primary" onclick="addDebt()">Add debt</button></div>
+  </div>
+</div>
+
+<!-- ── GOALS ── -->
+<div class="page" id="page-goals">
+  <div class="page-header"><h2>Goals</h2><p>Financial targets with progress tracking</p></div>
+  <div class="goals-grid" id="goals-grid"></div>
+  <div class="add-form">
+    <h3>Add goal</h3>
+    <div class="form-grid">
+      <div class="form-field"><label>Goal name</label><input type="text" id="g-name" placeholder="e.g. House deposit"/></div>
+      <div class="form-field"><label>Target amount (£)</label><input type="number" id="g-target" placeholder="40000" min="0"/></div>
+      <div class="form-field"><label>Current saved (£)</label><input type="number" id="g-saved" placeholder="12000" min="0"/></div>
+      <div class="form-field"><label>Target date</label><input type="date" id="g-date"/></div>
+      <div class="form-field"><label>Monthly contribution (£)</label><input type="number" id="g-monthly" placeholder="500" min="0"/></div>
+      <div class="form-field"><label>Emoji / icon</label><input type="text" id="g-emoji" placeholder="🏠" maxlength="4"/></div>
+    </div>
+    <div class="form-actions"><button class="btn-primary" onclick="addGoal()">Add goal</button></div>
+  </div>
+</div>
+
+<!-- ── TRANSACTIONS ── -->
+<div class="page" id="page-transactions">
+  <div class="page-header"><h2>Transaction history</h2><p>All buys, sells, wins, income and debt payments</p></div>
+  <div class="table-toolbar" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;padding:10px 12px;">
+    <input class="search-box" id="tx-search" placeholder="Search transactions..." oninput="renderTransactions()"/>
+    <button class="filter-btn active" onclick="setTxFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setTxFilter('buy',this)">Buys</button>
+    <button class="filter-btn" onclick="setTxFilter('sell',this)">Sells</button>
+    <button class="filter-btn" onclick="setTxFilter('win',this)">Wins</button>
+    <button class="filter-btn" onclick="setTxFilter('income',this)">Income</button>
+    <button class="filter-btn" onclick="setTxFilter('payment',this)">Payments</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th>P&amp;L</th><th>Notes</th></tr></thead>
+      <tbody id="tx-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── TAX SUMMARY ── -->
+<div class="page" id="page-tax">
+  <div class="page-header"><h2>Tax summary</h2><p>2025/26 tax year · For guidance only — consult a professional for advice</p></div>
+  <div class="tax-grid" id="tax-grid"></div>
+  <div class="card" style="margin-top:16px;">
+    <div class="card-header"><span class="card-title">ISA allowance across all wrappers</span></div>
+    <div id="tax-isa-detail" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+</div>
+
+<!-- ── SETTINGS ── -->
+<div class="page" id="page-settings">
+  <div class="page-header"><h2>Settings</h2><p>Personalise your dashboard</p></div>
+  <div class="add-form">
+    <h3>Personal details</h3>
+    <div class="form-grid">
+      <div class="form-field"><label>Your name</label><input type="text" id="set-name" placeholder="e.g. Alex"/></div>
+      <div class="form-field"><label>Dashboard title</label><input type="text" id="set-title" placeholder="e.g. Alex's Wealth"/></div>
+      <div class="form-field"><label>Currency symbol</label><input type="text" id="set-currency" placeholder="£" maxlength="3"/></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-primary" onclick="saveSettings()">Save settings</button>
+      <button class="btn-secondary" onclick="loadSample()">Load sample data</button>
+      <button class="btn-secondary" style="color:var(--red);border-color:var(--red);" onclick="clearAll()">Clear all data</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- ══ EDIT MODAL ══ -->
+<div class="modal-overlay hidden" id="edit-modal">
+  <div class="modal">
+    <h3>Edit holding</h3>
+    <div class="form-grid" id="edit-form-grid"></div>
+    <div id="sell-section" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:10px;color:var(--red);">Mark as sold</div>
+      <div class="form-grid">
+        <div class="form-field"><label>Sell price per unit (£)</label><input type="number" id="edit-sell-price" placeholder="200.00" step="any"/></div>
+        <div class="form-field"><label>Sell date</label><input type="date" id="edit-sell-date"/></div>
+        <div class="form-field"><label>Total sold for (£)</label><input type="number" id="edit-sell-total" placeholder="2000" min="0"/></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn-secondary" style="color:var(--red);border-color:var(--red);" onclick="sellHolding()">Mark sold</button>
+      <button class="btn-primary" onclick="saveEditHolding()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+const SK = 'wealth_v3';
+let S = {
+  settings: { name: '', title: 'My Wealth', currency: '£' },
+  holdings: [], closedHoldings: [], accounts: [],
+  premiumBonds: { amount: 0, date: '', wins: [] },
+  debts: [], goals: [], salaries: [],
+  watchlist: [], netWorthHistory: [],
+  transactions: [], contributions: [],
+  lastUpdated: null
+};
+let donutInst=null, barInst=null, nwInst=null, contribInst=null;
+let currentFilter='all', currentTxFilter='all', editingId=null;
+let livePrices={};
+const CUR = () => S.settings.currency || '£';
+
+// ══════════════════════════════════════════════
+// PERSIST
+// ══════════════════════════════════════════════
+function save(){
+  S.lastUpdated = new Date().toISOString();
+  try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){}
+  updateLastUpdatedUI();
+}
+function loadState(){
+  try{
+    const r = localStorage.getItem(SK);
+    if(r){ const p=JSON.parse(r); S={...S,...p}; S.settings=Object.assign({name:'',title:'My Wealth',currency:'£'},p.settings||{}); }
+  }catch(e){}
+  if(!S.watchlist)S.watchlist=[];
+  if(!S.netWorthHistory)S.netWorthHistory=[];
+  if(!S.transactions)S.transactions=[];
+  if(!S.contributions)S.contributions=[];
+  if(!S.closedHoldings)S.closedHoldings=[];
+  if(!S.premiumBonds)S.premiumBonds={amount:0,date:'',wins:[]};
+  if(!S.debts)S.debts=[];
+  if(!S.goals)S.goals=[];
+  if(!S.salaries)S.salaries=[];
+}
+function updateLastUpdatedUI(){
+  const el=document.getElementById('last-updated-global');
+  if(S.lastUpdated){
+    const d=new Date(S.lastUpdated);
+    el.textContent='data updated '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+// ══════════════════════════════════════════════
+// FORMAT
+// ══════════════════════════════════════════════
+function fmt(n){return CUR()+Math.abs(Math.round(n)).toLocaleString();}
+function fmtD(n){return CUR()+(Math.abs(n)<10?Math.abs(n).toFixed(2):Math.abs(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','));}
+function fmtS(n){return(n>=0?'+'+CUR():'-'+CUR())+Math.abs(Math.round(n)).toLocaleString();}
+function pct(c,i){return i===0?0:((c-i)/i*100);}
+function pctStr(c,i){const p=pct(c,i);return(p>=0?'+':'')+p.toFixed(1)+'%';}
+function cls(n){return n>=0?'pos':'neg';}
+function fmtDate(s){if(!s)return'—';const d=new Date(s);return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function nav(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  el.classList.add('active');
+  const renders={
+    'overview':renderOverview,'holdings':()=>{renderHoldingsTable();renderClosedTable();},
+    'accounts':renderAccounts,'premium-bonds':renderPremiumBonds,
+    'stocks-page':renderStocksPage,'salary':renderSalary,'debts':renderDebts,
+    'goals':renderGoals,'transactions':renderTransactions,'tax':renderTax,
+    'settings':()=>{document.getElementById('set-name').value=S.settings.name||'';
+      document.getElementById('set-title').value=S.settings.title||'';
+      document.getElementById('set-currency').value=S.settings.currency||'£';}
+  };
+  if(renders[page])renders[page]();
+}
+
+// ══════════════════════════════════════════════
+// OVERVIEW
+// ══════════════════════════════════════════════
+function renderOverview(){
+  const name=S.settings.name;
+  const d=new Date();
+  const hr=d.getHours();
+  const greet=hr<12?'Good morning':'hr<17'?'Good afternoon':'Good evening';
+  document.getElementById('overview-greeting').textContent=(name?(hr<12?'Good morning, ':hr<17?'Good afternoon, ':'Good evening, ')+name:'Overview');
+  document.getElementById('overview-date').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('sidebar-name').textContent=S.settings.title||'My Wealth';
+
+  const H=S.holdings; const A=S.accounts;
+  const totInvest=H.reduce((s,h)=>s+h.invested,0);
+  const totCur=H.reduce((s,h)=>s+h.current,0);
+  const bankBal=A.filter(a=>['current','savings','joint'].includes(a.type)).reduce((s,a)=>s+a.balance,0);
+  const pbBal=S.premiumBonds.amount||0;
+  const debtTotal=S.debts.reduce((s,d)=>s+d.total,0);
+  const netWorth=totCur+bankBal+pbBal-debtTotal;
+  const pl=totCur-totInvest;
+  const isaTotal=A.filter(a=>a.type.includes('isa')||a.type==='help-to-buy-isa').reduce((s,a)=>s+a.balance,0);
+
+  // Snapshot net worth
+  const today=d.toISOString().split('T')[0];
+  if(!S.netWorthHistory.length||S.netWorthHistory[S.netWorthHistory.length-1].date!==today){
+    S.netWorthHistory.push({date:today,value:Math.round(netWorth)});
+    if(S.netWorthHistory.length>365)S.netWorthHistory=S.netWorthHistory.slice(-365);
+    save();
+  }
+
+  document.getElementById('summary-cards').innerHTML=`
+    <div class="stat-card accent"><div class="stat-label">Net worth</div><div class="stat-val">${fmt(netWorth)}</div><div class="stat-sub">${H.length+A.length} assets</div></div>
+    <div class="stat-card ${pl>=0?'green':'red'}"><div class="stat-label">Unrealised P&amp;L</div><div class="stat-val ${cls(pl)}">${fmtS(pl)}</div><div class="stat-sub ${cls(pl)}">${pctStr(totCur,totInvest)}</div></div>
+    <div class="stat-card green"><div class="stat-label">ISA holdings</div><div class="stat-val pos">${fmt(isaTotal)}</div><div class="stat-sub">tax-free</div></div>
+    <div class="stat-card ${debtTotal>0?'red':'amber'}"><div class="stat-label">Total debts</div><div class="stat-val ${debtTotal>0?'neg':'neu'}">${debtTotal>0?'-'+fmt(debtTotal):fmt(0)}</div><div class="stat-sub">${S.debts.length} obligations</div></div>`;
+
+  renderDonut(); renderBar(); renderNWChart(); renderContribChart(); renderISAMini();
+}
+
+// ══════════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════════
+const TC={stocks:'#2378d5',isa:'#0e9e6a',crypto:'#c47f0a',cash:'#888799',pension:'#5b4ef5',property:'#c2407a',other:'#0e8f85',current:'#6b7280',savings:'#0e9e6a',joint:'#2378d5'};
+
+function renderDonut(){
+  const groups={};
+  S.holdings.forEach(h=>{groups[h.type]=(groups[h.type]||0)+h.current;});
+  S.accounts.filter(a=>['current','savings','joint'].includes(a.type)).forEach(a=>{groups[a.type]=(groups[a.type]||0)+a.balance;});
+  if(S.premiumBonds.amount)groups['premium bonds']=(groups['premium bonds']||0)+S.premiumBonds.amount;
+  const labels=Object.keys(groups),data=labels.map(l=>groups[l]),colors=labels.map(l=>TC[l]||'#888');
+  const total=data.reduce((s,v)=>s+v,0);
+  document.getElementById('donut-center-val').textContent=fmt(total);
+  document.getElementById('donut-legend').innerHTML=labels.map((l,i)=>`
+    <div class="legend-row">
+      <div class="legend-left"><div class="legend-dot" style="background:${colors[i]}"></div><span class="legend-name">${l.charAt(0).toUpperCase()+l.slice(1)}</span></div>
+      <span class="legend-val">${fmt(groups[l])}</span>
+    </div>`).join('');
+  if(donutInst)donutInst.destroy();
+  if(!labels.length)return;
+  donutInst=new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`}}}}
+  });
+}
+
+function renderBar(){
+  if(barInst)barInst.destroy();
+  const H=[...S.holdings].sort((a,b)=>(b.current-b.invested)-(a.current-a.invested));
+  if(!H.length)return;
+  const labels=H.map(h=>h.ticker||h.name.substring(0,7));
+  const pls=H.map(h=>Math.round(h.current-h.invested));
+  barInst=new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{labels,datasets:[{data:pls,backgroundColor:pls.map(v=>v>=0?'rgba(14,158,106,0.18)':'rgba(217,64,64,0.14)'),borderColor:pls.map(v=>v>=0?'#0e9e6a':'#d94040'),borderWidth:1.5,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw>=0?'+':''}${fmt(Math.abs(ctx.raw))}`}}},
+      scales:{x:{ticks:{color:'#888799',font:{size:10},maxRotation:45},grid:{display:false}},
+        y:{ticks:{color:'#888799',font:{size:10},callback:v=>(v>=0?'+':'')+fmt(Math.abs(v))},grid:{color:'rgba(0,0,0,0.04)'}}}
+    }
+  });
+}
+
+function renderNWChart(){
+  if(nwInst)nwInst.destroy();
+  const hist=S.netWorthHistory;
+  if(hist.length<2){document.getElementById('nw-sub').textContent='building history...';return;}
+  document.getElementById('nw-sub').textContent=hist.length+' days tracked';
+  const labels=hist.map(h=>new Date(h.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}));
+  const data=hist.map(h=>h.value);
+  nwInst=new Chart(document.getElementById('nwChart'),{
+    type:'line',
+    data:{labels,datasets:[{data,borderColor:'#5b4ef5',backgroundColor:'rgba(91,78,245,0.07)',borderWidth:2,pointRadius:0,tension:0.4,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`}}},
+      scales:{x:{ticks:{color:'#888799',font:{size:10},maxTicksLimit:6},grid:{display:false}},
+        y:{ticks:{color:'#888799',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,0.04)'}}}
+    }
+  });
+}
+
+function renderContribChart(){
+  if(contribInst)contribInst.destroy();
+  // Build monthly contribution data from transactions
+  const buyTx=S.transactions.filter(t=>t.txtype==='buy');
+  const months={};
+  buyTx.forEach(t=>{
+    if(!t.date)return;
+    const key=t.date.substring(0,7);
+    months[key]=(months[key]||0)+Math.abs(t.amount);
+  });
+  // Also from contributions array
+  S.contributions.forEach(c=>{
+    months[c.month]=(months[c.month]||0)+c.amount;
+  });
+  const sorted=Object.keys(months).sort();
+  if(!sorted.length){
+    // show empty
+    contribInst=new Chart(document.getElementById('contribChart'),{
+      type:'bar',data:{labels:['No data'],datasets:[{data:[0],backgroundColor:'rgba(91,78,245,0.15)',borderColor:'#5b4ef5',borderWidth:1.5,borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#888799',font:{size:10}}},y:{ticks:{color:'#888799',font:{size:10}}}}}
+    });
+    return;
+  }
+  const labels=sorted.map(m=>{const[y,mo]=m.split('-');return new Date(y,mo-1).toLocaleDateString('en-GB',{month:'short',year:'2-digit'});});
+  const data=sorted.map(m=>Math.round(months[m]));
+  contribInst=new Chart(document.getElementById('contribChart'),{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:'rgba(91,78,245,0.15)',borderColor:'#5b4ef5',borderWidth:1.5,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`}}},
+      scales:{x:{ticks:{color:'#888799',font:{size:10},maxRotation:45},grid:{display:false}},
+        y:{ticks:{color:'#888799',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,0.04)'}}}
+    }
+  });
+}
+
+// ISA mini on overview
+const ISA_INFO={
+  'stocks-isa':{name:'S&S ISA',limit:20000,color:'#0e9e6a'},
+  'cash-isa':{name:'Cash ISA',limit:20000,color:'#2378d5'},
+  'lifetime-isa':{name:'LISA',limit:4000,color:'#5b4ef5'},
+  'help-to-buy-isa':{name:'Help to Buy ISA',limit:2400,color:'#c2407a'},
+  'innovative-isa':{name:'IFISA',limit:20000,color:'#0e8f85'},
+  'junior-isa':{name:'Junior ISA',limit:9000,color:'#c47f0a'},
+};
+function renderISAMini(){
+  const relevant=S.accounts.filter(a=>ISA_INFO[a.type]);
+  const el=document.getElementById('isa-mini-grid');
+  if(!relevant.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;">No ISA accounts added yet.</div>';return;}
+  el.innerHTML=relevant.map(a=>{
+    const info=ISA_INFO[a.type];
+    const used=Math.min(a.contrib||0,info.limit);
+    const p=Math.min(((used/info.limit)*100),100);
+    return`<div>
+      <div style="font-size:11px;color:var(--muted2);margin-bottom:5px;font-weight:500;">${info.name} — ${a.name}</div>
+      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:5px;">
+        <div style="height:100%;width:${p.toFixed(1)}%;background:${info.color};border-radius:3px;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;">
+        <span style="color:${info.color};">${fmt(used)} used</span>
+        <span style="color:var(--muted);">${fmt(info.limit-used)} left</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+// HOLDINGS
+// ══════════════════════════════════════════════
+function holdingsTab(tab,el){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('htab-'+tab).classList.add('active');
+  if(tab==='open')renderHoldingsTable();
+  if(tab==='closed')renderClosedTable();
+}
+function setFilter(f,el){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderHoldingsTable();
+}
+function renderHoldingsTable(){
+  const q=(document.getElementById('holdings-search')||{}).value||'';
+  let H=S.holdings;
+  if(currentFilter!=='all')H=H.filter(h=>h.type===currentFilter);
+  if(q)H=H.filter(h=>h.name.toLowerCase().includes(q.toLowerCase())||(h.ticker||'').toLowerCase().includes(q.toLowerCase()));
+  const tbody=document.getElementById('holdings-body');
+  if(!H.length){tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="big">◫</div><p>No holdings. Add one via the Add tab.</p></div></td></tr>`;return;}
+  tbody.innerHTML=H.map(h=>{
+    const pl=h.current-h.invested;
+    const ret=pct(h.current,h.invested);
+    const lp=h.ticker?livePrices[h.ticker.toUpperCase()]:null;
+    return`<tr>
+      <td><strong>${h.name}</strong>${h.ticker?`<span class="ticker-badge">${h.ticker}</span>`:''}</td>
+      <td><span class="type-pill tp-${h.type}">${h.type}</span></td>
+      <td>${h.buyPrice?CUR()+parseFloat(h.buyPrice).toFixed(2):'—'}</td>
+      <td>${fmtDate(h.buyDate)}</td>
+      <td>${fmt(h.invested)}</td>
+      <td>${fmt(h.current)}${lp?` <span style="font-size:10px;color:var(--muted);">(live)</span>`:''}</td>
+      <td class="${cls(pl)}">${fmtS(pl)}</td>
+      <td class="${cls(ret)}">${ret>=0?'+':''}${ret.toFixed(1)}%</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;">${h.notes||'—'}</td>
+      <td style="white-space:nowrap;">
+        <button class="icon-btn edit" onclick="openEditModal(${h.id})" title="Edit">✎</button>
+        <button class="icon-btn del" onclick="deleteHolding(${h.id})" title="Delete">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function renderClosedTable(){
+  const tbody=document.getElementById('closed-body');
+  if(!S.closedHoldings.length){tbody.innerHTML=`<tr><td colspan="11"><div class="empty-state"><div class="big">◫</div><p>No sold holdings yet.</p></div></td></tr>`;return;}
+  tbody.innerHTML=S.closedHoldings.map((h,i)=>{
+    const pl=(h.soldFor||0)-h.invested;
+    const ret=pct(h.soldFor||0,h.invested);
+    return`<tr>
+      <td><strong>${h.name}</strong>${h.ticker?`<span class="ticker-badge">${h.ticker}</span>`:''}</td>
+      <td><span class="type-pill tp-${h.type}">${h.type}</span></td>
+      <td>${h.buyPrice?CUR()+parseFloat(h.buyPrice).toFixed(2):'—'}</td>
+      <td>${fmtDate(h.buyDate)}</td>
+      <td>${h.sellPrice?CUR()+parseFloat(h.sellPrice).toFixed(2):'—'}</td>
+      <td>${fmtDate(h.sellDate)}</td>
+      <td>${fmt(h.invested)}</td>
+      <td>${fmt(h.soldFor||0)}</td>
+      <td class="${cls(pl)}">${fmtS(pl)}</td>
+      <td class="${cls(ret)}">${ret>=0?'+':''}${ret.toFixed(1)}%</td>
+      <td><button class="icon-btn del" onclick="deleteClosedHolding(${i})" title="Delete">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function addHolding(){
+  const name=(document.getElementById('h-name').value||'').trim();
+  const ticker=(document.getElementById('h-ticker').value||'').trim().toUpperCase();
+  const type=document.getElementById('h-type').value;
+  const invested=parseFloat(document.getElementById('h-invested').value);
+  const current=parseFloat(document.getElementById('h-current').value);
+  const buyPrice=document.getElementById('h-buyprice').value;
+  const shares=document.getElementById('h-shares').value;
+  const buyDate=document.getElementById('h-buydate').value;
+  const wrapper=document.getElementById('h-wrapper').value;
+  const notes=document.getElementById('h-notes').value;
+  if(!name||isNaN(invested)||isNaN(current)){toast('Please fill name, invested, and current value.');return;}
+  const h={id:Date.now(),name,ticker,type,invested,current,buyPrice,shares,buyDate,wrapper,notes,closed:false};
+  S.holdings.push(h);
+  addTransaction({txtype:'buy',date:buyDate||new Date().toISOString().split('T')[0],desc:`Bought ${name}${ticker?' ('+ticker+')':''}`,amount:invested,pnl:0,notes});
+  save(); toast(`Added ${name}`);
+  ['h-name','h-ticker','h-invested','h-current','h-buyprice','h-shares','h-buydate','h-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('h-wrapper').value='';
+}
+
+function deleteHolding(id){
+  S.holdings=S.holdings.filter(h=>h.id!==id);
+  save();renderHoldingsTable();renderOverview();toast('Deleted');
+}
+function deleteClosedHolding(i){
+  S.closedHoldings.splice(i,1);
+  save();renderClosedTable();toast('Deleted');
+}
+
+// ── Edit modal ──
+function openEditModal(id){
+  editingId=id;
+  const h=S.holdings.find(x=>x.id===id);
+  if(!h)return;
+  document.getElementById('edit-form-grid').innerHTML=`
+    <div class="form-field"><label>Name</label><input type="text" id="em-name" value="${h.name}"/></div>
+    <div class="form-field"><label>Ticker</label><input type="text" id="em-ticker" value="${h.ticker||''}"/></div>
+    <div class="form-field"><label>Type</label>
+      <select id="em-type">
+        ${['stocks','isa','crypto','cash','pension','property','other'].map(t=>`<option value="${t}"${h.type===t?' selected':''}>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-field"><label>Invested (${CUR()})</label><input type="number" id="em-invested" value="${h.invested}"/></div>
+    <div class="form-field"><label>Current value (${CUR()})</label><input type="number" id="em-current" value="${h.current}"/></div>
+    <div class="form-field"><label>Buy price per unit</label><input type="number" id="em-buyprice" value="${h.buyPrice||''}" step="any"/></div>
+    <div class="form-field"><label>Shares / units</label><input type="number" id="em-shares" value="${h.shares||''}" step="any"/></div>
+    <div class="form-field"><label>Buy date</label><input type="date" id="em-buydate" value="${h.buyDate||''}"/></div>
+    <div class="form-field" style="grid-column:1/-1"><label>Notes</label><textarea id="em-notes">${h.notes||''}</textarea></div>`;
+  document.getElementById('edit-sell-price').value='';
+  document.getElementById('edit-sell-date').value='';
+  document.getElementById('edit-sell-total').value='';
+  document.getElementById('edit-modal').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('edit-modal').classList.add('hidden');editingId=null;}
+function saveEditHolding(){
+  const h=S.holdings.find(x=>x.id===editingId);
+  if(!h)return;
+  h.name=document.getElementById('em-name').value;
+  h.ticker=(document.getElementById('em-ticker').value||'').toUpperCase();
+  h.type=document.getElementById('em-type').value;
+  h.invested=parseFloat(document.getElementById('em-invested').value)||h.invested;
+  h.current=parseFloat(document.getElementById('em-current').value)||h.current;
+  h.buyPrice=document.getElementById('em-buyprice').value;
+  h.shares=document.getElementById('em-shares').value;
+  h.buyDate=document.getElementById('em-buydate').value;
+  h.notes=document.getElementById('em-notes').value;
+  save();closeModal();renderHoldingsTable();renderOverview();toast('Saved changes');
+}
+function sellHolding(){
+  const h=S.holdings.find(x=>x.id===editingId);
+  if(!h)return;
+  const sellPrice=document.getElementById('edit-sell-price').value;
+  const sellDate=document.getElementById('edit-sell-date').value||new Date().toISOString().split('T')[0];
+  const sellTotal=parseFloat(document.getElementById('edit-sell-total').value)||h.current;
+  const pl=sellTotal-h.invested;
+  const closed={...h,sellPrice,sellDate,soldFor:sellTotal,closedAt:new Date().toISOString()};
+  S.closedHoldings.push(closed);
+  S.holdings=S.holdings.filter(x=>x.id!==editingId);
+  addTransaction({txtype:'sell',date:sellDate,desc:`Sold ${h.name}${h.ticker?' ('+h.ticker+')':''}`,amount:sellTotal,pnl:pl,notes:`Buy: ${fmt(h.invested)} → Sell: ${fmt(sellTotal)}`});
+  save();closeModal();renderHoldingsTable();renderClosedTable();renderOverview();
+  toast(`Sold ${h.name} · P&L: ${fmtS(pl)}`);
+}
+
+// ══════════════════════════════════════════════
+// ACCOUNTS & ISA
+// ══════════════════════════════════════════════
+const ACC_ICONS={'current':'🏦','savings':'💰','joint':'👫','stocks-isa':'📈','cash-isa':'🏛','lifetime-isa':'🏠','help-to-buy-isa':'🔑','innovative-isa':'💡','junior-isa':'🎓','pension':'🔒','premium-bonds-acc':'🎟','other':'◈'};
+const ACC_COL={'current':'var(--blue)','savings':'var(--green)','joint':'var(--teal)','stocks-isa':'var(--green)','cash-isa':'var(--blue)','lifetime-isa':'var(--accent)','help-to-buy-isa':'var(--pink)','innovative-isa':'var(--teal)','junior-isa':'var(--amber)','pension':'var(--accent)','premium-bonds-acc':'var(--amber)','other':'var(--muted2)'};
+
+function renderAccounts(){
+  renderISATracker();
+  const grid=document.getElementById('accounts-grid');
+  if(!S.accounts.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big">◳</div><p>No accounts yet.</p></div>`;return;}
+  grid.innerHTML=S.accounts.map((a,i)=>{
+    const info=ISA_INFO[a.type];
+    const contrib=a.contrib||0;
+    const limit=info?info.limit:null;
+    const pf=limit?Math.min((contrib/limit)*100,100):null;
+    const col=ACC_COL[a.type]||'var(--muted2)';
+    return`<div class="account-card">
+      <div class="account-top">
+        <div>
+          <div class="account-name">${a.name}</div>
+          <div class="account-type-label">${a.provider||''} · ${a.type.replace(/-/g,' ')}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:22px;">${ACC_ICONS[a.type]||'◈'}</span>
+          <button class="icon-btn del" onclick="deleteAccount(${i})">✕</button>
+        </div>
+      </div>
+      <div class="account-balance" style="color:${col};">${fmt(a.balance)}</div>
+      ${info?`<div style="font-size:11px;color:var(--muted);margin-top:3px;">Contributed: ${fmt(contrib)}</div>
+      <div class="acc-bar"><div class="acc-bar-fill" style="width:${pf.toFixed(1)}%;background:${col};"></div></div>
+      <div class="acc-bar-label"><span>${fmt(contrib)} used</span><span>${fmt(limit-contrib)} left of ${fmt(limit)}</span></div>`
+      :`<div style="font-size:11px;color:var(--muted);margin-top:3px;">${a.type.includes('pension')?'Pension':'Account'}</div>`}
+    </div>`;
+  }).join('');
+}
+
+function renderISATracker(){
+  const el=document.getElementById('isa-tracker');
+  const defs=[
+    {key:'stocks-isa',name:'Stocks & Shares ISA',desc:'Stocks, funds & ETFs. Tax-free gains. £20k/yr.'},
+    {key:'cash-isa',name:'Cash ISA',desc:'Tax-free interest on cash. £20k/yr.'},
+    {key:'lifetime-isa',name:'Lifetime ISA',desc:'25% bonus. First home / retirement. £4k/yr. Age 18–39.'},
+    {key:'help-to-buy-isa',name:'Help to Buy ISA',desc:'Gov bonus on first home purchase. £2,400/yr. Closed to new applicants Dec 2019.'},
+    {key:'innovative-isa',name:'Innovative Finance ISA',desc:'Peer-to-peer lending. Higher risk. £20k/yr shared.'},
+  ];
+  el.innerHTML=defs.map(d=>{
+    const info=ISA_INFO[d.key];
+    const matching=S.accounts.filter(a=>a.type===d.key);
+    const used=Math.min(matching.reduce((s,a)=>s+(a.contrib||0),0),info.limit);
+    const p=Math.min((used/info.limit)*100,100);
+    return`<div class="isa-card">
+      <div style="font-size:10px;color:va
