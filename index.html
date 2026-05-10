@@ -4,463 +4,640 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Wealth Dashboard</title>
+<!--
+  ╔══════════════════════════════════════════════════════════╗
+  ║  WEALTH DASHBOARD v4                                     ║
+  ║  Architecture: single-file, section-separated            ║
+  ║  Sections:                                               ║
+  ║    1. FONTS & LIBS                                       ║
+  ║    2. CSS DESIGN SYSTEM (tokens, resets, utilities)      ║
+  ║    3. CSS COMPONENTS (sidebar, cards, table, forms...)   ║
+  ║    4. CSS PAGE-SPECIFIC                                  ║
+  ║    5. HTML SHELL (sidebar nav)                           ║
+  ║    6. HTML PAGES (one per section)                       ║
+  ║    7. HTML MODALS                                        ║
+  ║    8. JS: STATE & PERSISTENCE                            ║
+  ║    9. JS: UTILITIES (fmt, date, math)                    ║
+  ║   10. JS: NAVIGATION & ROUTING                           ║
+  ║   11. JS: OVERVIEW (greeting, summary, charts)           ║
+  ║   12. JS: HOLDINGS                                       ║
+  ║   13. JS: ACCOUNTS & ISA                                 ║
+  ║   14. JS: PREMIUM BONDS                                  ║
+  ║   15. JS: SALARY (UK tax calc, breakdown)                ║
+  ║   16. JS: DEBTS                                          ║
+  ║   17. JS: GOALS                                          ║
+  ║   18. JS: STOCKS / LIVE PRICES                           ║
+  ║   19. JS: TRANSACTIONS                                   ║
+  ║   20. JS: TAX SUMMARY                                    ║
+  ║   21. JS: SETTINGS                                       ║
+  ║   22. JS: SAMPLE DATA & INIT                             ║
+  ╚══════════════════════════════════════════════════════════╝
+-->
+
+<!-- ═══════════════════════════════════════════════════
+     1. FONTS & LIBRARIES
+     ═══════════════════════════════════════════════════ -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,100..900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<!-- ═══════════════════════════════════════════════════
+     2. CSS DESIGN SYSTEM – tokens, resets, base
+     ═══════════════════════════════════════════════════ -->
 <style>
 :root {
-  --bg: #f5f4f0;
-  --surface: #ffffff;
-  --surface2: #f0eff9;
-  --border: rgba(0,0,0,0.08);
-  --border2: rgba(0,0,0,0.14);
-  --text: #1a1a24;
-  --muted: #888799;
-  --muted2: #5a5970;
-  --green: #0e9e6a;
-  --green-dim: rgba(14,158,106,0.1);
-  --red: #d94040;
-  --red-dim: rgba(217,64,64,0.09);
-  --accent: #5b4ef5;
-  --accent-dim: rgba(91,78,245,0.1);
-  --amber: #c47f0a;
-  --amber-dim: rgba(196,127,10,0.1);
-  --blue: #2378d5;
-  --blue-dim: rgba(35,120,213,0.1);
-  --teal: #0e8f85;
-  --teal-dim: rgba(14,143,133,0.1);
-  --pink: #c2407a;
-  --pink-dim: rgba(194,64,122,0.1);
-  --sidebar-w: 230px;
+  /* Color tokens */
+  --bg:       #f5f4f0;
+  --surface:  #ffffff;
+  --surface2: #f0effe;
+  --border:   rgba(0,0,0,0.07);
+  --border2:  rgba(0,0,0,0.13);
+  --text:     #18181b;
+  --muted:    #7c7b8a;
+  --muted2:   #52515f;
+
+  --green:     #0a8f5c; --green-dim:  rgba(10,143,92,.1);
+  --red:       #cc3333; --red-dim:    rgba(204,51,51,.09);
+  --accent:    #5046e5; --accent-dim: rgba(80,70,229,.1);
+  --amber:     #b87309; --amber-dim:  rgba(184,115,9,.1);
+  --blue:      #1d6fca; --blue-dim:   rgba(29,111,202,.1);
+  --teal:      #0b7a6e; --teal-dim:   rgba(11,122,110,.1);
+  --pink:      #b03070; --pink-dim:   rgba(176,48,112,.1);
+  --purple:    #7c3aed; --purple-dim: rgba(124,58,237,.1);
+
+  /* Layout */
+  --sidebar-w: 238px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Font */
+  --font: 'Google Sans Flex', system-ui, sans-serif;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
-h1,h2,h3,h4,h5{font-family:'Syne',sans-serif;}
-a{color:var(--accent);text-decoration:none;}
-input,select,textarea{font-family:'DM Mono',monospace;}
+
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  font-variation-settings: 'wght' 400, 'opsz' 14;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 13.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+input, select, textarea, button { font-family: var(--font); }
+a { color: var(--accent); text-decoration: none; }
+
+/* Utility classes */
+.pos { color: var(--green) !important; }
+.neg { color: var(--red)   !important; }
+.neu { color: var(--muted2); }
+.bold { font-variation-settings: 'wght' 700; }
+.semibold { font-variation-settings: 'wght' 600; }
+.sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+/* ═══════════════════════════════════════════════════
+   3. CSS COMPONENTS
+   ═══════════════════════════════════════════════════ */
 
 /* ── Layout ── */
-.app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;min-height:100vh;}
-.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:24px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
-.main{padding:28px 32px;overflow-y:auto;max-width:1200px;}
+.app { display: grid; grid-template-columns: var(--sidebar-w) 1fr; min-height: 100vh; }
+.main { padding: 28px 32px; overflow-y: auto; max-width: 1280px; }
 
 /* ── Sidebar ── */
-.logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;}
-.logo-name{font-size:20px;font-weight:800;letter-spacing:-0.5px;color:var(--text);}
-.logo-sub{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;}
-.nav-section{padding:0 12px;margin-bottom:4px;}
-.nav-label{font-size:10px;letter-spacing:.1em;color:var(--muted);padding:0 8px;margin-bottom:4px;text-transform:uppercase;}
-.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted2);transition:all .15s;font-size:12px;border:none;background:none;width:100%;text-align:left;font-family:'DM Mono',monospace;}
-.nav-item:hover{background:var(--surface2);color:var(--text);}
-.nav-item.active{background:var(--accent-dim);color:var(--accent);font-weight:500;}
-.nav-divider{height:1px;background:var(--border);margin:10px 12px;}
-.sidebar-footer{margin-top:auto;padding:14px 12px;}
-.refresh-btn{width:100%;padding:9px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all .2s;font-weight:500;}
-.refresh-btn:hover{opacity:.85;}
-.last-refresh{text-align:center;font-size:10px;color:var(--muted);margin-top:6px;}
-.last-updated-global{font-size:10px;color:var(--muted);text-align:center;margin-top:4px;}
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; overflow-x: hidden;
+}
+.logo { padding: 20px 18px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.logo-name { font-size: 18px; font-variation-settings:'wght' 800; letter-spacing: -.5px; }
+.logo-sub  { font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+.nav-scroll { flex: 1; overflow-y: auto; padding: 8px 0 4px; }
+.nav-group { padding: 10px 10px 2px; }
+.nav-label { font-size: 10px; letter-spacing: .1em; color: var(--muted); padding: 0 8px; margin-bottom: 3px; text-transform: uppercase; font-variation-settings:'wght' 600; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; color: var(--muted2);
+  transition: background .12s, color .12s;
+  font-size: 13px; border: none; background: none;
+  width: 100%; text-align: left;
+  font-variation-settings: 'wght' 450;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-dim); color: var(--accent); font-variation-settings:'wght' 650; }
+.nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; opacity: .75; }
+.nav-divider { height: 1px; background: var(--border); margin: 6px 10px; }
+
+/* Sidebar bottom user chip */
+.sidebar-bottom { padding: 10px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.user-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  margin-bottom: 10px;
+}
+.user-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-variation-settings:'wght' 700; flex-shrink: 0;
+}
+.user-name { font-size: 13px; font-variation-settings:'wght' 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-sub  { font-size: 10px; color: var(--muted); }
+
+.refresh-btn {
+  width: 100%; padding: 9px 12px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 12px; font-variation-settings:'wght' 600;
+  cursor: pointer; transition: opacity .15s, transform .15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.refresh-btn:hover { opacity: .87; transform: translateY(-1px); }
+.last-refresh { text-align: center; font-size: 10px; color: var(--muted); margin-top: 5px; }
+.last-updated  { text-align: center; font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+/* Eye / hide figures button */
+.eye-fab {
+  position: fixed; top: 16px; right: 20px; z-index: 200;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  transition: box-shadow .15s;
+}
+.eye-fab:hover { box-shadow: 0 4px 14px rgba(0,0,0,.16); }
+body.hidden-vals .val { filter: blur(7px); pointer-events: none; user-select: none; transition: filter .25s; }
 
 /* ── Pages ── */
-.page{display:none;}
-.page.active{display:block;}
-.page-header{margin-bottom:24px;}
-.page-header h2{font-size:24px;font-weight:800;letter-spacing:-1px;margin-bottom:3px;}
-.page-header p{color:var(--muted2);font-size:12px;}
+.page { display: none; animation: pgIn .18s ease; }
+.page.active { display: block; }
+@keyframes pgIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+.page-header { margin-bottom: 22px; }
+.page-header h2 { font-size: 24px; font-variation-settings:'wght' 800; letter-spacing: -1px; margin-bottom: 2px; }
+.page-header p  { color: var(--muted2); font-size: 12px; }
 
-/* ── Stat cards ── */
-.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;}
-.stat-card::after{content:'';position:absolute;bottom:0;left:0;height:3px;width:100%;}
-.stat-card.green::after{background:var(--green);}
-.stat-card.red::after{background:var(--red);}
-.stat-card.accent::after{background:var(--accent);}
-.stat-card.amber::after{background:var(--amber);}
-.stat-card.blue::after{background:var(--blue);}
-.stat-label{font-size:10px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
-.stat-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:700;letter-spacing:-1px;line-height:1;}
-.stat-sub{font-size:11px;margin-top:5px;color:var(--muted2);}
-.pos{color:var(--green)!important;}
-.neg{color:var(--red)!important;}
-.neu{color:var(--muted2);}
+/* ── Stat / summary cards ── */
+.summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: box-shadow .15s, transform .15s;
+}
+.stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); transform: translateY(-1px); }
+.stat-card::after { content:''; position:absolute; bottom:0; left:0; height:3px; width:100%; }
+.sc-green::after  { background: var(--green); }
+.sc-red::after    { background: var(--red);   }
+.sc-accent::after { background: var(--accent); }
+.sc-amber::after  { background: var(--amber);  }
+.sc-blue::after   { background: var(--blue);   }
+.sc-teal::after   { background: var(--teal);   }
+.sc-purple::after { background: var(--purple); }
+.stat-label { font-size: 10px; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-bottom:8px; font-variation-settings:'wght' 600; }
+.stat-val   { font-size: 26px; font-variation-settings:'wght' 700; letter-spacing:-1px; line-height:1; }
+.stat-sub   { font-size: 11px; margin-top:4px; color:var(--muted2); }
 
-/* ── Cards ── */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
-.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;}
-.card-sub{font-size:11px;color:var(--muted);}
-.charts-row{display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px;}
+/* ── Card ── */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; }
+.card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.card-title  { font-size:14px; font-variation-settings:'wght' 700; }
+.card-sub    { font-size:11px; color:var(--muted); }
 
-/* ── Donut ── */
-.donut-wrap{position:relative;width:100%;height:170px;}
-.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
-.donut-center .big{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;letter-spacing:-1px;}
-.donut-center .sm{font-size:10px;color:var(--muted);}
-.legend-list{margin-top:12px;display:flex;flex-direction:column;gap:5px;}
-.legend-row{display:flex;align-items:center;justify-content:space-between;}
-.legend-left{display:flex;align-items:center;gap:7px;}
-.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
-.legend-name{font-size:11px;color:var(--muted2);}
-.legend-val{font-size:11px;font-weight:500;}
+/* ── Donut chart ── */
+.donut-wrap { position:relative; width:100%; height:170px; }
+.donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; }
+.donut-center .dc-big { font-size:20px; font-variation-settings:'wght' 700; letter-spacing:-1px; }
+.donut-center .dc-sm  { font-size:10px; color:var(--muted); }
+.legend-list { margin-top:12px; display:flex; flex-direction:column; gap:5px; }
+.legend-row  { display:flex; align-items:center; justify-content:space-between; }
+.legend-left { display:flex; align-items:center; gap:7px; }
+.legend-dot  { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+.legend-name { font-size:11px; color:var(--muted2); }
+.legend-val  { font-size:11px; font-variation-settings:'wght' 600; }
 
 /* ── Table ── */
-.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;}
-.table-toolbar{display:flex;gap:8px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
-.search-box{flex:1;min-width:140px;background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;}
-.search-box:focus{border-color:var(--accent);}
-.filter-btn{padding:6px 12px;background:transparent;border:1px solid var(--border2);border-radius:7px;color:var(--muted2);font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap;}
-.filter-btn:hover,.filter-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
-table{width:100%;border-collapse:collapse;}
-thead th{padding:9px 12px;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;font-weight:500;background:var(--surface);}
-tbody td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;font-size:12px;}
-tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover{background:var(--bg);}
+.table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; margin-bottom:18px; }
+.table-toolbar { display:flex; gap:8px; align-items:center; padding:11px 14px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.search-box { flex:1; min-width:130px; background:var(--bg); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:6px 10px; color:var(--text); font-size:12.5px; outline:none; transition:border .15s; }
+.search-box:focus { border-color:var(--accent); }
+.filter-btn { padding:5px 11px; background:transparent; border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--muted2); font-size:11px; cursor:pointer; transition:all .13s; white-space:nowrap; }
+.filter-btn:hover, .filter-btn.active { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
+table { width:100%; border-collapse:collapse; }
+thead th { padding:8px 12px; font-size:10px; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--border); text-align:left; font-variation-settings:'wght' 600; }
+tbody td { padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:middle; font-size:12.5px; }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr:hover { background:var(--bg); }
+.ticker-badge { font-size:10px; background:var(--bg); border:1px solid var(--border2); border-radius:4px; padding:2px 5px; color:var(--muted2); margin-left:4px; }
 
-/* ── Badges ── */
-.ticker-badge{font-size:10px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;padding:2px 5px;color:var(--muted2);margin-left:5px;}
-.type-pill{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;}
-.tp-stocks{background:var(--blue-dim);color:var(--blue);}
-.tp-isa{background:var(--green-dim);color:var(--green);}
-.tp-crypto{background:var(--amber-dim);color:var(--amber);}
-.tp-cash{background:rgba(0,0,0,0.05);color:var(--muted2);}
-.tp-pension{background:var(--accent-dim);color:var(--accent);}
-.tp-property{background:var(--pink-dim);color:var(--pink);}
-.tp-debt{background:var(--red-dim);color:var(--red);}
-.tp-other{background:var(--teal-dim);color:var(--teal);}
-.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);margin-right:4px;animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* ── Type pills ── */
+.pill { font-size:10px; padding:2px 8px; border-radius:20px; font-variation-settings:'wght' 600; }
+.p-stocks  { background:var(--blue-dim);   color:var(--blue);   }
+.p-isa     { background:var(--green-dim);  color:var(--green);  }
+.p-crypto  { background:var(--amber-dim);  color:var(--amber);  }
+.p-cash    { background:rgba(0,0,0,.05);   color:var(--muted2); }
+.p-pension { background:var(--accent-dim); color:var(--accent); }
+.p-property{ background:var(--pink-dim);   color:var(--pink);   }
+.p-debt    { background:var(--red-dim);    color:var(--red);    }
+.p-other   { background:var(--teal-dim);   color:var(--teal);   }
+.p-buy     { background:var(--blue-dim);   color:var(--blue);   }
+.p-sell    { background:var(--green-dim);  color:var(--green);  }
+.p-win     { background:var(--amber-dim);  color:var(--amber);  }
+.p-income  { background:var(--teal-dim);   color:var(--teal);   }
+.p-payment { background:var(--red-dim);    color:var(--red);    }
+.p-bonus   { background:var(--purple-dim); color:var(--purple); }
 
 /* ── Buttons ── */
-.icon-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--muted);cursor:pointer;font-size:12px;transition:all .15s;line-height:1;font-family:'DM Mono',monospace;}
-.icon-btn:hover{border-color:var(--border2);color:var(--text);background:var(--bg);}
-.icon-btn.del:hover{border-color:var(--red);color:var(--red);background:var(--red-dim);}
-.icon-btn.edit:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
-.btn-primary{padding:9px 18px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;font-weight:500;transition:all .15s;}
-.btn-primary:hover{opacity:.85;}
-.btn-secondary{padding:9px 14px;background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--muted2);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer;transition:all .15s;}
-.btn-secondary:hover{border-color:var(--text);color:var(--text);}
+.icon-btn { background:none; border:1px solid var(--border); border-radius:6px; padding:4px 8px; color:var(--muted); cursor:pointer; font-size:12px; transition:all .13s; line-height:1; }
+.icon-btn:hover       { border-color:var(--border2); color:var(--text); background:var(--bg); }
+.icon-btn.del:hover   { border-color:var(--red);    color:var(--red);    background:var(--red-dim);    }
+.icon-btn.edit:hover  { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+.btn { padding:8px 18px; border:none; border-radius:var(--radius-sm); font-size:12.5px; font-variation-settings:'wght' 600; cursor:pointer; transition:all .13s; }
+.btn-primary   { background:var(--accent); color:#fff; }
+.btn-primary:hover { opacity:.87; transform:translateY(-1px); }
+.btn-secondary { background:transparent; border:1px solid var(--border2); color:var(--muted2); }
+.btn-secondary:hover { border-color:var(--text); color:var(--text); }
+.btn-danger    { background:transparent; border:1px solid var(--red); color:var(--red); }
+.btn-danger:hover { background:var(--red-dim); }
+.btn-sm { padding:5px 12px; font-size:11px; }
 
-/* ── Forms ── */
-.add-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:18px;}
-.add-form h3{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;margin-bottom:14px;}
-.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:12px;}
-.form-field{display:flex;flex-direction:column;gap:4px;}
-.form-field label{font-size:10px;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;}
-.form-field input,.form-field select,.form-field textarea{background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:7px 9px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border .15s;}
-.form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--accent);}
-.form-field input::placeholder{color:var(--muted);}
-.form-field textarea{resize:vertical;min-height:60px;}
-.form-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+/* ── Form boxes ── */
+.form-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; margin-bottom:16px; }
+.form-box h3 { font-size:14px; font-variation-settings:'wght' 700; margin-bottom:14px; }
+.form-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:10px; margin-bottom:12px; }
+.form-grid.wide { grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); }
+.ff { display:flex; flex-direction:column; gap:4px; }
+.ff label { font-size:10px; letter-spacing:.07em; color:var(--muted); text-transform:uppercase; font-variation-settings:'wght' 600; }
+.ff input, .ff select, .ff textarea {
+  background:var(--bg); border:1px solid var(--border2);
+  border-radius:var(--radius-sm); padding:7px 10px;
+  color:var(--text); font-size:12.5px; outline:none;
+  transition:border .13s;
+}
+.ff input:focus, .ff select:focus, .ff textarea:focus { border-color:var(--accent); }
+.ff input::placeholder, .ff textarea::placeholder { color:var(--border2); }
+.ff textarea { resize:vertical; min-height:60px; }
+.form-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.full-col { grid-column:1/-1; }
+.cb-row { display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--muted2); cursor:pointer; }
+.cb-row input[type=checkbox] { width:14px; height:14px; accent-color:var(--accent); }
+.cb-row input[type=radio]    { width:14px; height:14px; accent-color:var(--accent); }
+
+/* ── Toggle switch ── */
+.toggle-wrap { display:flex; align-items:center; gap:10px; font-size:12.5px; color:var(--muted2); }
+.toggle { position:relative; width:36px; height:20px; flex-shrink:0; }
+.toggle input { opacity:0; width:0; height:0; position:absolute; }
+.toggle-track { position:absolute; inset:0; background:var(--border2); border-radius:20px; cursor:pointer; transition:background .2s; }
+.toggle-track::before { content:''; position:absolute; width:14px; height:14px; left:3px; top:3px; background:#fff; border-radius:50%; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+.toggle input:checked + .toggle-track { background:var(--accent); }
+.toggle input:checked + .toggle-track::before { transform:translateX(16px); }
 
 /* ── Modal ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;}
-.modal-overlay.hidden{display:none;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;}
-.modal h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:16px;}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
-
-/* ── Date picker ── */
-input[type="date"]{cursor:pointer;}
-.datepicker-wrap{position:relative;}
-
-/* ── Accounts ── */
-.accounts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px;}
-.account-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;transition:border .15s;}
-.account-card:hover{border-color:var(--border2);}
-.account-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;}
-.account-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;}
-.account-type-label{font-size:10px;color:var(--muted);margin-top:2px;}
-.account-balance{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;letter-spacing:-1px;margin-bottom:4px;}
-.acc-bar{height:4px;background:var(--border);border-radius:2px;margin-top:12px;overflow:hidden;}
-.acc-bar-fill{height:100%;border-radius:2px;transition:width .5s;}
-.acc-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:4px;}
-
-/* ── ISA ── */
-.isa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:20px;}
-.isa-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
-.isa-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:3px;}
-.isa-desc{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5;}
-.isa-bar-outer{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px;}
-.isa-bar-inner{height:100%;border-radius:3px;transition:width .6s;}
-.isa-stats{display:flex;justify-content:space-between;font-size:11px;}
-
-/* ── Stocks ── */
-.stocks-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px;}
-.stock-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;}
-.stock-card:hover{border-color:var(--border2);box-shadow:0 2px 8px rgba(0,0,0,.06);}
-.stock-ticker{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;}
-.stock-name{font-size:11px;color:var(--muted);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.stock-price{font-size:20px;font-weight:500;font-family:'Syne',sans-serif;letter-spacing:-.5px;}
-.stock-chg{font-size:12px;margin-top:3px;}
-
-/* ── Debt ── */
-.debt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px;}
-.debt-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
-.debt-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:2px;}
-.debt-meta{font-size:11px;color:var(--muted);margin-bottom:12px;}
-.debt-bar{height:5px;background:var(--border);border-radius:3px;margin:10px 0 5px;overflow:hidden;}
-.debt-bar-fill{height:100%;border-radius:3px;background:var(--red);}
-.debt-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;}
-.debt-stat-lbl{color:var(--muted);}
-.debt-stat-val{font-weight:500;}
-
-/* ── Premium Bonds ── */
-.pb-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
-.pb-wins-table tbody td{vertical-align:middle;}
-
-/* ── Salary ── */
-.salary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
-.salary-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
-.salary-label{font-size:10px;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
-.salary-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;letter-spacing:-1px;}
-.salary-sub{font-size:11px;color:var(--muted2);margin-top:4px;}
-
-/* ── Goals ── */
-.goals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:20px;}
-.goal-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
-.goal-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;margin-bottom:2px;}
-.goal-meta{font-size:11px;color:var(--muted);margin-bottom:10px;}
-.goal-bar-outer{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:6px;}
-.goal-bar-inner{height:100%;border-radius:4px;transition:width .6s;}
-.goal-stats{display:flex;justify-content:space-between;font-size:11px;}
-
-/* ── Tax summary ── */
-.tax-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:20px;}
-.tax-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;}
-
-/* ── Net worth chart ── */
-.nw-chart-wrap{position:relative;width:100%;height:220px;}
-
-/* ── Contributions ── */
-.contrib-chart-wrap{position:relative;width:100%;height:200px;}
-
-/* ── Toast ── */
-.toast{position:fixed;bottom:22px;right:22px;background:var(--text);border-radius:10px;padding:11px 16px;font-size:12px;color:#fff;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;}
-.toast.show{transform:translateY(0);opacity:1;}
-
-/* ── Empty ── */
-.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
-.empty-state .big{font-size:28px;margin-bottom:10px;}
-
-/* ── Section divider ── */
-.section-label{font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;margin-top:22px;}
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.38); z-index:500; display:flex; align-items:center; justify-content:center; padding:16px; animation:pgIn .18s ease; }
+.modal-overlay.hidden { display:none; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:640px; max-height:88vh; overflow-y:auto; }
+.modal h3 { font-size:16px; font-variation-settings:'wght' 700; margin-bottom:16px; }
+.modal-section { margin-top:16px; padding-top:16px; border-top:1px solid var(--border); }
+.modal-section-title { font-size:13px; font-variation-settings:'wght' 700; color:var(--red); margin-bottom:10px; }
+.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; padding-top:14px; border-top:1px solid var(--border); }
 
 /* ── Tabs ── */
-.tab-row{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:18px;}
-.tab-btn{padding:8px 14px;background:none;border:none;border-bottom:2px solid transparent;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted2);cursor:pointer;transition:all .15s;margin-bottom:-1px;}
-.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
-.tab-btn:hover{color:var(--text);}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
+.tab-row { display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:18px; }
+.tab-btn { padding:8px 16px; background:none; border:none; border-bottom:2px solid transparent; font-size:12.5px; color:var(--muted2); cursor:pointer; transition:all .13s; margin-bottom:-1px; font-variation-settings:'wght' 500; }
+.tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); font-variation-settings:'wght' 700; }
+.tab-btn:hover  { color:var(--text); }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
 
-/* ── Inline edit ── */
-.editable-row td{transition:background .1s;}
-.edit-input{background:var(--bg);border:1px solid var(--accent);border-radius:5px;padding:3px 6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);outline:none;width:90px;}
+/* ── Section label ── */
+.section-label { font-size:10px; letter-spacing:.1em; color:var(--muted); text-transform:uppercase; margin-bottom:10px; margin-top:20px; font-variation-settings:'wght' 600; }
+.section-label:first-child { margin-top:0; }
 
-/* ── Transaction history ── */
-.tx-badge{font-size:10px;padding:2px 7px;border-radius:20px;}
-.tx-buy{background:var(--blue-dim);color:var(--blue);}
-.tx-sell{background:var(--green-dim);color:var(--green);}
-.tx-win{background:var(--amber-dim);color:var(--amber);}
-.tx-income{background:var(--teal-dim);color:var(--teal);}
-.tx-payment{background:var(--red-dim);color:var(--red);}
+/* ── Alert banner ── */
+.alert { padding:10px 14px; border-radius:var(--radius-sm); font-size:12px; margin-bottom:16px; }
+.alert-amber { background:var(--amber-dim); border:1px solid rgba(184,115,9,.25); color:var(--amber); }
+.alert-green  { background:var(--green-dim); border:1px solid rgba(10,143,92,.25); color:var(--green); }
+.alert-red    { background:var(--red-dim); border:1px solid rgba(204,51,51,.2); color:var(--red); }
+
+/* ── Toast ── */
+.toast { position:fixed; bottom:20px; right:20px; background:var(--text); border-radius:var(--radius-md); padding:11px 18px; font-size:12.5px; color:#fff; z-index:999; transform:translateY(80px); opacity:0; transition:all .28s; pointer-events:none; max-width:280px; font-variation-settings:'wght' 500; }
+.toast.show { transform:translateY(0); opacity:1; }
+
+/* ── Empty state ── */
+.empty { text-align:center; padding:44px 20px; color:var(--muted); }
+.empty .ei { font-size:30px; margin-bottom:12px; }
+.empty p { font-size:13px; line-height:1.6; }
+
+/* ── Progress bar ── */
+.prog-outer { height:6px; background:var(--border); border-radius:4px; overflow:hidden; margin-bottom:5px; }
+.prog-fill  { height:100%; border-radius:4px; transition:width .5s ease; }
+
+/* ── Live dot ── */
+.live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green); margin-right:4px; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ═══════════════════════════════════════════════════
+   4. CSS PAGE-SPECIFIC
+   ═══════════════════════════════════════════════════ */
+
+/* Overview */
+.charts-2col  { display:grid; grid-template-columns:260px 1fr; gap:16px; margin-bottom:18px; }
+.charts-equal { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; }
+.nw-wrap     { position:relative; width:100%; height:210px; }
+.bar-wrap    { position:relative; height:200px; }
+.contrib-wrap{ position:relative; height:195px; }
+
+/* ISA mini on overview */
+.isa-mini-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(185px,1fr)); gap:14px; }
+
+/* Holdings */
+/* (uses table-wrap, tab-row) */
+
+/* Accounts & ISA */
+.accounts-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:14px; margin-bottom:18px; }
+.acc-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px; transition:border .13s; }
+.acc-card:hover { border-color:var(--border2); }
+.acc-top  { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+.acc-name { font-size:15px; font-variation-settings:'wght' 700; }
+.acc-type-lbl { font-size:10px; color:var(--muted); margin-top:1px; }
+.acc-bal  { font-size:22px; font-variation-settings:'wght' 700; letter-spacing:-1px; margin-bottom:3px; }
+.acc-bar  { height:4px; background:var(--border); border-radius:2px; margin-top:10px; overflow:hidden; }
+.acc-bar-fill { height:100%; border-radius:2px; transition:width .5s; }
+.acc-bar-lbl  { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:3px; }
+
+/* ISA tracker */
+.isa-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(215px,1fr)); gap:14px; margin-bottom:18px; }
+.isa-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px; }
+.isa-name { font-size:14px; font-variation-settings:'wght' 700; margin-bottom:2px; }
+.isa-desc { font-size:11px; color:var(--muted); margin-bottom:10px; line-height:1.5; }
+.isa-stats{ display:flex; justify-content:space-between; font-size:11px; }
+
+/* Premium bonds */
+.pb-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+
+/* Salary */
+.sal-breakdown-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(175px,1fr)); gap:12px; margin-bottom:18px; }
+.sal-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px; }
+.sal-label { font-size:10px; letter-spacing:.07em; color:var(--muted); text-transform:uppercase; margin-bottom:5px; font-variation-settings:'wght' 600; }
+.sal-val   { font-size:22px; font-variation-settings:'wght' 700; letter-spacing:-1px; }
+.sal-sub   { font-size:11px; color:var(--muted2); margin-top:3px; }
+.tax-band-table { width:100%; }
+.tax-band-table td { padding:7px 10px; font-size:12.5px; border-bottom:1px solid var(--border); }
+.tax-band-table tr:last-child td { border-bottom:none; }
+.band-dot { width:10px; height:10px; border-radius:2px; display:inline-block; margin-right:6px; }
+.sal-chart-wrap { position:relative; height:220px; }
+.person-tab { display:flex; gap:4px; margin-bottom:14px; }
+.person-btn { padding:6px 14px; border:1px solid var(--border2); border-radius:var(--radius-sm); background:transparent; font-size:12px; cursor:pointer; color:var(--muted2); transition:all .13s; }
+.person-btn.active { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); font-variation-settings:'wght' 700; }
+
+/* Debts */
+.debt-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(275px,1fr)); gap:14px; margin-bottom:18px; }
+.debt-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px; }
+.debt-name { font-size:14px; font-variation-settings:'wght' 700; margin-bottom:1px; }
+.debt-meta { font-size:11px; color:var(--muted); margin-bottom:10px; }
+.debt-owed { font-size:22px; font-variation-settings:'wght' 700; color:var(--red); margin-bottom:2px; }
+.debt-stats{ display:grid; grid-template-columns:1fr 1fr; gap:5px 10px; font-size:11px; margin-top:8px; }
+.ds-lbl { color:var(--muted); }
+.ds-val { font-variation-settings:'wght' 600; }
+
+/* Goals */
+.goals-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; margin-bottom:18px; }
+.goal-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px; }
+.goal-name { font-size:14px; font-variation-settings:'wght' 700; margin-bottom:2px; }
+.goal-meta { font-size:11px; color:var(--muted); margin-bottom:8px; }
+.goal-saved{ font-size:22px; font-variation-settings:'wght' 700; letter-spacing:-1px; margin-bottom:2px; }
+.goal-stats{ display:flex; justify-content:space-between; font-size:11px; }
+
+/* Stocks */
+.stocks-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(175px,1fr)); gap:12px; margin-bottom:18px; }
+.stock-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; transition:all .13s; }
+.stock-card:hover { box-shadow:0 3px 10px rgba(0,0,0,.07); transform:translateY(-1px); }
+.stock-ticker { font-size:16px; font-variation-settings:'wght' 800; }
+.stock-name   { font-size:11px; color:var(--muted); margin-bottom:10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.stock-price  { font-size:20px; font-variation-settings:'wght' 700; letter-spacing:-.5px; }
+.stock-chg    { font-size:12px; margin-top:2px; }
+
+/* Tax */
+.tax-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:14px; margin-bottom:18px; }
+.tax-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:18px; }
 
 /* ── Responsive ── */
-@media(max-width:900px){
-  .app{grid-template-columns:1fr;}
-  .sidebar{display:none;}
-  .summary-grid{grid-template-columns:1fr 1fr;}
-  .charts-row{grid-template-columns:1fr;}
+@media(max-width:940px){
+  .app { grid-template-columns:1fr; }
+  .sidebar { position:fixed; left:-260px; z-index:300; transition:left .25s; height:100vh; width:var(--sidebar-w); }
+  .sidebar.open { left:0; }
+  .summary-grid { grid-template-columns:1fr 1fr; }
+  .charts-2col  { grid-template-columns:1fr; }
+  .charts-equal { grid-template-columns:1fr; }
+  .main { padding:16px; }
+  .eye-fab { top:14px; right:14px; }
 }
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
 <body>
+
+<!-- ═══════════════════════════════════════════════════
+     5. HTML SHELL
+     ═══════════════════════════════════════════════════ -->
+<button class="eye-fab" id="eyeBtn" onclick="toggleHide()" title="Show/hide figures">👁</button>
+
 <div class="app">
 
-<!-- ═══ SIDEBAR ═══ -->
-<nav class="sidebar">
+<!-- ─── SIDEBAR ─── -->
+<nav class="sidebar" id="sidebar">
   <div class="logo">
-    <div class="logo-name" id="sidebar-name">My Wealth</div>
+    <div class="logo-name" id="sidebarTitle">My Wealth</div>
     <div class="logo-sub">personal finance dashboard</div>
   </div>
-  <div class="nav-section">
-    <div class="nav-label">Overview</div>
-    <button class="nav-item active" onclick="nav('overview',this)">▣ &nbsp;Overview</button>
+
+  <div class="nav-scroll">
+    <div class="nav-group">
+      <div class="nav-label">Overview</div>
+      <button class="nav-item active" data-page="overview" onclick="nav('overview',this)"><span class="nav-icon">◈</span>Overview</button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Assets</div>
+      <button class="nav-item" data-page="holdings"      onclick="nav('holdings',this)"><span class="nav-icon">◫</span>Holdings</button>
+      <button class="nav-item" data-page="accounts"      onclick="nav('accounts',this)"><span class="nav-icon">◳</span>Accounts &amp; ISAs</button>
+      <button class="nav-item" data-page="premium-bonds" onclick="nav('premium-bonds',this)"><span class="nav-icon">◎</span>Premium Bonds</button>
+      <button class="nav-item" data-page="stocks-page"   onclick="nav('stocks-page',this)"><span class="nav-icon">◬</span>Stocks</button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Finances</div>
+      <button class="nav-item" data-page="salary"  onclick="nav('salary',this)"><span class="nav-icon">◈</span>Salary</button>
+      <button class="nav-item" data-page="debts"   onclick="nav('debts',this)"><span class="nav-icon">◉</span>Debts</button>
+      <button class="nav-item" data-page="goals"   onclick="nav('goals',this)"><span class="nav-icon">◐</span>Goals</button>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">History</div>
+      <button class="nav-item" data-page="transactions" onclick="nav('transactions',this)"><span class="nav-icon">≡</span>Transactions</button>
+      <button class="nav-item" data-page="tax"          onclick="nav('tax',this)"><span class="nav-icon">◷</span>Tax Summary</button>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="nav-group">
+      <button class="nav-item" data-page="settings" onclick="nav('settings',this)"><span class="nav-icon">⚙</span>Settings</button>
+    </div>
   </div>
-  <div class="nav-section">
-    <div class="nav-label">Assets</div>
-    <button class="nav-item" onclick="nav('holdings',this)">◫ &nbsp;Holdings</button>
-    <button class="nav-item" onclick="nav('accounts',this)">◳ &nbsp;Accounts & ISAs</button>
-    <button class="nav-item" onclick="nav('premium-bonds',this)">◎ &nbsp;Premium Bonds</button>
-    <button class="nav-item" onclick="nav('stocks-page',this)">◬ &nbsp;Live Prices</button>
-  </div>
-  <div class="nav-section">
-    <div class="nav-label">Finances</div>
-    <button class="nav-item" onclick="nav('salary',this)">◈ &nbsp;Salary</button>
-    <button class="nav-item" onclick="nav('debts',this)">◉ &nbsp;Debts</button>
-    <button class="nav-item" onclick="nav('goals',this)">◐ &nbsp;Goals</button>
-  </div>
-  <div class="nav-section">
-    <div class="nav-label">History</div>
-    <button class="nav-item" onclick="nav('transactions',this)">≡ &nbsp;Transactions</button>
-    <button class="nav-item" onclick="nav('tax',this)">◷ &nbsp;Tax Summary</button>
-  </div>
-  <div class="nav-divider"></div>
-  <div class="nav-section">
-    <button class="nav-item" onclick="nav('settings',this)">⚙ &nbsp;Settings</button>
-  </div>
-  <div class="sidebar-footer">
+
+  <div class="sidebar-bottom">
+    <div class="user-chip">
+      <div class="user-avatar" id="userAvatar">W</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">My Wealth</div>
+        <div class="user-sub" id="lastUpdated">never saved</div>
+      </div>
+    </div>
     <button class="refresh-btn" onclick="refreshPrices()">↻ &nbsp;Refresh prices</button>
-    <div class="last-refresh" id="last-refresh-time">prices never refreshed</div>
-    <div class="last-updated-global" id="last-updated-global"></div>
+    <div class="last-refresh" id="lastRefreshTime">prices not yet loaded</div>
   </div>
 </nav>
 
-<!-- ═══ MAIN ═══ -->
+<!-- ═══════════════════════════════════════════════════
+     6. HTML PAGES
+     ═══════════════════════════════════════════════════ -->
 <main class="main">
 
-<!-- ── OVERVIEW ── -->
+<!-- ─── PAGE: OVERVIEW ─── -->
 <div class="page active" id="page-overview">
   <div class="page-header">
-    <h2 id="overview-greeting">Overview</h2>
-    <p id="overview-date"></p>
+    <h2 id="overviewGreeting">Overview</h2>
+    <p id="overviewDate"></p>
   </div>
-  <div class="summary-grid" id="summary-cards"></div>
-  <div class="charts-row">
+  <div class="summary-grid" id="summarycards"></div>
+  <div class="charts-2col">
     <div class="card">
       <div class="card-header"><span class="card-title">Allocation</span></div>
       <div class="donut-wrap">
-        <canvas id="donutChart" role="img" aria-label="Portfolio allocation"></canvas>
-        <div class="donut-center">
-          <div class="big" id="donut-center-val">—</div>
-          <div class="sm">total value</div>
-        </div>
+        <canvas id="donutChart"></canvas>
+        <div class="donut-center"><div class="dc-big val" id="donutCenterVal">—</div><div class="dc-sm">total value</div></div>
       </div>
-      <div class="legend-list" id="donut-legend"></div>
+      <div class="legend-list" id="donutLegend"></div>
     </div>
     <div class="card">
-      <div class="card-header"><span class="card-title">Net worth over time</span><span class="card-sub" id="nw-sub"></span></div>
-      <div class="nw-chart-wrap"><canvas id="nwChart" role="img" aria-label="Net worth over time"></canvas></div>
+      <div class="card-header">
+        <span class="card-title">Net worth over time</span>
+        <span class="card-sub" id="nwSub"></span>
+      </div>
+      <div class="nw-wrap"><canvas id="nwChart"></canvas></div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+  <div class="charts-equal">
     <div class="card">
       <div class="card-header"><span class="card-title">P&amp;L by holding</span></div>
-      <div style="position:relative;height:200px;"><canvas id="barChart" role="img" aria-label="P&L per holding"></canvas></div>
+      <div class="bar-wrap"><canvas id="barChart"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-header"><span class="card-title">Monthly contributions</span></div>
-      <div class="contrib-chart-wrap"><canvas id="contribChart" role="img" aria-label="Monthly contributions"></canvas></div>
+      <div class="card-header"><span class="card-title">Goals progress</span></div>
+      <div id="goalsRings" style="padding:4px 0;"></div>
     </div>
   </div>
-  <div class="card" style="margin-bottom:20px;">
+  <div class="card" style="margin-bottom:18px;">
     <div class="card-header"><span class="card-title">ISA allowances 2025/26</span></div>
-    <div id="isa-mini-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;"></div>
+    <div class="isa-mini-grid" id="isaMiniGrid"></div>
   </div>
 </div>
 
-<!-- ── HOLDINGS ── -->
+<!-- ─── PAGE: HOLDINGS ─── -->
 <div class="page" id="page-holdings">
   <div class="page-header">
     <h2>Holdings</h2>
-    <p>Track investments — add buy/sell prices to see realised P&amp;L</p>
+    <p>Track investments · edit, mark as sold, add buy &amp; sell prices</p>
   </div>
   <div class="tab-row">
-    <button class="tab-btn active" onclick="holdingsTab('open',this)">Open positions</button>
-    <button class="tab-btn" onclick="holdingsTab('closed',this)">Closed / sold</button>
-    <button class="tab-btn" onclick="holdingsTab('add',this)">+ Add holding</button>
+    <button class="tab-btn active" onclick="hTab('open',this)">Open positions</button>
+    <button class="tab-btn"        onclick="hTab('closed',this)">Closed / sold</button>
+    <button class="tab-btn"        onclick="hTab('add',this)">+ Add holding</button>
   </div>
-  <!-- Open positions -->
-  <div class="tab-content active" id="htab-open">
+  <div class="tab-pane active" id="htab-open">
     <div class="table-wrap">
       <div class="table-toolbar">
-        <input class="search-box" id="holdings-search" placeholder="Search..." oninput="renderHoldingsTable()"/>
-        <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
-        <button class="filter-btn" onclick="setFilter('stocks',this)">Stocks</button>
-        <button class="filter-btn" onclick="setFilter('isa',this)">ISA</button>
-        <button class="filter-btn" onclick="setFilter('crypto',this)">Crypto</button>
-        <button class="filter-btn" onclick="setFilter('pension',this)">Pension</button>
+        <input class="search-box" id="holdingsSearch" placeholder="Search holdings…" oninput="renderHoldings()"/>
+        <button class="filter-btn active" onclick="setHFilter('all',this)">All</button>
+        <button class="filter-btn" onclick="setHFilter('stocks',this)">Stocks</button>
+        <button class="filter-btn" onclick="setHFilter('isa',this)">ISA</button>
+        <button class="filter-btn" onclick="setHFilter('crypto',this)">Crypto</button>
+        <button class="filter-btn" onclick="setHFilter('pension',this)">Pension</button>
       </div>
       <table>
-        <thead><tr>
-          <th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Invested</th><th>Value</th><th>Unreal. P&amp;L</th><th>Return</th><th>Notes</th><th></th>
-        </tr></thead>
-        <tbody id="holdings-body"></tbody>
+        <thead><tr><th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Invested</th><th>Value</th><th>Unreal. P&amp;L</th><th>Return</th><th>Notes</th><th></th></tr></thead>
+        <tbody id="holdingsBody"></tbody>
       </table>
     </div>
   </div>
-  <!-- Closed -->
-  <div class="tab-content" id="htab-closed">
+  <div class="tab-pane" id="htab-closed">
     <div class="table-wrap">
       <table>
-        <thead><tr>
-          <th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Sell price</th><th>Sell date</th><th>Invested</th><th>Sold for</th><th>Realised P&amp;L</th><th>Return</th><th></th>
-        </tr></thead>
-        <tbody id="closed-body"></tbody>
+        <thead><tr><th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Sell price</th><th>Sell date</th><th>Invested</th><th>Sold for</th><th>Realised P&amp;L</th><th>Return %</th><th></th></tr></thead>
+        <tbody id="closedBody"></tbody>
       </table>
     </div>
   </div>
-  <!-- Add -->
-  <div class="tab-content" id="htab-add">
-    <div class="add-form">
+  <div class="tab-pane" id="htab-add">
+    <div class="form-box">
       <h3>Add holding</h3>
       <div class="form-grid">
-        <div class="form-field"><label>Name</label><input type="text" id="h-name" placeholder="e.g. Apple Inc."/></div>
-        <div class="form-field"><label>Ticker (optional)</label><input type="text" id="h-ticker" placeholder="AAPL"/></div>
-        <div class="form-field"><label>Asset type</label>
-          <select id="h-type">
-            <option value="stocks">Stock</option>
-            <option value="isa">ISA holding</option>
-            <option value="crypto">Crypto</option>
-            <option value="cash">Cash</option>
-            <option value="pension">Pension</option>
-            <option value="property">Property</option>
-            <option value="other">Other</option>
+        <div class="ff"><label>Name</label><input type="text" id="hName" placeholder="e.g. Apple Inc."/></div>
+        <div class="ff"><label>Ticker (optional)</label><input type="text" id="hTicker" placeholder="AAPL"/></div>
+        <div class="ff"><label>Asset type</label>
+          <select id="hType">
+            <option value="stocks">Stock</option><option value="isa">ISA holding</option>
+            <option value="crypto">Crypto</option><option value="cash">Cash</option>
+            <option value="pension">Pension</option><option value="property">Property</option><option value="other">Other</option>
           </select>
         </div>
-        <div class="form-field"><label>Amount invested (£)</label><input type="number" id="h-invested" placeholder="1000" min="0"/></div>
-        <div class="form-field"><label>Current value (£)</label><input type="number" id="h-current" placeholder="1200" min="0"/></div>
-        <div class="form-field"><label>Buy price per unit (£)</label><input type="number" id="h-buyprice" placeholder="150.00" step="any"/></div>
-        <div class="form-field"><label>Shares / units</label><input type="number" id="h-shares" placeholder="10" step="any"/></div>
-        <div class="form-field"><label>Buy date</label><input type="date" id="h-buydate"/></div>
-        <div class="form-field"><label>Held in wrapper</label>
-          <select id="h-wrapper">
-            <option value="">— none —</option>
-            <option value="stocks-isa">Stocks &amp; Shares ISA</option>
-            <option value="cash-isa">Cash ISA</option>
-            <option value="lifetime-isa">Lifetime ISA</option>
-            <option value="pension">Pension/SIPP</option>
-            <option value="gia">General Investment Account</option>
+        <div class="ff"><label>Amount invested (£)</label><input type="number" id="hInvested" placeholder="£1,000" min="0"/></div>
+        <div class="ff"><label>Current value (£)</label><input type="number" id="hCurrent" placeholder="£1,200" min="0"/></div>
+        <div class="ff"><label>Buy price / unit (£)</label><input type="number" id="hBuyPrice" placeholder="£150.00" step="any"/></div>
+        <div class="ff"><label>Shares / units</label><input type="number" id="hShares" placeholder="10" step="any"/></div>
+        <div class="ff"><label>Buy date</label><input type="date" id="hBuyDate"/></div>
+        <div class="ff"><label>Wrapper</label>
+          <select id="hWrapper">
+            <option value="">— none —</option><option value="stocks-isa">S&amp;S ISA</option>
+            <option value="cash-isa">Cash ISA</option><option value="lifetime-isa">Lifetime ISA</option>
+            <option value="pension">Pension/SIPP</option><option value="gia">GIA</option>
           </select>
         </div>
-        <div class="form-field" style="grid-column:1/-1;"><label>Notes</label><textarea id="h-notes" placeholder="e.g. Long-term hold, bought the dip..."></textarea></div>
+        <div class="ff full-col"><label>Notes</label><textarea id="hNotes" placeholder="e.g. Long-term hold, bought the dip…"></textarea></div>
       </div>
       <div class="form-actions">
-        <button class="btn-primary" onclick="addHolding()">Save holding</button>
-        <button class="btn-secondary" onclick="loadSample()">Load sample data</button>
+        <button class="btn btn-primary" onclick="addHolding()">Save holding</button>
+        <button class="btn btn-secondary" onclick="loadSample()">Load sample data</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ── ACCOUNTS & ISA ── -->
+<!-- ─── PAGE: ACCOUNTS & ISA ─── -->
 <div class="page" id="page-accounts">
   <div class="page-header">
     <h2>Accounts &amp; ISAs</h2>
-    <p>Bank accounts, ISAs and wrappers · 2025/26 ISA allowance: <strong style="color:var(--green)">£20,000</strong></p>
+    <p>Bank accounts, ISA wrappers and savings · 2025/26 annual ISA allowance: <strong style="color:var(--green)">£20,000</strong></p>
   </div>
-  <div class="section-label" style="margin-top:0">ISA allowance tracker</div>
-  <div class="isa-grid" id="isa-tracker"></div>
+  <div class="section-label">ISA allowance tracker</div>
+  <div class="isa-grid" id="isaTracker"></div>
   <div class="section-label">Your accounts</div>
-  <div class="accounts-grid" id="accounts-grid"></div>
-  <div class="add-form">
+  <div class="accounts-grid" id="accountsGrid"></div>
+  <div class="form-box">
     <h3>+ Add account or ISA</h3>
     <div class="form-grid">
-      <div class="form-field"><label>Account name</label><input type="text" id="acc-name" placeholder="e.g. Vanguard ISA"/></div>
-      <div class="form-field"><label>Type</label>
-        <select id="acc-type">
+      <div class="ff"><label>Account name</label><input type="text" id="accName" placeholder="e.g. Vanguard ISA"/></div>
+      <div class="ff"><label>Type</label>
+        <select id="accType">
           <optgroup label="Bank Accounts">
             <option value="current">Current account</option>
             <option value="savings">Savings account</option>
@@ -481,151 +658,196 @@ input[type="date"]{cursor:pointer;}
           </optgroup>
         </select>
       </div>
-      <div class="form-field"><label>Provider</label><input type="text" id="acc-provider" placeholder="e.g. Vanguard"/></div>
-      <div class="form-field"><label>Balance (£)</label><input type="number" id="acc-balance" placeholder="5000" min="0"/></div>
-      <div class="form-field"><label>Contributed this tax year (£)</label><input type="number" id="acc-contrib" placeholder="0" min="0"/></div>
+      <div class="ff"><label>Provider</label><input type="text" id="accProvider" placeholder="e.g. Vanguard"/></div>
+      <div class="ff"><label>Balance (£)</label><input type="number" id="accBalance" placeholder="£5,000" min="0"/></div>
+      <div class="ff"><label>Contributed this tax year (£)</label><input type="number" id="accContrib" placeholder="£0" min="0"/></div>
     </div>
-    <div class="form-actions"><button class="btn-primary" onclick="addAccount()">Add account</button></div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="addAccount()">Add account</button></div>
   </div>
 </div>
 
-<!-- ── PREMIUM BONDS ── -->
+<!-- ─── PAGE: PREMIUM BONDS ─── -->
 <div class="page" id="page-premium-bonds">
   <div class="page-header">
     <h2>Premium Bonds</h2>
-    <p>Track your NS&amp;I premium bonds, winnings history and total return</p>
+    <p>NS&amp;I premium bonds · max holding £50,000 · all prizes are tax-free</p>
   </div>
-  <div class="pb-summary" id="pb-summary"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-    <div class="add-form" style="margin-bottom:0;">
+  <div class="pb-summary" id="pbSummary"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
+    <div class="form-box" style="margin-bottom:0;">
       <h3>Update bond holding</h3>
       <div class="form-grid">
-        <div class="form-field"><label>Total bonds held (£)</label><input type="number" id="pb-amount" placeholder="50000" min="0" max="50000"/></div>
-        <div class="form-field"><label>Date purchased/updated</label><input type="date" id="pb-date"/></div>
+        <div class="ff"><label>Total bonds held (£)</label><input type="number" id="pbAmount" placeholder="£50,000" min="0" max="50000"/></div>
+        <div class="ff"><label>Date purchased / updated</label><input type="date" id="pbDate"/></div>
       </div>
-      <div class="form-actions"><button class="btn-primary" onclick="updatePBHolding()">Update</button></div>
+      <div class="form-actions"><button class="btn btn-primary" onclick="updatePB()">Update</button></div>
     </div>
-    <div class="add-form" style="margin-bottom:0;">
-      <h3>Log a win</h3>
+    <div class="form-box" style="margin-bottom:0;">
+      <h3>Log a prize win</h3>
       <div class="form-grid">
-        <div class="form-field"><label>Win amount (£)</label><input type="number" id="pb-win-amount" placeholder="25" min="0"/></div>
-        <div class="form-field"><label>Win date</label><input type="date" id="pb-win-date"/></div>
-        <div class="form-field"><label>Prize type</label>
-          <select id="pb-win-type">
-            <option value="£25">£25</option>
-            <option value="£50">£50</option>
-            <option value="£100">£100</option>
-            <option value="£500">£500</option>
-            <option value="£1000">£1,000</option>
-            <option value="£5000">£5,000</option>
-            <option value="£25000">£25,000</option>
-            <option value="£50000">£50,000</option>
-            <option value="£1000000">£1,000,000</option>
+        <div class="ff"><label>Prize tier</label>
+          <select id="pbWinTier">
+            <option value="25">£25</option><option value="50">£50</option>
+            <option value="100">£100</option><option value="500">£500</option>
+            <option value="1000">£1,000</option><option value="5000">£5,000</option>
+            <option value="25000">£25,000</option><option value="50000">£50,000</option>
+            <option value="100000">£100,000</option><option value="1000000">£1,000,000</option>
           </select>
         </div>
+        <div class="ff"><label>Month</label>
+          <select id="pbWinMonth">
+            <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+            <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+            <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+          </select>
+        </div>
+        <div class="ff"><label>Year</label><input type="number" id="pbWinYear" placeholder="2025" min="2000" max="2100"/></div>
       </div>
-      <div class="form-actions"><button class="btn-primary" onclick="addPBWin()">Log win</button></div>
+      <div style="margin-bottom:12px;">
+        <label class="toggle-wrap">
+          <span>Add winnings to bond holding automatically</span>
+          <label class="toggle"><input type="checkbox" id="pbAutoAdd"><span class="toggle-track"></span></label>
+        </label>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" onclick="addPBWin()">Log win 🎉</button></div>
     </div>
   </div>
   <div class="section-label">Winnings history</div>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Date</th><th>Amount</th><th>Prize tier</th><th>Running total</th><th></th></tr></thead>
-      <tbody id="pb-wins-body"></tbody>
+      <thead><tr><th>Month / year</th><th>Amount</th><th>Cumulative total</th><th>Where went</th><th></th></tr></thead>
+      <tbody id="pbWinsBody"></tbody>
     </table>
   </div>
 </div>
 
-<!-- ── LIVE PRICES ── -->
+<!-- ─── PAGE: STOCKS ─── -->
 <div class="page" id="page-stocks-page">
   <div class="page-header">
-    <h2>Live prices</h2>
-    <p>Yahoo Finance · 15-min delayed · UK stocks: add .L suffix (e.g. LLOY.L)</p>
+    <h2>Stocks &amp; prices</h2>
+    <p>Live prices via Yahoo Finance (15-min delayed) · UK stocks suffix: <code>.L</code> · Crypto: <code>BTC-GBP</code></p>
   </div>
-  <div style="background:var(--amber-dim);border:1px solid rgba(196,127,10,.3);border-radius:10px;padding:11px 14px;margin-bottom:18px;font-size:12px;color:var(--amber);">
-    ⚠ Prices are 15-min delayed. US stocks: <code>AAPL</code> · UK stocks: <code>VUSA.L</code> · Crypto: <code>BTC-GBP</code> · Indices: <code>^FTSE</code>
-  </div>
-  <div class="add-form" style="margin-bottom:18px;">
+  <div class="alert alert-amber">⚠ Prices are 15-min delayed. Examples: <code>AAPL</code> · <code>VUSA.L</code> · <code>BTC-GBP</code> · <code>^FTSE</code> · <code>^GSPC</code></div>
+  <div class="form-box" style="margin-bottom:18px;">
     <h3>Add to watchlist</h3>
     <div style="display:flex;gap:10px;align-items:flex-end;">
-      <div class="form-field" style="flex:1;"><label>Ticker</label><input type="text" id="watch-ticker" placeholder="NVDA, BTC-GBP, ^FTSE..." style="width:100%;" onkeydown="if(event.key==='Enter')addWatchTicker()"/></div>
-      <button class="btn-primary" onclick="addWatchTicker()">Add</button>
+      <div class="ff" style="flex:1;"><label>Ticker symbol</label><input type="text" id="watchTicker" placeholder="NVDA, BTC-GBP, ^FTSE…" style="width:100%;" onkeydown="if(event.key==='Enter')addWatchTicker()"/></div>
+      <button class="btn btn-primary" onclick="addWatchTicker()">Add</button>
     </div>
   </div>
-  <div class="stocks-grid" id="stocks-grid"></div>
+  <div class="stocks-grid" id="stocksGrid"></div>
 </div>
 
-<!-- ── SALARY ── -->
+<!-- ─── PAGE: SALARY ─── -->
 <div class="page" id="page-salary">
-  <div class="page-header"><h2>Salary</h2><p>Track your income and take-home pay</p></div>
-  <div class="salary-grid" id="salary-cards"></div>
-  <div class="add-form">
-    <h3>Add / update salary</h3>
-    <div class="form-grid">
-      <div class="form-field"><label>Employer</label><input type="text" id="sal-employer" placeholder="e.g. Acme Ltd"/></div>
-      <div class="form-field"><label>Gross annual salary (£)</label><input type="number" id="sal-gross" placeholder="45000" min="0"/></div>
-      <div class="form-field"><label>Net monthly take-home (£)</label><input type="number" id="sal-net-monthly" placeholder="2900" min="0"/></div>
-      <div class="form-field"><label>Pension contribution (%)</label><input type="number" id="sal-pension-pct" placeholder="5" min="0" max="100" step=".5"/></div>
-      <div class="form-field"><label>Employer pension (%)</label><input type="number" id="sal-employer-pension" placeholder="3" min="0" max="100" step=".5"/></div>
-      <div class="form-field"><label>Start date</label><input type="date" id="sal-date"/></div>
-    </div>
-    <div class="form-actions"><button class="btn-primary" onclick="addSalary()">Save</button></div>
+  <div class="page-header">
+    <h2>Salary &amp; income</h2>
+    <p>UK tax calculation · household incomes · breakdown</p>
   </div>
-</div>
-
-<!-- ── DEBTS ── -->
-<div class="page" id="page-debts">
-  <div class="page-header"><h2>Debts</h2><p>Track what you owe, monthly payments and payoff dates</p></div>
-  <div class="summary-grid" id="debt-summary-cards" style="grid-template-columns:repeat(3,1fr);"></div>
-  <div class="debt-grid" id="debt-grid" style="margin-top:18px;"></div>
-  <div class="add-form">
-    <h3>Add debt</h3>
-    <div class="form-grid">
-      <div class="form-field"><label>Name</label><input type="text" id="d-name" placeholder="e.g. Car loan"/></div>
-      <div class="form-field"><label>Type</label>
-        <select id="d-type">
-          <option value="loan">Personal loan</option>
-          <option value="mortgage">Mortgage</option>
-          <option value="credit-card">Credit card</option>
-          <option value="student">Student loan</option>
-          <option value="car">Car finance</option>
-          <option value="other">Other</option>
+  <div class="person-tab" id="personTabs"></div>
+  <div id="salaryContent"></div>
+  <div class="form-box" id="salaryAddForm">
+    <h3>Add salary</h3>
+    <div class="form-grid wide">
+      <div class="ff"><label>Person</label>
+        <select id="salPerson">
+          <option value="0">Person 1</option>
+          <option value="1">Person 2</option>
         </select>
       </div>
-      <div class="form-field"><label>Total owed (£)</label><input type="number" id="d-total" placeholder="8000" min="0"/></div>
-      <div class="form-field"><label>Monthly payment (£)</label><input type="number" id="d-monthly" placeholder="250" min="0"/></div>
-      <div class="form-field"><label>Interest rate (%)</label><input type="number" id="d-rate" placeholder="6.5" step=".1" min="0"/></div>
-      <div class="form-field"><label>Start date</label><input type="date" id="d-start"/></div>
-      <div class="form-field"><label>End / payoff date</label><input type="date" id="d-end"/></div>
-      <div class="form-field"><label>Lender</label><input type="text" id="d-lender" placeholder="e.g. Halifax"/></div>
+      <div class="ff"><label>Employer</label><input type="text" id="salEmployer" placeholder="e.g. Acme Ltd"/></div>
+      <div class="ff"><label>Gross annual salary (£)</label><input type="number" id="salGross" placeholder="£45,000" min="0"/></div>
+      <div class="ff"><label>Annual bonus (£, optional)</label><input type="number" id="salBonus" placeholder="£0" min="0"/></div>
+      <div class="ff"><label>Your pension (%)</label><input type="number" id="salPensionPct" placeholder="5%" min="0" max="100" step=".5"/></div>
+      <div class="ff"><label>Employer pension (%)</label><input type="number" id="salEmployerPension" placeholder="3%" min="0" max="100" step=".5"/></div>
+      <div class="ff"><label>Student loan plan</label>
+        <select id="salStudentLoan">
+          <option value="none">None</option>
+          <option value="plan1">Plan 1 (pre-2012)</option>
+          <option value="plan2">Plan 2 (2012–2023)</option>
+          <option value="plan4">Plan 4 (Scotland)</option>
+          <option value="plan5">Plan 5 (2023+)</option>
+          <option value="postgrad">Postgraduate</option>
+        </select>
+      </div>
+      <div class="ff"><label>Start date</label><input type="date" id="salStartDate"/></div>
+      <div class="ff" id="salEndDateWrap" style="display:none;"><label>End date</label><input type="date" id="salEndDate"/></div>
+      <div class="ff full-col" style="display:flex;flex-direction:row;align-items:center;gap:10px;margin-top:2px;">
+        <label class="cb-row"><input type="checkbox" id="salOngoing" checked onchange="document.getElementById('salEndDateWrap').style.display=this.checked?'none':'flex'"> Ongoing (no end date)</label>
+      </div>
+      <div class="ff full-col"><label>Notes</label><textarea id="salNotes" placeholder="e.g. includes car allowance…"></textarea></div>
     </div>
-    <div class="form-actions"><button class="btn-primary" onclick="addDebt()">Add debt</button></div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="addSalary()">Save salary</button>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:var(--muted);">2nd person?</span>
+        <label class="toggle-wrap">
+          <label class="toggle"><input type="checkbox" id="householdToggle" onchange="toggleHousehold()"><span class="toggle-track"></span></label>
+        </label>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ── GOALS ── -->
+<!-- ─── PAGE: DEBTS ─── -->
+<div class="page" id="page-debts">
+  <div class="page-header">
+    <h2>Debts</h2>
+    <p>Track everything you owe · monthly payments · payoff timeline</p>
+  </div>
+  <div class="summary-grid" id="debtSummaryCards" style="grid-template-columns:repeat(3,1fr);"></div>
+  <div class="debt-grid" id="debtGrid" style="margin-top:16px;"></div>
+  <div class="form-box">
+    <h3>Add debt</h3>
+    <div class="form-grid">
+      <div class="ff"><label>Name</label><input type="text" id="dName" placeholder="e.g. Car loan"/></div>
+      <div class="ff"><label>Type</label>
+        <select id="dType">
+          <option value="loan">Personal loan</option><option value="mortgage">Mortgage</option>
+          <option value="credit-card">Credit card</option><option value="student">Student loan</option>
+          <option value="car">Car finance</option><option value="other">Other</option>
+        </select>
+      </div>
+      <div class="ff"><label>Original total (£)</label><input type="number" id="dTotal" placeholder="£8,000" min="0"/></div>
+      <div class="ff"><label>Remaining balance (£)</label><input type="number" id="dRemaining" placeholder="£6,500" min="0"/></div>
+      <div class="ff"><label>Monthly payment (£)</label><input type="number" id="dMonthly" placeholder="£250" min="0"/></div>
+      <div class="ff"><label>Interest rate (%)</label><input type="number" id="dRate" placeholder="6.5%" step=".1" min="0"/></div>
+      <div class="ff"><label>Start date</label><input type="date" id="dStart"/></div>
+      <div class="ff"><label>End / payoff date</label><input type="date" id="dEnd"/></div>
+      <div class="ff"><label>Lender</label><input type="text" id="dLender" placeholder="e.g. Halifax"/></div>
+      <div class="ff full-col"><label>Notes</label><textarea id="dNotes" placeholder="e.g. 0% ends Jan 2026, then 29.9% APR…"></textarea></div>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="addDebt()">Add debt</button></div>
+  </div>
+</div>
+
+<!-- ─── PAGE: GOALS ─── -->
 <div class="page" id="page-goals">
-  <div class="page-header"><h2>Goals</h2><p>Financial targets with progress tracking</p></div>
-  <div class="goals-grid" id="goals-grid"></div>
-  <div class="add-form">
+  <div class="page-header">
+    <h2>Goals</h2>
+    <p>Financial targets with progress tracking · also shown on Overview</p>
+  </div>
+  <div class="goals-grid" id="goalsGrid"></div>
+  <div class="form-box">
     <h3>Add goal</h3>
     <div class="form-grid">
-      <div class="form-field"><label>Goal name</label><input type="text" id="g-name" placeholder="e.g. House deposit"/></div>
-      <div class="form-field"><label>Target amount (£)</label><input type="number" id="g-target" placeholder="40000" min="0"/></div>
-      <div class="form-field"><label>Current saved (£)</label><input type="number" id="g-saved" placeholder="12000" min="0"/></div>
-      <div class="form-field"><label>Target date</label><input type="date" id="g-date"/></div>
-      <div class="form-field"><label>Monthly contribution (£)</label><input type="number" id="g-monthly" placeholder="500" min="0"/></div>
-      <div class="form-field"><label>Emoji / icon</label><input type="text" id="g-emoji" placeholder="🏠" maxlength="4"/></div>
+      <div class="ff"><label>Goal name</label><input type="text" id="gName" placeholder="e.g. House deposit"/></div>
+      <div class="ff"><label>Target (£)</label><input type="number" id="gTarget" placeholder="£40,000" min="0"/></div>
+      <div class="ff"><label>Currently saved (£)</label><input type="number" id="gSaved" placeholder="£12,000" min="0"/></div>
+      <div class="ff"><label>Target date</label><input type="date" id="gDate"/></div>
+      <div class="ff"><label>Monthly contribution (£)</label><input type="number" id="gMonthly" placeholder="£500" min="0"/></div>
+      <div class="ff"><label>Icon / emoji</label><input type="text" id="gEmoji" placeholder="🏠" maxlength="4"/></div>
     </div>
-    <div class="form-actions"><button class="btn-primary" onclick="addGoal()">Add goal</button></div>
+    <div class="form-actions"><button class="btn btn-primary" onclick="addGoal()">Add goal</button></div>
   </div>
 </div>
 
-<!-- ── TRANSACTIONS ── -->
+<!-- ─── PAGE: TRANSACTIONS ─── -->
 <div class="page" id="page-transactions">
-  <div class="page-header"><h2>Transaction history</h2><p>All buys, sells, wins, income and debt payments</p></div>
-  <div class="table-toolbar" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;padding:10px 12px;">
-    <input class="search-box" id="tx-search" placeholder="Search transactions..." oninput="renderTransactions()"/>
+  <div class="page-header"><h2>Transaction history</h2><p>All buys, sells, wins, income and payments</p></div>
+  <div class="table-toolbar" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:14px;padding:10px 12px;">
+    <input class="search-box" id="txSearch" placeholder="Search…" oninput="renderTransactions()"/>
     <button class="filter-btn active" onclick="setTxFilter('all',this)">All</button>
     <button class="filter-btn" onclick="setTxFilter('buy',this)">Buys</button>
     <button class="filter-btn" onclick="setTxFilter('sell',this)">Sells</button>
@@ -636,893 +858,1223 @@ input[type="date"]{cursor:pointer;}
   <div class="table-wrap">
     <table>
       <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th>P&amp;L</th><th>Notes</th></tr></thead>
-      <tbody id="tx-body"></tbody>
+      <tbody id="txBody"></tbody>
     </table>
   </div>
 </div>
 
-<!-- ── TAX SUMMARY ── -->
+<!-- ─── PAGE: TAX ─── -->
 <div class="page" id="page-tax">
-  <div class="page-header"><h2>Tax summary</h2><p>2025/26 tax year · For guidance only — consult a professional for advice</p></div>
-  <div class="tax-grid" id="tax-grid"></div>
-  <div class="card" style="margin-top:16px;">
-    <div class="card-header"><span class="card-title">ISA allowance across all wrappers</span></div>
-    <div id="tax-isa-detail" style="display:flex;flex-direction:column;gap:10px;"></div>
+  <div class="page-header">
+    <h2>Tax summary</h2>
+    <p>2025/26 tax year · guidance only — please consult a qualified professional</p>
+  </div>
+  <div class="alert alert-amber">ℹ This is an estimate. Actual tax may differ. For advice, speak to an accountant.</div>
+  <div class="tax-grid" id="taxGrid"></div>
+  <div class="card" style="margin-top:14px;">
+    <div class="card-header"><span class="card-title">ISA allowances across all wrappers</span></div>
+    <div id="taxIsaDetail" style="display:flex;flex-direction:column;gap:8px;"></div>
   </div>
 </div>
 
-<!-- ── SETTINGS ── -->
+<!-- ─── PAGE: SETTINGS ─── -->
 <div class="page" id="page-settings">
   <div class="page-header"><h2>Settings</h2><p>Personalise your dashboard</p></div>
-  <div class="add-form">
+  <div class="form-box">
     <h3>Personal details</h3>
     <div class="form-grid">
-      <div class="form-field"><label>Your name</label><input type="text" id="set-name" placeholder="e.g. Alex"/></div>
-      <div class="form-field"><label>Dashboard title</label><input type="text" id="set-title" placeholder="e.g. Alex's Wealth"/></div>
-      <div class="form-field"><label>Currency symbol</label><input type="text" id="set-currency" placeholder="£" maxlength="3"/></div>
+      <div class="ff"><label>Your name</label><input type="text" id="setName" placeholder="e.g. Alex"/></div>
+      <div class="ff"><label>Dashboard title</label><input type="text" id="setTitle" placeholder="Alex's Wealth"/></div>
+      <div class="ff"><label>Currency symbol</label><input type="text" id="setCurrency" placeholder="£" maxlength="3"/></div>
     </div>
     <div class="form-actions">
-      <button class="btn-primary" onclick="saveSettings()">Save settings</button>
-      <button class="btn-secondary" onclick="loadSample()">Load sample data</button>
-      <button class="btn-secondary" style="color:var(--red);border-color:var(--red);" onclick="clearAll()">Clear all data</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
+      <button class="btn btn-secondary" onclick="loadSample()">Load sample data</button>
+      <button class="btn btn-danger" style="margin-left:auto;" onclick="clearAll()">Clear all data</button>
     </div>
   </div>
 </div>
 
 </main>
-</div>
+</div><!-- /.app -->
 
-<!-- ══ EDIT MODAL ══ -->
-<div class="modal-overlay hidden" id="edit-modal">
+<!-- ═══════════════════════════════════════════════════
+     7. HTML MODALS
+     ═══════════════════════════════════════════════════ -->
+
+<!-- Edit holding modal -->
+<div class="modal-overlay hidden" id="editModal">
   <div class="modal">
     <h3>Edit holding</h3>
-    <div class="form-grid" id="edit-form-grid"></div>
-    <div id="sell-section" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:10px;color:var(--red);">Mark as sold</div>
+    <div class="form-grid" id="editFormGrid"></div>
+    <div class="modal-section">
+      <div class="modal-section-title">Mark as sold</div>
       <div class="form-grid">
-        <div class="form-field"><label>Sell price per unit (£)</label><input type="number" id="edit-sell-price" placeholder="200.00" step="any"/></div>
-        <div class="form-field"><label>Sell date</label><input type="date" id="edit-sell-date"/></div>
-        <div class="form-field"><label>Total sold for (£)</label><input type="number" id="edit-sell-total" placeholder="2000" min="0"/></div>
+        <div class="ff"><label>Sell price / unit (£)</label><input type="number" id="editSellPrice" placeholder="£200.00" step="any"/></div>
+        <div class="ff"><label>Sell date</label><input type="date" id="editSellDate"/></div>
+        <div class="ff"><label>Total sold for (£)</label><input type="number" id="editSellTotal" placeholder="£2,000" min="0"/></div>
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn-secondary" style="color:var(--red);border-color:var(--red);" onclick="sellHolding()">Mark sold</button>
-      <button class="btn-primary" onclick="saveEditHolding()">Save changes</button>
+      <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn btn-danger"    onclick="sellHolding()">Mark sold</button>
+      <button class="btn btn-primary"   onclick="saveEditHolding()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit debt modal -->
+<div class="modal-overlay hidden" id="editDebtModal">
+  <div class="modal">
+    <h3>Edit debt</h3>
+    <div class="form-grid" id="editDebtGrid"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('editDebtModal')">Cancel</button>
+      <button class="btn btn-primary"   onclick="saveEditDebt()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit salary modal -->
+<div class="modal-overlay hidden" id="editSalaryModal">
+  <div class="modal">
+    <h3>Edit salary</h3>
+    <div class="form-grid" id="editSalaryGrid"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('editSalaryModal')">Cancel</button>
+      <button class="btn btn-primary"   onclick="saveEditSalary()">Save changes</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<!-- ═══════════════════════════════════════════════════
+     8. JS: STATE & PERSISTENCE
+     ═══════════════════════════════════════════════════ -->
 <script>
-// ══════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════
-const SK = 'wealth_v3';
-let S = {
-  settings: { name: '', title: 'My Wealth', currency: '£' },
-  holdings: [], closedHoldings: [], accounts: [],
-  premiumBonds: { amount: 0, date: '', wins: [] },
-  debts: [], goals: [], salaries: [],
-  watchlist: [], netWorthHistory: [],
-  transactions: [], contributions: [],
-  lastUpdated: null
-};
-let donutInst=null, barInst=null, nwInst=null, contribInst=null;
-let currentFilter='all', currentTxFilter='all', editingId=null;
-let livePrices={};
-const CUR = () => S.settings.currency || '£';
+const SK = 'wealth_v4';
 
-// ══════════════════════════════════════════════
-// PERSIST
-// ══════════════════════════════════════════════
+// Default state shape — add new keys here as features grow
+let S = {
+  settings:  { name:'', title:'My Wealth', currency:'£', household:false },
+  holdings:  [], closedHoldings: [], accounts: [],
+  premiumBonds: { amount:0, date:'', wins:[] },
+  debts:     [], goals:    [], salaries: [],
+  watchlist: [], netWorthHistory: [],
+  transactions: [], lastUpdated: null
+};
+
+// Chart instances
+let donutChart=null, barChart=null, nwChart=null;
+
+// UI state
+let hFilter='all', txFilter='all', editingId=null, editingDebtIdx=null, editingSalaryIdx=null;
+let livePrices={};
+
 function save(){
   S.lastUpdated = new Date().toISOString();
-  try{ localStorage.setItem(SK, JSON.stringify(S)); }catch(e){}
-  updateLastUpdatedUI();
+  try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e){}
+  _updateSidebarMeta();
 }
+
 function loadState(){
-  try{
-    const r = localStorage.getItem(SK);
-    if(r){ const p=JSON.parse(r); S={...S,...p}; S.settings=Object.assign({name:'',title:'My Wealth',currency:'£'},p.settings||{}); }
-  }catch(e){}
-  if(!S.watchlist)S.watchlist=[];
-  if(!S.netWorthHistory)S.netWorthHistory=[];
-  if(!S.transactions)S.transactions=[];
-  if(!S.contributions)S.contributions=[];
-  if(!S.closedHoldings)S.closedHoldings=[];
-  if(!S.premiumBonds)S.premiumBonds={amount:0,date:'',wins:[]};
-  if(!S.debts)S.debts=[];
-  if(!S.goals)S.goals=[];
-  if(!S.salaries)S.salaries=[];
+  try {
+    const raw = localStorage.getItem(SK);
+    if(raw){
+      const p = JSON.parse(raw);
+      S = { ...S, ...p };
+      S.settings = Object.assign({ name:'',title:'My Wealth',currency:'£',household:false }, p.settings||{} );
+    }
+  } catch(e){}
+  // Guard all arrays
+  ['holdings','closedHoldings','accounts','debts','goals','salaries','watchlist','netWorthHistory','transactions']
+    .forEach(k=>{ if(!Array.isArray(S[k])) S[k]=[]; });
+  if(!S.premiumBonds||typeof S.premiumBonds!=='object') S.premiumBonds={amount:0,date:'',wins:[]};
+  if(!Array.isArray(S.premiumBonds.wins)) S.premiumBonds.wins=[];
 }
-function updateLastUpdatedUI(){
-  const el=document.getElementById('last-updated-global');
+
+function _updateSidebarMeta(){
+  const name = S.settings.name || S.settings.title || 'My Wealth';
+  document.getElementById('sidebarTitle').textContent = S.settings.title || 'My Wealth';
+  document.getElementById('userName').textContent = name;
+  document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
   if(S.lastUpdated){
-    const d=new Date(S.lastUpdated);
-    el.textContent='data updated '+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    const d = new Date(S.lastUpdated);
+    document.getElementById('lastUpdated').textContent =
+      'saved ' + d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' ' +
+      d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   }
 }
 
-// ══════════════════════════════════════════════
-// FORMAT
-// ══════════════════════════════════════════════
-function fmt(n){return CUR()+Math.abs(Math.round(n)).toLocaleString();}
-function fmtD(n){return CUR()+(Math.abs(n)<10?Math.abs(n).toFixed(2):Math.abs(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','));}
-function fmtS(n){return(n>=0?'+'+CUR():'-'+CUR())+Math.abs(Math.round(n)).toLocaleString();}
-function pct(c,i){return i===0?0:((c-i)/i*100);}
-function pctStr(c,i){const p=pct(c,i);return(p>=0?'+':'')+p.toFixed(1)+'%';}
-function cls(n){return n>=0?'pos':'neg';}
-function fmtDate(s){if(!s)return'—';const d=new Date(s);return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+// ═══════════════════════════════════════════════════
+// 9. JS: UTILITIES
+// ═══════════════════════════════════════════════════
+const CUR = () => S.settings.currency || '£';
+function fmt(n){ return CUR() + Math.abs(Math.round(n)).toLocaleString('en-GB'); }
+function fmtS(n){ return (n>=0?'+':'-') + CUR() + Math.abs(Math.round(n)).toLocaleString('en-GB'); }
+function fmtP(n){ return (n>=0?'+':'') + n.toFixed(1) + '%'; }
+function pct(cur,inv){ return inv===0?0:((cur-inv)/inv*100); }
+function cls(n){ return n>=0?'pos':'neg'; }
+function fmtDate(s){ if(!s)return'—'; const d=new Date(s); return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function monthYear(m,y){ const d=new Date(y,m-1); return d.toLocaleDateString('en-GB',{month:'long',year:'numeric'}); }
+function clamp(v,mn,mx){ return Math.min(Math.max(v,mn),mx); }
 
-// ══════════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════════
-function nav(page,el){
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3200);
+}
+function closeModal(id){ document.getElementById(id).classList.add('hidden'); editingId=null; editingDebtIdx=null; editingSalaryIdx=null; }
+function toggleHide(){
+  document.body.classList.toggle('hidden-vals');
+  document.getElementById('eyeBtn').textContent = document.body.classList.contains('hidden-vals') ? '🙈' : '👁';
+}
+
+// ═══════════════════════════════════════════════════
+// 10. JS: NAVIGATION
+// ═══════════════════════════════════════════════════
+const PAGE_RENDERS = {
+  'overview':       renderOverview,
+  'holdings':       ()=>{ renderHoldings(); renderClosed(); },
+  'accounts':       renderAccounts,
+  'premium-bonds':  renderPremiumBonds,
+  'stocks-page':    renderStocks,
+  'salary':         renderSalary,
+  'debts':          renderDebts,
+  'goals':          renderGoals,
+  'transactions':   renderTransactions,
+  'tax':            renderTax,
+  'settings':       ()=>{
+    document.getElementById('setName').value     = S.settings.name||'';
+    document.getElementById('setTitle').value    = S.settings.title||'';
+    document.getElementById('setCurrency').value = S.settings.currency||'£';
+  }
+};
+
+function nav(page, el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  el.classList.add('active');
-  const renders={
-    'overview':renderOverview,'holdings':()=>{renderHoldingsTable();renderClosedTable();},
-    'accounts':renderAccounts,'premium-bonds':renderPremiumBonds,
-    'stocks-page':renderStocksPage,'salary':renderSalary,'debts':renderDebts,
-    'goals':renderGoals,'transactions':renderTransactions,'tax':renderTax,
-    'settings':()=>{document.getElementById('set-name').value=S.settings.name||'';
-      document.getElementById('set-title').value=S.settings.title||'';
-      document.getElementById('set-currency').value=S.settings.currency||'£';}
-  };
-  if(renders[page])renders[page]();
+  if(el) el.classList.add('active');
+  if(PAGE_RENDERS[page]) PAGE_RENDERS[page]();
 }
 
-// ══════════════════════════════════════════════
-// OVERVIEW
-// ══════════════════════════════════════════════
+function hTab(tab, el){
+  document.querySelectorAll('#page-holdings .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#page-holdings .tab-pane').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('htab-'+tab).classList.add('active');
+  if(tab==='open') renderHoldings();
+  if(tab==='closed') renderClosed();
+}
+
+// ═══════════════════════════════════════════════════
+// 11. JS: OVERVIEW
+// ═══════════════════════════════════════════════════
 function renderOverview(){
-  const name=S.settings.name;
-  const d=new Date();
-  const hr=d.getHours();
-  const greet=hr<12?'Good morning':'hr<17'?'Good afternoon':'Good evening';
-  document.getElementById('overview-greeting').textContent=(name?(hr<12?'Good morning, ':hr<17?'Good afternoon, ':'Good evening, ')+name:'Overview');
-  document.getElementById('overview-date').textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('sidebar-name').textContent=S.settings.title||'My Wealth';
+  const now = new Date();
+  const hr = now.getHours();
+  const name = S.settings.name;
+  const greet = hr<12?'Good morning':'Good afternoon';
+  document.getElementById('overviewGreeting').textContent = name ? `${greet}, ${name}` : 'Overview';
+  document.getElementById('overviewDate').textContent = now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('sidebarTitle').textContent = S.settings.title||'My Wealth';
 
-  const H=S.holdings; const A=S.accounts;
-  const totInvest=H.reduce((s,h)=>s+h.invested,0);
-  const totCur=H.reduce((s,h)=>s+h.current,0);
-  const bankBal=A.filter(a=>['current','savings','joint'].includes(a.type)).reduce((s,a)=>s+a.balance,0);
-  const pbBal=S.premiumBonds.amount||0;
-  const debtTotal=S.debts.reduce((s,d)=>s+d.total,0);
-  const netWorth=totCur+bankBal+pbBal-debtTotal;
-  const pl=totCur-totInvest;
-  const isaTotal=A.filter(a=>a.type.includes('isa')||a.type==='help-to-buy-isa').reduce((s,a)=>s+a.balance,0);
+  const H=S.holdings, A=S.accounts;
+  const totInv  = H.reduce((s,h)=>s+h.invested,0);
+  const totCur  = H.reduce((s,h)=>s+h.current,0);
+  const bankBal = A.filter(a=>['current','savings','joint'].includes(a.type)).reduce((s,a)=>s+a.balance,0);
+  const pbBal   = S.premiumBonds.amount||0;
+  const debtTot = S.debts.reduce((s,d)=>s+(d.remaining||d.total||0),0);
+  const netWorth= totCur+bankBal+pbBal-debtTot;
+  const pl      = totCur-totInv;
+  const isaTot  = A.filter(a=>a.type.includes('isa')).reduce((s,a)=>s+a.balance,0);
 
-  // Snapshot net worth
-  const today=d.toISOString().split('T')[0];
-  if(!S.netWorthHistory.length||S.netWorthHistory[S.netWorthHistory.length-1].date!==today){
-    S.netWorthHistory.push({date:today,value:Math.round(netWorth)});
-    if(S.netWorthHistory.length>365)S.netWorthHistory=S.netWorthHistory.slice(-365);
+  // Snapshot net worth history (once per day)
+  const today = now.toISOString().split('T')[0];
+  if(!S.netWorthHistory.length || S.netWorthHistory[S.netWorthHistory.length-1].date!==today){
+    S.netWorthHistory.push({date:today, value:Math.round(netWorth)});
+    if(S.netWorthHistory.length>730) S.netWorthHistory=S.netWorthHistory.slice(-730);
     save();
   }
 
-  document.getElementById('summary-cards').innerHTML=`
-    <div class="stat-card accent"><div class="stat-label">Net worth</div><div class="stat-val">${fmt(netWorth)}</div><div class="stat-sub">${H.length+A.length} assets</div></div>
-    <div class="stat-card ${pl>=0?'green':'red'}"><div class="stat-label">Unrealised P&amp;L</div><div class="stat-val ${cls(pl)}">${fmtS(pl)}</div><div class="stat-sub ${cls(pl)}">${pctStr(totCur,totInvest)}</div></div>
-    <div class="stat-card green"><div class="stat-label">ISA holdings</div><div class="stat-val pos">${fmt(isaTotal)}</div><div class="stat-sub">tax-free</div></div>
-    <div class="stat-card ${debtTotal>0?'red':'amber'}"><div class="stat-label">Total debts</div><div class="stat-val ${debtTotal>0?'neg':'neu'}">${debtTotal>0?'-'+fmt(debtTotal):fmt(0)}</div><div class="stat-sub">${S.debts.length} obligations</div></div>`;
+  document.getElementById('summarycards').innerHTML = `
+    <div class="stat-card sc-accent"><div class="stat-label">Net worth</div><div class="stat-val val">${fmt(netWorth)}</div><div class="stat-sub val">${H.length+A.length} assets tracked</div></div>
+    <div class="stat-card ${pl>=0?'sc-green':'sc-red'}"><div class="stat-label">Unrealised P&amp;L</div><div class="stat-val ${cls(pl)} val">${fmtS(pl)}</div><div class="stat-sub ${cls(pl)} val">${fmtP(pct(totCur,totInv))}</div></div>
+    <div class="stat-card sc-green"><div class="stat-label">ISA holdings</div><div class="stat-val pos val">${fmt(isaTot)}</div><div class="stat-sub">tax-free wrapper</div></div>
+    <div class="stat-card ${debtTot>0?'sc-red':'sc-amber'}"><div class="stat-label">Total debts</div><div class="stat-val ${debtTot>0?'neg':'neu'} val">${debtTot>0?'-'+fmt(debtTot):fmt(0)}</div><div class="stat-sub">${S.debts.length} obligation${S.debts.length!==1?'s':''}</div></div>`;
 
-  renderDonut(); renderBar(); renderNWChart(); renderContribChart(); renderISAMini();
+  _renderDonut(); _renderBar(); _renderNWChart(); _renderGoalRings(); _renderISAMini();
 }
 
-// ══════════════════════════════════════════════
-// CHARTS
-// ══════════════════════════════════════════════
-const TC={stocks:'#2378d5',isa:'#0e9e6a',crypto:'#c47f0a',cash:'#888799',pension:'#5b4ef5',property:'#c2407a',other:'#0e8f85',current:'#6b7280',savings:'#0e9e6a',joint:'#2378d5'};
+// Colour map for asset types
+const TC = {stocks:'#1d6fca',isa:'#0a8f5c',crypto:'#b87309',cash:'#7c7b8a',pension:'#5046e5',property:'#b03070',other:'#0b7a6e',current:'#6b7280',savings:'#0a8f5c',joint:'#1d6fca','premium bonds':'#b87309'};
 
-function renderDonut(){
+function _renderDonut(){
   const groups={};
   S.holdings.forEach(h=>{groups[h.type]=(groups[h.type]||0)+h.current;});
   S.accounts.filter(a=>['current','savings','joint'].includes(a.type)).forEach(a=>{groups[a.type]=(groups[a.type]||0)+a.balance;});
-  if(S.premiumBonds.amount)groups['premium bonds']=(groups['premium bonds']||0)+S.premiumBonds.amount;
-  const labels=Object.keys(groups),data=labels.map(l=>groups[l]),colors=labels.map(l=>TC[l]||'#888');
+  if(S.premiumBonds.amount) groups['premium bonds']=(groups['premium bonds']||0)+S.premiumBonds.amount;
+  const labels=Object.keys(groups), data=labels.map(l=>groups[l]), colors=labels.map(l=>TC[l]||'#888');
   const total=data.reduce((s,v)=>s+v,0);
-  document.getElementById('donut-center-val').textContent=fmt(total);
-  document.getElementById('donut-legend').innerHTML=labels.map((l,i)=>`
+  document.getElementById('donutCenterVal').textContent=fmt(total);
+  document.getElementById('donutLegend').innerHTML=labels.map((l,i)=>`
     <div class="legend-row">
       <div class="legend-left"><div class="legend-dot" style="background:${colors[i]}"></div><span class="legend-name">${l.charAt(0).toUpperCase()+l.slice(1)}</span></div>
-      <span class="legend-val">${fmt(groups[l])}</span>
+      <span class="legend-val val">${fmt(groups[l])}</span>
     </div>`).join('');
-  if(donutInst)donutInst.destroy();
-  if(!labels.length)return;
-  donutInst=new Chart(document.getElementById('donutChart'),{
-    type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`}}}}
+  if(donutChart) donutChart.destroy();
+  if(!labels.length) return;
+  donutChart = new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'72%',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`}}}}
   });
 }
 
-function renderBar(){
-  if(barInst)barInst.destroy();
+function _renderBar(){
+  if(barChart) barChart.destroy();
   const H=[...S.holdings].sort((a,b)=>(b.current-b.invested)-(a.current-a.invested));
-  if(!H.length)return;
-  const labels=H.map(h=>h.ticker||h.name.substring(0,7));
+  if(!H.length) return;
+  const labels=H.map(h=>h.ticker||h.name.substring(0,8));
   const pls=H.map(h=>Math.round(h.current-h.invested));
-  barInst=new Chart(document.getElementById('barChart'),{
+  barChart = new Chart(document.getElementById('barChart'),{
     type:'bar',
-    data:{labels,datasets:[{data:pls,backgroundColor:pls.map(v=>v>=0?'rgba(14,158,106,0.18)':'rgba(217,64,64,0.14)'),borderColor:pls.map(v=>v>=0?'#0e9e6a':'#d94040'),borderWidth:1.5,borderRadius:4}]},
+    data:{labels,datasets:[{data:pls,backgroundColor:pls.map(v=>v>=0?'rgba(10,143,92,.18)':'rgba(204,51,51,.14)'),borderColor:pls.map(v=>v>=0?'#0a8f5c':'#cc3333'),borderWidth:1.5,borderRadius:4}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw>=0?'+':''}${fmt(Math.abs(ctx.raw))}`}}},
-      scales:{x:{ticks:{color:'#888799',font:{size:10},maxRotation:45},grid:{display:false}},
-        y:{ticks:{color:'#888799',font:{size:10},callback:v=>(v>=0?'+':'')+fmt(Math.abs(v))},grid:{color:'rgba(0,0,0,0.04)'}}}
-    }
+      scales:{x:{ticks:{color:'#7c7b8a',font:{size:10},maxRotation:45},grid:{display:false}},
+        y:{ticks:{color:'#7c7b8a',font:{size:10},callback:v=>(v>=0?'+':'')+fmt(Math.abs(v))},grid:{color:'rgba(0,0,0,.04)'}}}}
   });
 }
 
-function renderNWChart(){
-  if(nwInst)nwInst.destroy();
+function _renderNWChart(){
+  if(nwChart) nwChart.destroy();
   const hist=S.netWorthHistory;
-  if(hist.length<2){document.getElementById('nw-sub').textContent='building history...';return;}
-  document.getElementById('nw-sub').textContent=hist.length+' days tracked';
+  document.getElementById('nwSub').textContent = hist.length>=2 ? hist.length+' days tracked':'building history…';
+  if(hist.length<2) return;
   const labels=hist.map(h=>new Date(h.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}));
-  const data=hist.map(h=>h.value);
-  nwInst=new Chart(document.getElementById('nwChart'),{
+  nwChart = new Chart(document.getElementById('nwChart'),{
     type:'line',
-    data:{labels,datasets:[{data,borderColor:'#5b4ef5',backgroundColor:'rgba(91,78,245,0.07)',borderWidth:2,pointRadius:0,tension:0.4,fill:true}]},
+    data:{labels,datasets:[{data:hist.map(h=>h.value),borderColor:'#5046e5',backgroundColor:'rgba(80,70,229,.07)',borderWidth:2,pointRadius:0,tension:.4,fill:true}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`}}},
-      scales:{x:{ticks:{color:'#888799',font:{size:10},maxTicksLimit:6},grid:{display:false}},
-        y:{ticks:{color:'#888799',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,0.04)'}}}
-    }
+      scales:{x:{ticks:{color:'#7c7b8a',font:{size:10},maxTicksLimit:6},grid:{display:false}},
+        y:{ticks:{color:'#7c7b8a',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
   });
 }
 
-function renderContribChart(){
-  if(contribInst)contribInst.destroy();
-  // Build monthly contribution data from transactions
-  const buyTx=S.transactions.filter(t=>t.txtype==='buy');
-  const months={};
-  buyTx.forEach(t=>{
-    if(!t.date)return;
-    const key=t.date.substring(0,7);
-    months[key]=(months[key]||0)+Math.abs(t.amount);
-  });
-  // Also from contributions array
-  S.contributions.forEach(c=>{
-    months[c.month]=(months[c.month]||0)+c.amount;
-  });
-  const sorted=Object.keys(months).sort();
-  if(!sorted.length){
-    // show empty
-    contribInst=new Chart(document.getElementById('contribChart'),{
-      type:'bar',data:{labels:['No data'],datasets:[{data:[0],backgroundColor:'rgba(91,78,245,0.15)',borderColor:'#5b4ef5',borderWidth:1.5,borderRadius:4}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#888799',font:{size:10}}},y:{ticks:{color:'#888799',font:{size:10}}}}}
-    });
-    return;
-  }
-  const labels=sorted.map(m=>{const[y,mo]=m.split('-');return new Date(y,mo-1).toLocaleDateString('en-GB',{month:'short',year:'2-digit'});});
-  const data=sorted.map(m=>Math.round(months[m]));
-  contribInst=new Chart(document.getElementById('contribChart'),{
-    type:'bar',
-    data:{labels,datasets:[{data,backgroundColor:'rgba(91,78,245,0.15)',borderColor:'#5b4ef5',borderWidth:1.5,borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`}}},
-      scales:{x:{ticks:{color:'#888799',font:{size:10},maxRotation:45},grid:{display:false}},
-        y:{ticks:{color:'#888799',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,0.04)'}}}
-    }
-  });
+function _renderGoalRings(){
+  const el=document.getElementById('goalsRings');
+  if(!S.goals.length){ el.innerHTML='<div class="empty"><div class="ei">◐</div><p>No goals yet.</p></div>'; return; }
+  const COLS=['#5046e5','#0a8f5c','#1d6fca','#b87309','#b03070','#0b7a6e'];
+  const R=36, C=2*Math.PI*R, SZ=90;
+  el.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:18px;padding:4px 0;">'+S.goals.map((g,i)=>{
+    const p=clamp(g.saved/g.target,0,1), col=COLS[i%COLS.length];
+    const dash=p*C, gap=C-dash;
+    return`<div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+      <svg width="${SZ}" height="${SZ}" viewBox="0 0 ${SZ} ${SZ}" style="transform:rotate(-90deg)">
+        <circle cx="${SZ/2}" cy="${SZ/2}" r="${R}" fill="none" stroke="var(--border)" stroke-width="7"/>
+        <circle cx="${SZ/2}" cy="${SZ/2}" r="${R}" fill="none" stroke="${col}" stroke-width="7" stroke-dasharray="${dash.toFixed(1)} ${gap.toFixed(1)}" stroke-linecap="round"/>
+      </svg>
+      <div style="margin-top:-${SZ/2+14}px;margin-bottom:${SZ/2-4}px;font-size:13px;font-variation-settings:'wght' 700;color:${col};">${Math.round(p*100)}%</div>
+      <div style="font-size:11px;color:var(--muted2);text-align:center;max-width:80px;">${g.emoji||''} ${g.name}</div>
+    </div>`;
+  }).join('')+'</div>';
 }
 
-// ISA mini on overview
-const ISA_INFO={
-  'stocks-isa':{name:'S&S ISA',limit:20000,color:'#0e9e6a'},
-  'cash-isa':{name:'Cash ISA',limit:20000,color:'#2378d5'},
-  'lifetime-isa':{name:'LISA',limit:4000,color:'#5b4ef5'},
-  'help-to-buy-isa':{name:'Help to Buy ISA',limit:2400,color:'#c2407a'},
-  'innovative-isa':{name:'IFISA',limit:20000,color:'#0e8f85'},
-  'junior-isa':{name:'Junior ISA',limit:9000,color:'#c47f0a'},
-};
-function renderISAMini(){
+function _renderISAMini(){
+  const ISA_INFO={
+    'stocks-isa':{name:'S&S ISA',limit:20000,color:'#0a8f5c'},
+    'cash-isa':{name:'Cash ISA',limit:20000,color:'#1d6fca'},
+    'lifetime-isa':{name:'LISA',limit:4000,color:'#5046e5'},
+    'help-to-buy-isa':{name:'HTB ISA',limit:2400,color:'#b03070'},
+    'innovative-isa':{name:'IFISA',limit:20000,color:'#0b7a6e'},
+    'junior-isa':{name:'Junior ISA',limit:9000,color:'#b87309'},
+  };
   const relevant=S.accounts.filter(a=>ISA_INFO[a.type]);
-  const el=document.getElementById('isa-mini-grid');
-  if(!relevant.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;">No ISA accounts added yet.</div>';return;}
+  const el=document.getElementById('isaMiniGrid');
+  if(!relevant.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">No ISA accounts added yet. Add them in Accounts &amp; ISAs.</div>'; return; }
   el.innerHTML=relevant.map(a=>{
-    const info=ISA_INFO[a.type];
-    const used=Math.min(a.contrib||0,info.limit);
-    const p=Math.min(((used/info.limit)*100),100);
+    const info=ISA_INFO[a.type], used=Math.min(a.contrib||0,info.limit), p=Math.min((used/info.limit)*100,100);
     return`<div>
-      <div style="font-size:11px;color:var(--muted2);margin-bottom:5px;font-weight:500;">${info.name} — ${a.name}</div>
-      <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:5px;">
-        <div style="height:100%;width:${p.toFixed(1)}%;background:${info.color};border-radius:3px;"></div>
-      </div>
+      <div style="font-size:11px;color:var(--muted2);margin-bottom:5px;font-variation-settings:'wght' 600;">${info.name} · ${a.name}</div>
+      <div class="prog-outer"><div class="prog-fill" style="width:${p.toFixed(1)}%;background:${info.color};"></div></div>
       <div style="display:flex;justify-content:space-between;font-size:11px;">
-        <span style="color:${info.color};">${fmt(used)} used</span>
+        <span style="color:${info.color};font-variation-settings:'wght' 600;" class="val">${fmt(used)} used</span>
         <span style="color:var(--muted);">${fmt(info.limit-used)} left</span>
       </div>
     </div>`;
   }).join('');
 }
 
-// ══════════════════════════════════════════════
-// HOLDINGS
-// ══════════════════════════════════════════════
-function holdingsTab(tab,el){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('htab-'+tab).classList.add('active');
-  if(tab==='open')renderHoldingsTable();
-  if(tab==='closed')renderClosedTable();
+// ═══════════════════════════════════════════════════
+// 12. JS: HOLDINGS
+// ═══════════════════════════════════════════════════
+function setHFilter(f,el){
+  hFilter=f;
+  document.querySelectorAll('#htab-open .filter-btn').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderHoldings();
 }
-function setFilter(f,el){
-  currentFilter=f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  renderHoldingsTable();
-}
-function renderHoldingsTable(){
-  const q=(document.getElementById('holdings-search')||{}).value||'';
+
+function renderHoldings(){
+  const q=(document.getElementById('holdingsSearch')||{}).value||'';
   let H=S.holdings;
-  if(currentFilter!=='all')H=H.filter(h=>h.type===currentFilter);
-  if(q)H=H.filter(h=>h.name.toLowerCase().includes(q.toLowerCase())||(h.ticker||'').toLowerCase().includes(q.toLowerCase()));
-  const tbody=document.getElementById('holdings-body');
-  if(!H.length){tbody.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="big">◫</div><p>No holdings. Add one via the Add tab.</p></div></td></tr>`;return;}
-  tbody.innerHTML=H.map(h=>{
-    const pl=h.current-h.invested;
-    const ret=pct(h.current,h.invested);
+  if(hFilter!=='all') H=H.filter(h=>h.type===hFilter);
+  if(q) H=H.filter(h=>h.name.toLowerCase().includes(q.toLowerCase())||(h.ticker||'').toLowerCase().includes(q.toLowerCase()));
+  const tb=document.getElementById('holdingsBody');
+  if(!H.length){ tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="ei">◫</div><p>No holdings yet.<br>Add one via the Add tab.</p></div></td></tr>`; return; }
+  tb.innerHTML=H.map(h=>{
+    const pl=h.current-h.invested, ret=pct(h.current,h.invested);
     const lp=h.ticker?livePrices[h.ticker.toUpperCase()]:null;
     return`<tr>
-      <td><strong>${h.name}</strong>${h.ticker?`<span class="ticker-badge">${h.ticker}</span>`:''}</td>
-      <td><span class="type-pill tp-${h.type}">${h.type}</span></td>
+      <td><span style="font-variation-settings:'wght' 600;">${h.name}</span>${h.ticker?`<span class="ticker-badge">${h.ticker}</span>`:''}</td>
+      <td><span class="pill p-${h.type}">${h.type}</span></td>
       <td>${h.buyPrice?CUR()+parseFloat(h.buyPrice).toFixed(2):'—'}</td>
       <td>${fmtDate(h.buyDate)}</td>
-      <td>${fmt(h.invested)}</td>
-      <td>${fmt(h.current)}${lp?` <span style="font-size:10px;color:var(--muted);">(live)</span>`:''}</td>
-      <td class="${cls(pl)}">${fmtS(pl)}</td>
-      <td class="${cls(ret)}">${ret>=0?'+':''}${ret.toFixed(1)}%</td>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;">${h.notes||'—'}</td>
+      <td class="val">${fmt(h.invested)}</td>
+      <td class="val">${fmt(h.current)}${lp?` <span style="font-size:10px;color:var(--muted);">(live)</span>`:''}</td>
+      <td class="${cls(pl)} val">${fmtS(pl)}</td>
+      <td class="${cls(ret)}">${fmtP(ret)}</td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;">${h.notes||'—'}</td>
       <td style="white-space:nowrap;">
-        <button class="icon-btn edit" onclick="openEditModal(${h.id})" title="Edit">✎</button>
-        <button class="icon-btn del" onclick="deleteHolding(${h.id})" title="Delete">✕</button>
+        <button class="icon-btn edit" onclick="openEditHolding(${h.id})">✎</button>
+        <button class="icon-btn del"  onclick="deleteHolding(${h.id})">✕</button>
       </td>
     </tr>`;
   }).join('');
 }
-function renderClosedTable(){
-  const tbody=document.getElementById('closed-body');
-  if(!S.closedHoldings.length){tbody.innerHTML=`<tr><td colspan="11"><div class="empty-state"><div class="big">◫</div><p>No sold holdings yet.</p></div></td></tr>`;return;}
-  tbody.innerHTML=S.closedHoldings.map((h,i)=>{
-    const pl=(h.soldFor||0)-h.invested;
-    const ret=pct(h.soldFor||0,h.invested);
+
+function renderClosed(){
+  const tb=document.getElementById('closedBody');
+  if(!S.closedHoldings.length){ tb.innerHTML=`<tr><td colspan="11"><div class="empty"><div class="ei">◫</div><p>No sold positions yet.</p></div></td></tr>`; return; }
+  tb.innerHTML=S.closedHoldings.map((h,i)=>{
+    const pl=(h.soldFor||0)-h.invested, ret=pct(h.soldFor||0,h.invested);
     return`<tr>
-      <td><strong>${h.name}</strong>${h.ticker?`<span class="ticker-badge">${h.ticker}</span>`:''}</td>
-      <td><span class="type-pill tp-${h.type}">${h.type}</span></td>
+      <td><span style="font-variation-settings:'wght' 600;">${h.name}</span>${h.ticker?`<span class="ticker-badge">${h.ticker}</span>`:''}</td>
+      <td><span class="pill p-${h.type}">${h.type}</span></td>
       <td>${h.buyPrice?CUR()+parseFloat(h.buyPrice).toFixed(2):'—'}</td>
       <td>${fmtDate(h.buyDate)}</td>
       <td>${h.sellPrice?CUR()+parseFloat(h.sellPrice).toFixed(2):'—'}</td>
       <td>${fmtDate(h.sellDate)}</td>
-      <td>${fmt(h.invested)}</td>
-      <td>${fmt(h.soldFor||0)}</td>
-      <td class="${cls(pl)}">${fmtS(pl)}</td>
-      <td class="${cls(ret)}">${ret>=0?'+':''}${ret.toFixed(1)}%</td>
-      <td><button class="icon-btn del" onclick="deleteClosedHolding(${i})" title="Delete">✕</button></td>
+      <td class="val">${fmt(h.invested)}</td>
+      <td class="val">${fmt(h.soldFor||0)}</td>
+      <td class="${cls(pl)} val">${fmtS(pl)}</td>
+      <td class="${cls(ret)}">${fmtP(ret)}</td>
+      <td><button class="icon-btn del" onclick="deleteClosedHolding(${i})">✕</button></td>
     </tr>`;
   }).join('');
 }
 
 function addHolding(){
-  const name=(document.getElementById('h-name').value||'').trim();
-  const ticker=(document.getElementById('h-ticker').value||'').trim().toUpperCase();
-  const type=document.getElementById('h-type').value;
-  const invested=parseFloat(document.getElementById('h-invested').value);
-  const current=parseFloat(document.getElementById('h-current').value);
-  const buyPrice=document.getElementById('h-buyprice').value;
-  const shares=document.getElementById('h-shares').value;
-  const buyDate=document.getElementById('h-buydate').value;
-  const wrapper=document.getElementById('h-wrapper').value;
-  const notes=document.getElementById('h-notes').value;
-  if(!name||isNaN(invested)||isNaN(current)){toast('Please fill name, invested, and current value.');return;}
-  const h={id:Date.now(),name,ticker,type,invested,current,buyPrice,shares,buyDate,wrapper,notes,closed:false};
-  S.holdings.push(h);
-  addTransaction({txtype:'buy',date:buyDate||new Date().toISOString().split('T')[0],desc:`Bought ${name}${ticker?' ('+ticker+')':''}`,amount:invested,pnl:0,notes});
+  const name=(document.getElementById('hName').value||'').trim();
+  const ticker=(document.getElementById('hTicker').value||'').trim().toUpperCase();
+  const type=document.getElementById('hType').value;
+  const invested=parseFloat(document.getElementById('hInvested').value);
+  const current=parseFloat(document.getElementById('hCurrent').value);
+  const buyPrice=document.getElementById('hBuyPrice').value;
+  const shares=document.getElementById('hShares').value;
+  const buyDate=document.getElementById('hBuyDate').value;
+  const wrapper=document.getElementById('hWrapper').value;
+  const notes=document.getElementById('hNotes').value;
+  if(!name||isNaN(invested)||isNaN(current)){ toast('Please fill: name, invested, and current value.'); return; }
+  S.holdings.push({id:Date.now(),name,ticker,type,invested,current,buyPrice,shares,buyDate,wrapper,notes});
+  _addTx({txtype:'buy',date:buyDate||new Date().toISOString().split('T')[0],desc:`Bought ${name}${ticker?' ('+ticker+')':''}`,amount:invested,pnl:0,notes});
   save(); toast(`Added ${name}`);
-  ['h-name','h-ticker','h-invested','h-current','h-buyprice','h-shares','h-buydate','h-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('h-wrapper').value='';
+  ['hName','hTicker','hInvested','hCurrent','hBuyPrice','hShares','hBuyDate','hNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('hWrapper').value='';
 }
 
 function deleteHolding(id){
   S.holdings=S.holdings.filter(h=>h.id!==id);
-  save();renderHoldingsTable();renderOverview();toast('Deleted');
+  save(); renderHoldings(); renderOverview(); toast('Holding deleted');
 }
 function deleteClosedHolding(i){
   S.closedHoldings.splice(i,1);
-  save();renderClosedTable();toast('Deleted');
+  save(); renderClosed(); toast('Deleted');
 }
 
-// ── Edit modal ──
-function openEditModal(id){
+function openEditHolding(id){
   editingId=id;
   const h=S.holdings.find(x=>x.id===id);
-  if(!h)return;
-  document.getElementById('edit-form-grid').innerHTML=`
-    <div class="form-field"><label>Name</label><input type="text" id="em-name" value="${h.name}"/></div>
-    <div class="form-field"><label>Ticker</label><input type="text" id="em-ticker" value="${h.ticker||''}"/></div>
-    <div class="form-field"><label>Type</label>
-      <select id="em-type">
-        ${['stocks','isa','crypto','cash','pension','property','other'].map(t=>`<option value="${t}"${h.type===t?' selected':''}>${t}</option>`).join('')}
-      </select>
+  if(!h) return;
+  document.getElementById('editFormGrid').innerHTML=`
+    <div class="ff"><label>Name</label><input type="text" id="em-name" value="${h.name}"/></div>
+    <div class="ff"><label>Ticker</label><input type="text" id="em-ticker" value="${h.ticker||''}"/></div>
+    <div class="ff"><label>Type</label>
+      <select id="em-type">${['stocks','isa','crypto','cash','pension','property','other'].map(t=>`<option value="${t}"${h.type===t?' selected':''}>${t}</option>`).join('')}</select>
     </div>
-    <div class="form-field"><label>Invested (${CUR()})</label><input type="number" id="em-invested" value="${h.invested}"/></div>
-    <div class="form-field"><label>Current value (${CUR()})</label><input type="number" id="em-current" value="${h.current}"/></div>
-    <div class="form-field"><label>Buy price per unit</label><input type="number" id="em-buyprice" value="${h.buyPrice||''}" step="any"/></div>
-    <div class="form-field"><label>Shares / units</label><input type="number" id="em-shares" value="${h.shares||''}" step="any"/></div>
-    <div class="form-field"><label>Buy date</label><input type="date" id="em-buydate" value="${h.buyDate||''}"/></div>
-    <div class="form-field" style="grid-column:1/-1"><label>Notes</label><textarea id="em-notes">${h.notes||''}</textarea></div>`;
-  document.getElementById('edit-sell-price').value='';
-  document.getElementById('edit-sell-date').value='';
-  document.getElementById('edit-sell-total').value='';
-  document.getElementById('edit-modal').classList.remove('hidden');
+    <div class="ff"><label>Invested (${CUR()})</label><input type="number" id="em-invested" value="${h.invested}"/></div>
+    <div class="ff"><label>Current value (${CUR()})</label><input type="number" id="em-current" value="${h.current}"/></div>
+    <div class="ff"><label>Buy price / unit</label><input type="number" id="em-buyprice" value="${h.buyPrice||''}" step="any"/></div>
+    <div class="ff"><label>Shares / units</label><input type="number" id="em-shares" value="${h.shares||''}" step="any"/></div>
+    <div class="ff"><label>Buy date</label><input type="date" id="em-buydate" value="${h.buyDate||''}"/></div>
+    <div class="ff full-col"><label>Notes</label><textarea id="em-notes">${h.notes||''}</textarea></div>`;
+  ['editSellPrice','editSellDate','editSellTotal'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('editModal').classList.remove('hidden');
 }
-function closeModal(){document.getElementById('edit-modal').classList.add('hidden');editingId=null;}
+
 function saveEditHolding(){
   const h=S.holdings.find(x=>x.id===editingId);
-  if(!h)return;
-  h.name=document.getElementById('em-name').value;
-  h.ticker=(document.getElementById('em-ticker').value||'').toUpperCase();
-  h.type=document.getElementById('em-type').value;
-  h.invested=parseFloat(document.getElementById('em-invested').value)||h.invested;
-  h.current=parseFloat(document.getElementById('em-current').value)||h.current;
-  h.buyPrice=document.getElementById('em-buyprice').value;
-  h.shares=document.getElementById('em-shares').value;
-  h.buyDate=document.getElementById('em-buydate').value;
-  h.notes=document.getElementById('em-notes').value;
-  save();closeModal();renderHoldingsTable();renderOverview();toast('Saved changes');
+  if(!h) return;
+  h.name    = document.getElementById('em-name').value;
+  h.ticker  = (document.getElementById('em-ticker').value||'').toUpperCase();
+  h.type    = document.getElementById('em-type').value;
+  h.invested= parseFloat(document.getElementById('em-invested').value)||h.invested;
+  h.current = parseFloat(document.getElementById('em-current').value)||h.current;
+  h.buyPrice= document.getElementById('em-buyprice').value;
+  h.shares  = document.getElementById('em-shares').value;
+  h.buyDate = document.getElementById('em-buydate').value;
+  h.notes   = document.getElementById('em-notes').value;
+  save(); closeModal('editModal'); renderHoldings(); renderOverview(); toast('Saved');
 }
+
 function sellHolding(){
   const h=S.holdings.find(x=>x.id===editingId);
-  if(!h)return;
-  const sellPrice=document.getElementById('edit-sell-price').value;
-  const sellDate=document.getElementById('edit-sell-date').value||new Date().toISOString().split('T')[0];
-  const sellTotal=parseFloat(document.getElementById('edit-sell-total').value)||h.current;
+  if(!h) return;
+  const sellPrice=document.getElementById('editSellPrice').value;
+  const sellDate =document.getElementById('editSellDate').value||new Date().toISOString().split('T')[0];
+  const sellTotal=parseFloat(document.getElementById('editSellTotal').value)||h.current;
   const pl=sellTotal-h.invested;
-  const closed={...h,sellPrice,sellDate,soldFor:sellTotal,closedAt:new Date().toISOString()};
-  S.closedHoldings.push(closed);
+  S.closedHoldings.push({...h,sellPrice,sellDate,soldFor:sellTotal});
   S.holdings=S.holdings.filter(x=>x.id!==editingId);
-  addTransaction({txtype:'sell',date:sellDate,desc:`Sold ${h.name}${h.ticker?' ('+h.ticker+')':''}`,amount:sellTotal,pnl:pl,notes:`Buy: ${fmt(h.invested)} → Sell: ${fmt(sellTotal)}`});
-  save();closeModal();renderHoldingsTable();renderClosedTable();renderOverview();
+  _addTx({txtype:'sell',date:sellDate,desc:`Sold ${h.name}${h.ticker?' ('+h.ticker+')':''}`,amount:sellTotal,pnl:pl,notes:`Cost: ${fmt(h.invested)} · Proceeds: ${fmt(sellTotal)}`});
+  save(); closeModal('editModal'); renderHoldings(); renderClosed(); renderOverview();
   toast(`Sold ${h.name} · P&L: ${fmtS(pl)}`);
 }
 
-// ══════════════════════════════════════════════
-// ACCOUNTS & ISA
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// 13. JS: ACCOUNTS & ISA
+// ═══════════════════════════════════════════════════
+const ISA_INFO={
+  'stocks-isa':{name:'Stocks & Shares ISA',limit:20000,color:'#0a8f5c',desc:'Invest in stocks, funds & ETFs. Tax-free gains. £20k/yr.'},
+  'cash-isa':{name:'Cash ISA',limit:20000,color:'#1d6fca',desc:'Tax-free interest on cash savings. £20k/yr.'},
+  'lifetime-isa':{name:'Lifetime ISA (LISA)',limit:4000,color:'#5046e5',desc:'25% Gov bonus. First home or retirement. £4k/yr. Age 18–39.'},
+  'help-to-buy-isa':{name:'Help to Buy ISA',limit:2400,color:'#b03070',desc:'Gov bonus on first home purchase. Closed to new applicants Dec 2019.'},
+  'innovative-isa':{name:'Innovative Finance ISA',limit:20000,color:'#0b7a6e',desc:'P2P lending wrapper. Higher risk. £20k/yr (shared allowance).'},
+  'junior-isa':{name:'Junior ISA',limit:9000,color:'#b87309',desc:'Tax-free savings for under 18s. £9k/yr.'},
+};
 const ACC_ICONS={'current':'🏦','savings':'💰','joint':'👫','stocks-isa':'📈','cash-isa':'🏛','lifetime-isa':'🏠','help-to-buy-isa':'🔑','innovative-isa':'💡','junior-isa':'🎓','pension':'🔒','premium-bonds-acc':'🎟','other':'◈'};
 const ACC_COL={'current':'var(--blue)','savings':'var(--green)','joint':'var(--teal)','stocks-isa':'var(--green)','cash-isa':'var(--blue)','lifetime-isa':'var(--accent)','help-to-buy-isa':'var(--pink)','innovative-isa':'var(--teal)','junior-isa':'var(--amber)','pension':'var(--accent)','premium-bonds-acc':'var(--amber)','other':'var(--muted2)'};
 
 function renderAccounts(){
-  renderISATracker();
-  const grid=document.getElementById('accounts-grid');
-  if(!S.accounts.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big">◳</div><p>No accounts yet.</p></div>`;return;}
+  // ISA tracker
+  const el=document.getElementById('isaTracker');
+  el.innerHTML=Object.keys(ISA_INFO).map(key=>{
+    const info=ISA_INFO[key];
+    const matching=S.accounts.filter(a=>a.type===key);
+    const used=Math.min(matching.reduce((s,a)=>s+(a.contrib||0),0),info.limit);
+    const p=Math.min((used/info.limit)*100,100);
+    return`<div class="isa-card">
+      <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;font-variation-settings:'wght' 600;">ISA type</div>
+      <div class="isa-name">${info.name}</div>
+      <div class="isa-desc">${info.desc}</div>
+      <div class="prog-outer"><div class="prog-fill" style="width:${p.toFixed(1)}%;background:${info.color};"></div></div>
+      <div class="isa-stats">
+        <span style="color:${info.color};font-variation-settings:'wght' 600;" class="val">${fmt(used)} used</span>
+        <span style="color:var(--muted);">${fmt(info.limit-used)} of ${fmt(info.limit)} left</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Accounts grid
+  const grid=document.getElementById('accountsGrid');
+  if(!S.accounts.length){ grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">◳</div><p>No accounts yet. Add one below.</p></div>`; return; }
   grid.innerHTML=S.accounts.map((a,i)=>{
     const info=ISA_INFO[a.type];
-    const contrib=a.contrib||0;
-    const limit=info?info.limit:null;
+    const contrib=a.contrib||0, limit=info?info.limit:null;
     const pf=limit?Math.min((contrib/limit)*100,100):null;
     const col=ACC_COL[a.type]||'var(--muted2)';
-    return`<div class="account-card">
-      <div class="account-top">
+    return`<div class="acc-card">
+      <div class="acc-top">
         <div>
-          <div class="account-name">${a.name}</div>
-          <div class="account-type-label">${a.provider||''} · ${a.type.replace(/-/g,' ')}</div>
+          <div class="acc-name">${a.name}</div>
+          <div class="acc-type-lbl">${a.provider||''} · ${(a.type||'').replace(/-/g,' ')}</div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
           <span style="font-size:22px;">${ACC_ICONS[a.type]||'◈'}</span>
           <button class="icon-btn del" onclick="deleteAccount(${i})">✕</button>
         </div>
       </div>
-      <div class="account-balance" style="color:${col};">${fmt(a.balance)}</div>
-      ${info?`<div style="font-size:11px;color:var(--muted);margin-top:3px;">Contributed: ${fmt(contrib)}</div>
-      <div class="acc-bar"><div class="acc-bar-fill" style="width:${pf.toFixed(1)}%;background:${col};"></div></div>
-      <div class="acc-bar-label"><span>${fmt(contrib)} used</span><span>${fmt(limit-contrib)} left of ${fmt(limit)}</span></div>`
-      :`<div style="font-size:11px;color:var(--muted);margin-top:3px;">${a.type.includes('pension')?'Pension':'Account'}</div>`}
-    </div>`;
-  }).join('');
-}
-
-function renderISATracker(){
-  const el=document.getElementById('isa-tracker');
-  const defs=[
-    {key:'stocks-isa',name:'Stocks & Shares ISA',desc:'Stocks, funds & ETFs. Tax-free gains. £20k/yr.'},
-    {key:'cash-isa',name:'Cash ISA',desc:'Tax-free interest on cash. £20k/yr.'},
-    {key:'lifetime-isa',name:'Lifetime ISA',desc:'25% bonus. First home / retirement. £4k/yr. Age 18–39.'},
-    {key:'help-to-buy-isa',name:'Help to Buy ISA',desc:'Gov bonus on first home purchase. £2,400/yr. Closed to new applicants Dec 2019.'},
-    {key:'innovative-isa',name:'Innovative Finance ISA',desc:'Peer-to-peer lending. Higher risk. £20k/yr shared.'},
-  ];
-  el.innerHTML=defs.map(d=>{
-    const info=ISA_INFO[d.key];
-    const matching=S.accounts.filter(a=>a.type===d.key);
-    const used=Math.min(matching.reduce((s,a)=>s+(a.contrib||0),0),info.limit);
-    const p=Math.min((used/info.limit)*100,100);
-    return`<div class="isa-card">
-      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">${d.name}</div>
-      <div class="isa-name">${d.desc}</div>
-      <div class="isa-bar-outer"><div class="isa-bar-inner" style="width:${p.toFixed(1)}%;background:${info.color};"></div></div>
-      <div class="isa-stats"><span>${fmt(used)} used</span><span>${fmt(info.limit-used)} left</span></div>
+      <div class="acc-bal val" style="color:${col};">${fmt(a.balance)}</div>
+      ${info?`<div style="font-size:11px;color:var(--muted);margin-top:2px;">Contributed: <span class="val">${fmt(contrib)}</span></div>
+        <div class="acc-bar"><div class="acc-bar-fill" style="width:${pf.toFixed(1)}%;background:${col};"></div></div>
+        <div class="acc-bar-lbl"><span class="val">${fmt(contrib)} used</span><span>${fmt(limit-contrib)} left of ${fmt(limit)}</span></div>`
+      :`<div style="font-size:11px;color:var(--muted);margin-top:2px;">${a.type.includes('pension')?'Pension pot':'Account balance'}</div>`}
     </div>`;
   }).join('');
 }
 
 function addAccount(){
-  const name=(document.getElementById('acc-name').value||'').trim();
-  const type=document.getElementById('acc-type').value;
-  const provider=(document.getElementById('acc-provider').value||'').trim();
-  const balance=parseFloat(document.getElementById('acc-balance').value);
-  const contrib=parseFloat(document.getElementById('acc-contrib').value)||0;
-  if(!name||isNaN(balance)){toast('Please fill name and balance.');return;}
+  const name=(document.getElementById('accName').value||'').trim();
+  const type=document.getElementById('accType').value;
+  const provider=(document.getElementById('accProvider').value||'').trim();
+  const balance=parseFloat(document.getElementById('accBalance').value)||0;
+  const contrib=parseFloat(document.getElementById('accContrib').value)||0;
+  if(!name){ toast('Please enter an account name.'); return; }
   S.accounts.push({name,type,provider,balance,contrib});
-  save();toast(`Added ${name}`);
-  ['acc-name','acc-provider','acc-balance','acc-contrib'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('acc-type').value='current';
+  save(); toast(`Added ${name}`);
+  ['accName','accProvider','accBalance','accContrib'].forEach(id=>document.getElementById(id).value='');
   renderAccounts();
 }
+function deleteAccount(i){ S.accounts.splice(i,1); save(); renderAccounts(); toast('Removed'); }
 
-function deleteAccount(i){
-  S.accounts.splice(i,1);
-  save();renderAccounts();renderOverview();toast('Deleted');
-}
-
-// ══════════════════════════════════════════════
-// PREMIUM BONDS
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// 14. JS: PREMIUM BONDS
+// ═══════════════════════════════════════════════════
 function renderPremiumBonds(){
   const pb=S.premiumBonds;
-  const summary=document.getElementById('pb-summary');
-  const wins=pb.wins||[];
-  const totalWins=wins.reduce((s,w)=>s+w.amount,0);
-  const totalValue=(pb.amount||0)+totalWins;
-  summary.innerHTML=`
-    <div class="stat-card amber"><div class="stat-label">Bonds held</div><div class="stat-val">${fmt(pb.amount||0)}</div><div class="stat-sub">${pb.date?fmtDate(pb.date):'—'}</div></div>
-    <div class="stat-card green"><div class="stat-label">Total wins</div><div class="stat-val pos">${fmt(totalWins)}</div><div class="stat-sub">${wins.length} wins</div></div>
-    <div class="stat-card accent"><div class="stat-label">Total value</div><div class="stat-val">${fmt(totalValue)}</div><div class="stat-sub">bonds + wins</div></div>`;
-  const tbody=document.getElementById('pb-wins-body');
-  if(!wins.length){tbody.innerHTML=`<tr><td colspan="4"><div class="empty-state"><div class="big">🎟</div><p>No wins logged yet.</p></div></td></tr>`;return;}
-  tbody.innerHTML=wins.map((w,i)=>`
+  const totalWins=pb.wins.reduce((s,w)=>s+w.amount,0);
+  const effRate=pb.amount>0?((totalWins/pb.amount)*100).toFixed(2):0;
+  document.getElementById('pbSummary').innerHTML=`
+    <div class="stat-card sc-accent"><div class="stat-label">Bonds held</div><div class="stat-val val">${fmt(pb.amount)}</div><div class="stat-sub">max £50,000</div></div>
+    <div class="stat-card sc-green"><div class="stat-label">Total winnings</div><div class="stat-val pos val">${fmt(totalWins)}</div><div class="stat-sub">${pb.wins.length} prize${pb.wins.length!==1?'s':''}</div></div>
+    <div class="stat-card sc-amber"><div class="stat-label">Effective return</div><div class="stat-val">${effRate}%</div><div class="stat-sub">all time</div></div>`;
+  document.getElementById('pbAmount').value = pb.amount||'';
+  _renderPBWins();
+}
+
+function updatePB(){
+  const amount=parseFloat(document.getElementById('pbAmount').value)||0;
+  const date=document.getElementById('pbDate').value;
+  if(amount>50000){ toast('Maximum holding is £50,000.'); return; }
+  S.premiumBonds.amount=amount;
+  S.premiumBonds.date=date;
+  save(); renderPremiumBonds(); renderOverview(); toast('Premium bonds updated');
+}
+
+function addPBWin(){
+  const tier=parseInt(document.getElementById('pbWinTier').value)||25;
+  const month=parseInt(document.getElementById('pbWinMonth').value)||new Date().getMonth()+1;
+  const year=parseInt(document.getElementById('pbWinYear').value)||new Date().getFullYear();
+  const autoAdd=document.getElementById('pbAutoAdd').checked;
+  const date=`${year}-${String(month).padStart(2,'0')}-01`;
+  S.premiumBonds.wins.unshift({amount:tier,date,month,year,autoAdded:autoAdd});
+  if(autoAdd) S.premiumBonds.amount=Math.min(50000,(S.premiumBonds.amount||0)+tier);
+  _addTx({txtype:'win',date,desc:'Premium Bond prize',amount:tier,pnl:tier,notes:`£${tier.toLocaleString()} prize · ${autoAdd?'added to bonds':'paid to bank'}`});
+  save(); renderPremiumBonds(); toast(`🎉 Logged £${tier.toLocaleString()} win!`);
+}
+
+function _renderPBWins(){
+  const wins=S.premiumBonds.wins;
+  const tb=document.getElementById('pbWinsBody');
+  if(!wins.length){ tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="ei">◎</div><p>No wins logged yet.</p></div></td></tr>`; return; }
+  let running=0;
+  const rows=[...wins].reverse().map(w=>{running+=w.amount;return{...w,running};}).reverse();
+  tb.innerHTML=rows.map((w,i)=>`
     <tr>
-      <td>${fmtDate(w.date)}</td>
-      <td class="tx-badge tx-win">${fmt(w.amount)}</td>
-      <td>${w.prizeType||'—'}</td>
-      <td>${fmt(wins.slice(0,i+1).reduce((s,ww)=>s+ww.amount,0))}</td>
+      <td>${monthYear(w.month,w.year)}</td>
+      <td style="color:var(--green);font-variation-settings:'wght' 700;" class="val">${fmt(w.amount)}</td>
+      <td class="val" style="color:var(--green);">${fmt(w.running)}</td>
+      <td><span class="pill ${w.autoAdded?'p-isa':'p-income'}">${w.autoAdded?'added to bonds':'paid to bank'}</span></td>
       <td><button class="icon-btn del" onclick="deletePBWin(${i})">✕</button></td>
     </tr>`).join('');
 }
 
-function updatePBHolding(){
-  const amount=parseFloat(document.getElementById('pb-amount').value);
-  const date=document.getElementById('pb-date').value;
-  if(isNaN(amount)||amount<0||amount>50000){toast('Amount must be 0-50,000.');return;}
-  S.premiumBonds.amount=amount;
-  S.premiumBonds.date=date;
-  save();renderPremiumBonds();renderOverview();toast('Updated');
-}
+function deletePBWin(i){ S.premiumBonds.wins.splice(i,1); save(); _renderPBWins(); toast('Removed'); }
 
-function addPBWin(){
-  const amount=parseFloat(document.getElementById('pb-win-amount').value);
-  const date=document.getElementById('pb-win-date').value;
-  const prizeType=document.getElementById('pb-win-type').value;
-  if(isNaN(amount)||!date){toast('Please fill amount and date.');return;}
-  S.premiumBonds.wins=(S.premiumBonds.wins||[]).concat({amount,date,prizeType});
-  S.premiumBonds.wins.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  addTransaction({txtype:'win',date,desc:`Premium Bond win`,amount,pnl:amount,notes:prizeType});
-  save();toast(`Logged ${fmt(amount)} win`);
-  document.getElementById('pb-win-amount').value='';
-  document.getElementById('pb-win-date').value='';
-  renderPremiumBonds();renderTransactions();
-}
-
-function deletePBWin(i){
-  S.premiumBonds.wins.splice(i,1);
-  save();renderPremiumBonds();renderTransactions();toast('Deleted');
-}
-
-// ══════════════════════════════════════════════
-// LIVE PRICES
-// ══════════════════════════════════════════════
-function renderStocksPage(){
-  const grid=document.getElementById('stocks-grid');
-  if(!S.watchlist.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big">◬</div><p>No tickers in watchlist.</p></div>`;return;}
-  grid.innerHTML=S.watchlist.map(t=>renderStockCard(t)).join('');
-}
-
-function renderStockCard(ticker){
-  const lp=livePrices[ticker];
-  const chg=lp?lp.change:0;
-  const chgPct=lp?lp.changePercent:0;
-  return`<div class="stock-card">
-    <div class="stock-ticker">${ticker}</div>
-    <div class="stock-name">${lp?lp.name:'Loading...'}</div>
-    <div class="stock-price ${lp?cls(chg):''}">${lp?fmtD(lp.price):'—'}</div>
-    <div class="stock-chg ${lp?cls(chg):''}">${lp?(chg>=0?'+':'')+fmtD(Math.abs(chg))+' ('+(chgPct>=0?'+':'')+chgPct.toFixed(2)+'%)':'—'}</div>
-  </div>`;
-}
-
-function addWatchTicker(){
-  const ticker=(document.getElementById('watch-ticker').value||'').trim().toUpperCase();
-  if(!ticker){toast('Enter a ticker.');return;}
-  if(S.watchlist.includes(ticker)){toast('Already in watchlist.');return;}
-  S.watchlist.push(ticker);
-  save();toast(`Added ${ticker}`);
-  document.getElementById('watch-ticker').value='';
-  renderStocksPage();
-  refreshPrices();
-}
-
-async function refreshPrices(){
-  if(!S.watchlist.length)return;
-  document.getElementById('last-refresh-time').textContent='refreshing...';
-  try{
-    const res=await fetch(`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${S.watchlist.join(',')}`);
-    const data=await res.json();
-    const quotes=data.quoteResponse.result;
-    quotes.forEach(q=>{
-      livePrices[q.symbol]={price:q.regularMarketPrice,name:q.shortName,change:q.regularMarketChange,changePercent:q.regularMarketChangePercent};
-    });
-    S.lastUpdated=new Date().toISOString();
-    save();
-    renderStocksPage();
-    renderHoldingsTable();
-    toast('Prices updated');
-  }catch(e){
-    toast('Failed to fetch prices');
+// ═══════════════════════════════════════════════════
+// 15. JS: SALARY (UK tax calculation)
+// ═══════════════════════════════════════════════════
+// UK 2025/26 tax bands
+const UK_TAX = {
+  personalAllowance: 12570,
+  bands: [
+    {name:'Personal allowance', from:0,       to:12570,  rate:0,   color:'#0a8f5c'},
+    {name:'Basic rate (20%)',   from:12570,   to:50270,  rate:20,  color:'#1d6fca'},
+    {name:'Higher rate (40%)',  from:50270,   to:125140, rate:40,  color:'#b87309'},
+    {name:'Additional (45%)',   from:125140,  to:Infinity,rate:45, color:'#cc3333'},
+  ],
+  ni: {
+    ptWeekly:242, // Primary threshold 2025/26 (weekly) - annual = 12,570
+    uelWeekly:967, // UEL (weekly) - annual = 50,270
+    mainRate:8,
+    upperRate:2,
+  },
+  studentLoan: {
+    plan1: {threshold:24990, rate:9},
+    plan2: {threshold:28470, rate:9},
+    plan4: {threshold:32745, rate:9},
+    plan5: {threshold:25000, rate:9},
+    postgrad:{threshold:21000, rate:6},
   }
-  updateLastUpdatedUI();
+};
+
+function calcUKTax(gross, pensionPct, bonus, studentLoanPlan){
+  const pensionAmt = gross * (pensionPct||0)/100;
+  const taxable = Math.max(0, gross - pensionAmt); // simplified: ignoring salary sacrifice nuance
+  const totalIncome = taxable + (bonus||0);
+
+  // Income tax
+  let incomeTax=0;
+  UK_TAX.bands.forEach(band=>{
+    const from=band.from, to=Math.min(band.to, totalIncome);
+    if(to>from && totalIncome>from) incomeTax += Math.max(0, to-from) * band.rate/100;
+  });
+
+  // NI (simplified annual)
+  const ptAnnual=UK_TAX.ni.ptWeekly*52; // ~12,570
+  const uelAnnual=UK_TAX.ni.uelWeekly*52; // ~50,270
+  let ni=0;
+  if(totalIncome>ptAnnual) ni += Math.min(totalIncome,uelAnnual)-ptAnnual > 0 ? (Math.min(totalIncome,uelAnnual)-ptAnnual)*UK_TAX.ni.mainRate/100 : 0;
+  if(totalIncome>uelAnnual) ni += (totalIncome-uelAnnual)*UK_TAX.ni.upperRate/100;
+
+  // Student loan
+  let slRepayment=0;
+  if(studentLoanPlan && studentLoanPlan!=='none' && UK_TAX.studentLoan[studentLoanPlan]){
+    const sl=UK_TAX.studentLoan[studentLoanPlan];
+    if(totalIncome>sl.threshold) slRepayment=(totalIncome-sl.threshold)*sl.rate/100;
+  }
+
+  const totalDeductions=incomeTax+ni+pensionAmt+slRepayment;
+  const takeHome=totalIncome-totalDeductions;
+  return {gross,bonus:bonus||0,totalIncome,pensionAmt,incomeTax,ni,slRepayment,totalDeductions,takeHome,takeHomeMonthly:takeHome/12};
 }
 
-// ══════════════════════════════════════════════
-// SALARY
-// ══════════════════════════════════════════════
+let currentPersonIdx=0;
+
+function toggleHousehold(){
+  S.settings.household=document.getElementById('householdToggle').checked;
+  save(); renderSalary();
+}
+
 function renderSalary(){
-  const cards=document.getElementById('salary-cards');
-  if(!S.salaries.length){cards.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big">◈</div><p>No salary data.</p></div>`;return;}
-  cards.innerHTML=S.salaries.map((s,i)=>`
-    <div class="salary-card">
-      <div class="salary-label">${s.employer}</div>
-      <div class="salary-val">${fmt(s.gross)}</div>
-      <div class="salary-sub">Gross annual</div>
-      <div class="salary-val" style="margin-top:12px;">${fmt(s.netMonthly)}</div>
-      <div class="salary-sub">Net monthly</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:8px;">Pension: ${s.pensionPct}% (${fmt(s.employerPension)}% employer)</div>
-      <div style="margin-top:8px;"><button class="icon-btn del" onclick="deleteSalary(${i})">✕</button></div>
-    </div>`).join('');
+  document.getElementById('householdToggle').checked=!!S.settings.household;
+  const numPersons=S.settings.household?2:1;
+
+  // Person tabs
+  const tabsEl=document.getElementById('personTabs');
+  if(numPersons>1){
+    tabsEl.innerHTML=['Person 1','Person 2'].map((p,i)=>`
+      <button class="person-btn ${currentPersonIdx===i?'active':''}" onclick="switchPerson(${i})">${p}</button>`).join('');
+  } else { tabsEl.innerHTML=''; currentPersonIdx=0; }
+
+  // Get salaries for current person
+  const personSals=S.salaries.filter(s=>(s.person||0)===currentPersonIdx);
+
+  const el=document.getElementById('salaryContent');
+  if(!personSals.length){
+    el.innerHTML=`<div class="empty"><div class="ei">◈</div><p>No salary added for this person yet.</p></div>`;
+    return;
+  }
+
+  // Show latest salary's breakdown
+  const sal=personSals[personSals.length-1];
+  const calc=calcUKTax(sal.gross||0, sal.pensionPct||0, sal.bonus||0, sal.studentLoan||'none');
+
+  el.innerHTML=`
+    <div class="sal-breakdown-grid">
+      <div class="sal-card"><div class="sal-label">Gross salary</div><div class="sal-val val">${fmt(calc.gross)}</div><div class="sal-sub">per year · ${sal.employer||'—'}</div></div>
+      <div class="sal-card"><div class="sal-label">Bonus</div><div class="sal-val val">${fmt(calc.bonus)}</div><div class="sal-sub">annual</div></div>
+      <div class="sal-card"><div class="sal-label">Total income</div><div class="sal-val val">${fmt(calc.totalIncome)}</div><div class="sal-sub">salary + bonus</div></div>
+      <div class="sal-card"><div class="sal-label">Income tax</div><div class="sal-val neg val">${fmt(calc.incomeTax)}</div><div class="sal-sub">PAYE 2025/26</div></div>
+      <div class="sal-card"><div class="sal-label">National Insurance</div><div class="sal-val neg val">${fmt(calc.ni)}</div><div class="sal-sub">employee NI</div></div>
+      <div class="sal-card"><div class="sal-label">Pension (yours)</div><div class="sal-val val">${fmt(calc.pensionAmt)}</div><div class="sal-sub">${sal.pensionPct||0}% of gross</div></div>
+      ${calc.slRepayment>0?`<div class="sal-card"><div class="sal-label">Student loan</div><div class="sal-val neg val">${fmt(calc.slRepayment)}</div><div class="sal-sub">${sal.studentLoan} plan</div></div>`:''}
+      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Take-home (annual)</div><div class="sal-val pos val">${fmt(calc.takeHome)}</div><div class="sal-sub">${fmt(calc.takeHomeMonthly)}/month</div></div>
+      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Take-home (monthly)</div><div class="sal-val pos val">${fmt(calc.takeHomeMonthly)}</div><div class="sal-sub">estimated net</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-header"><span class="card-title">UK tax bands 2025/26</span></div>
+        <table class="tax-band-table">
+          ${UK_TAX.bands.map(b=>{
+            const from=b.from, to=Math.min(b.to,calc.totalIncome);
+            const taxable=Math.max(0,to-from);
+            const amt=taxable*b.rate/100;
+            if(calc.totalIncome<b.from) return '';
+            return`<tr>
+              <td><span class="band-dot" style="background:${b.color};"></span>${b.name}</td>
+              <td style="color:var(--muted);font-size:11px;">${fmt(b.from)} – ${b.to===Infinity?'above':fmt(b.to)}</td>
+              <td style="font-variation-settings:'wght' 600;">${b.rate}%</td>
+              <td style="font-variation-settings:'wght' 600;color:${b.rate>0?'var(--red)':'var(--green)'};" class="val">${b.rate>0?'-'+fmt(amt):'✓ Tax-free'}</td>
+            </tr>`;
+          }).join('')}
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Annual breakdown</span></div>
+        <div class="sal-chart-wrap"><canvas id="salChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Salary history for this person -->
+    <div class="section-label">Salary history · Person ${currentPersonIdx+1}</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Employer</th><th>Gross</th><th>Bonus</th><th>Take-home/mo</th><th>Started</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${personSals.map((s,i)=>{
+            const c=calcUKTax(s.gross||0,s.pensionPct||0,s.bonus||0,s.studentLoan||'none');
+            return`<tr>
+              <td style="font-variation-settings:'wght' 600;">${s.employer||'—'}</td>
+              <td class="val">${fmt(s.gross)}</td>
+              <td class="val">${s.bonus?fmt(s.bonus):'—'}</td>
+              <td class="pos val">${fmt(c.takeHomeMonthly)}</td>
+              <td>${fmtDate(s.startDate)}</td>
+              <td><span class="pill ${s.ongoing!==false?'p-income':'p-payment'}">${s.ongoing!==false?'Ongoing':fmtDate(s.endDate)}</span></td>
+              <td>
+                <button class="icon-btn edit" onclick="openEditSalary(${i})">✎</button>
+                <button class="icon-btn del"  onclick="deleteSalary(${i})">✕</button>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    ${sal.notes?`<div style="padding:10px 14px;background:var(--surface2);border-radius:var(--radius-sm);font-size:12px;color:var(--muted2);margin-bottom:16px;">📝 ${sal.notes}</div>`:''}`;
+
+  // Render salary doughnut chart
+  setTimeout(()=>{
+    const ctx=document.getElementById('salChart');
+    if(!ctx) return;
+    if(window._salChart) window._salChart.destroy();
+    window._salChart=new Chart(ctx,{
+      type:'doughnut',
+      data:{
+        labels:['Take-home','Income tax','NI','Pension',...(calc.slRepayment>0?['Student loan']:[])],
+        datasets:[{data:[Math.round(calc.takeHome),Math.round(calc.incomeTax),Math.round(calc.ni),Math.round(calc.pensionAmt),...(calc.slRepayment>0?[Math.round(calc.slRepayment)]:[])],backgroundColor:['#0a8f5c','#cc3333','#b87309','#5046e5','#0b7a6e'],borderWidth:0}]
+      },
+      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:10}},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`}}}}
+    });
+  },50);
 }
 
-function addSalary(){
-  const employer=(document.getElementById('sal-employer').value||'').trim();
-  const gross=parseFloat(document.getElementById('sal-gross').value);
-  const netMonthly=parseFloat(document.getElementById('sal-net-monthly').value);
-  const pensionPct=parseFloat(document.getElementById('sal-pension-pct').value);
-  const employerPension=parseFloat(document.getElementById('sal-employer-pension').value);
-  const date=document.getElementById('sal-date').value;
-  if(!employer||isNaN(gross)||isNaN(netMonthly)){toast('Please fill employer, gross, and net monthly.');return;}
-  S.salaries.push({employer,gross,netMonthly,pensionPct,employerPension,date});
-  save();toast(`Added ${employer}`);
-  ['sal-employer','sal-gross','sal-net-monthly','sal-pension-pct','sal-employer-pension','sal-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+function switchPerson(idx){
+  currentPersonIdx=idx;
   renderSalary();
 }
 
-function deleteSalary(i){
-  S.salaries.splice(i,1);
-  save();renderSalary();toast('Deleted');
+function addSalary(){
+  const person=parseInt(document.getElementById('salPerson').value)||0;
+  const employer=(document.getElementById('salEmployer').value||'').trim();
+  const gross=parseFloat(document.getElementById('salGross').value)||0;
+  const bonus=parseFloat(document.getElementById('salBonus').value)||0;
+  const pensionPct=parseFloat(document.getElementById('salPensionPct').value)||0;
+  const employerPension=parseFloat(document.getElementById('salEmployerPension').value)||0;
+  const studentLoan=document.getElementById('salStudentLoan').value;
+  const startDate=document.getElementById('salStartDate').value;
+  const ongoing=document.getElementById('salOngoing').checked;
+  const endDate=ongoing?null:document.getElementById('salEndDate').value;
+  const notes=document.getElementById('salNotes').value;
+  if(!gross){ toast('Please enter a gross salary.'); return; }
+  S.salaries.push({person,employer,gross,bonus,pensionPct,employerPension,studentLoan,startDate,endDate,ongoing,notes});
+  _addTx({txtype:'income',date:startDate||new Date().toISOString().split('T')[0],desc:`Salary: ${employer}`,amount:gross,pnl:0,notes:`Person ${person+1} · Net/mo ~${fmt(calcUKTax(gross,pensionPct,bonus,studentLoan).takeHomeMonthly)}`});
+  save(); toast('Salary saved'); renderSalary();
 }
 
-// ══════════════════════════════════════════════
-// DEBTS
-// ══════════════════════════════════════════════
+function deleteSalary(i){
+  const personSals=S.salaries.filter(s=>(s.person||0)===currentPersonIdx);
+  const sal=personSals[i];
+  S.salaries=S.salaries.filter(s=>s!==sal);
+  save(); renderSalary(); toast('Deleted');
+}
+
+function openEditSalary(i){
+  const personSals=S.salaries.filter(s=>(s.person||0)===currentPersonIdx);
+  const sal=personSals[i];
+  editingSalaryIdx=S.salaries.indexOf(sal);
+  document.getElementById('editSalaryGrid').innerHTML=`
+    <div class="ff"><label>Employer</label><input type="text" id="es-employer" value="${sal.employer||''}"/></div>
+    <div class="ff"><label>Gross (£)</label><input type="number" id="es-gross" value="${sal.gross||''}"/></div>
+    <div class="ff"><label>Bonus (£)</label><input type="number" id="es-bonus" value="${sal.bonus||''}"/></div>
+    <div class="ff"><label>Your pension (%)</label><input type="number" id="es-pension" value="${sal.pensionPct||''}"/></div>
+    <div class="ff"><label>Student loan</label>
+      <select id="es-sl">
+        ${['none','plan1','plan2','plan4','plan5','postgrad'].map(v=>`<option value="${v}"${sal.studentLoan===v?' selected':''}>${v}</option>`).join('')}
+      </select>
+    </div>
+    <div class="ff"><label>Start date</label><input type="date" id="es-start" value="${sal.startDate||''}"/></div>
+    <div class="ff full-col"><label>Notes</label><textarea id="es-notes">${sal.notes||''}</textarea></div>`;
+  document.getElementById('editSalaryModal').classList.remove('hidden');
+}
+
+function saveEditSalary(){
+  if(editingSalaryIdx===null) return;
+  const sal=S.salaries[editingSalaryIdx];
+  sal.employer=document.getElementById('es-employer').value;
+  sal.gross=parseFloat(document.getElementById('es-gross').value)||sal.gross;
+  sal.bonus=parseFloat(document.getElementById('es-bonus').value)||0;
+  sal.pensionPct=parseFloat(document.getElementById('es-pension').value)||0;
+  sal.studentLoan=document.getElementById('es-sl').value;
+  sal.startDate=document.getElementById('es-start').value;
+  sal.notes=document.getElementById('es-notes').value;
+  save(); closeModal('editSalaryModal'); renderSalary(); toast('Saved');
+}
+
+// ═══════════════════════════════════════════════════
+// 16. JS: DEBTS
+// ═══════════════════════════════════════════════════
 function renderDebts(){
-  const summary=document.getElementById('debt-summary-cards');
-  const total=S.debts.reduce((s,d)=>s+d.total,0);
-  const monthly=S.debts.reduce((s,d)=>s+d.monthly,0);
-  const paid=S.debts.reduce((s,d)=>s+(d.total-d.remaining||d.total),0);
-  summary.innerHTML=`
-    <div class="stat-card red"><div class="stat-label">Total debt</div><div class="stat-val neg">${fmt(total)}</div><div class="stat-sub">${S.debts.length} debts</div></div>
-    <div class="stat-card amber"><div class="stat-label">Monthly payments</div><div class="stat-val neu">${fmt(monthly)}</div><div class="stat-sub">total</div></div>
-    <div class="stat-card green"><div class="stat-label">Paid off</div><div class="stat-val pos">${fmt(paid)}</div><div class="stat-sub">${total?((paid/total)*100).toFixed(1):0}%</div></div>`;
-  const grid=document.getElementById('debt-grid');
-  if(!S.debts.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big">◉</div><p>No debts.</p></div>`;return;}
-  grid.innerHTML=S.debts.map((d,i)=>{
-    const remaining=d.remaining||d.total;
-    const p=((d.total-remaining)/d.total)*100;
+  const debts=S.debts;
+  const totOwed=debts.reduce((s,d)=>s+(d.remaining??d.total??0),0);
+  const totMonthly=debts.reduce((s,d)=>s+(d.monthly||0),0);
+  const estMonths=totMonthly>0?Math.ceil(totOwed/totMonthly):0;
+  document.getElementById('debtSummaryCards').innerHTML=`
+    <div class="stat-card sc-red"><div class="stat-label">Total owed</div><div class="stat-val neg val">${fmt(totOwed)}</div><div class="stat-sub">${debts.length} debt${debts.length!==1?'s':''}</div></div>
+    <div class="stat-card sc-amber"><div class="stat-label">Monthly payments</div><div class="stat-val val">${fmt(totMonthly)}</div><div class="stat-sub">combined</div></div>
+    <div class="stat-card sc-blue"><div class="stat-label">Est. payoff</div><div class="stat-val" style="font-size:20px;">${estMonths?estMonths+' months':'—'}</div><div class="stat-sub">at current rate</div></div>`;
+
+  const grid=document.getElementById('debtGrid');
+  if(!debts.length){ grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">◉</div><p>No debts tracked.</p></div>`; return; }
+
+  grid.innerHTML=debts.map((d,i)=>{
+    const remaining=d.remaining??d.total??0;
+    const original=d.total??remaining;
+    const paid=Math.max(0,original-remaining);
+    const paidPct=original>0?Math.min((paid/original)*100,100):0;
+    const now=new Date(), end=d.end?new Date(d.end):null;
+    const monthsLeft=end?Math.max(0,Math.round((end-now)/(1000*60*60*24*30.5))):d.monthly>0?Math.ceil(remaining/d.monthly):null;
     return`<div class="debt-card">
-      <div class="debt-name">${d.name}</div>
-      <div class="debt-meta">${d.lender||''} · ${d.type} · ${d.rate}% interest</div>
-      <div class="debt-bar"><div class="debt-bar-fill" style="width:${p.toFixed(1)}%;"></div></div>
-      <div class="debt-stats">
-        <div class="debt-stat-lbl">Remaining</div><div class="debt-stat-val">${fmt(remaining)}</div>
-        <div class="debt-stat-lbl">Monthly</div><div class="debt-stat-val">${fmt(d.monthly)}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div>
+          <div class="debt-name">${d.name}</div>
+          <div class="debt-meta">${d.lender||d.type||'Debt'} · ${d.rate||0}% APR</div>
+        </div>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <span class="pill p-debt">${(d.type||'other').replace(/-/g,' ')}</span>
+          <button class="icon-btn edit" onclick="openEditDebt(${i})">✎</button>
+          <button class="icon-btn del"  onclick="deleteDebt(${i})">✕</button>
+        </div>
       </div>
-      <div style="margin-top:12px;text-align:right;"><button class="icon-btn del" onclick="deleteDebt(${i})">✕</button></div>
+      <div class="debt-owed val">${fmt(remaining)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">of ${fmt(original)} original · ${paidPct.toFixed(0)}% paid</div>
+      <div class="prog-outer"><div class="prog-fill" style="width:${paidPct.toFixed(1)}%;background:var(--green);"></div></div>
+      <div class="debt-stats">
+        <div><div class="ds-lbl">Monthly</div><div class="ds-val val">${fmt(d.monthly||0)}</div></div>
+        <div><div class="ds-lbl">Months left</div><div class="ds-val">${monthsLeft??'—'}</div></div>
+        <div><div class="ds-lbl">Started</div><div class="ds-val">${fmtDate(d.start)}</div></div>
+        <div><div class="ds-lbl">End date</div><div class="ds-val">${fmtDate(d.end)}</div></div>
+      </div>
+      ${d.notes?`<div style="margin-top:8px;font-size:11px;color:var(--muted2);background:var(--surface2);border-radius:6px;padding:7px 10px;">📝 ${d.notes}</div>`:''}
     </div>`;
   }).join('');
 }
 
 function addDebt(){
-  const name=(document.getElementById('d-name').value||'').trim();
-  const type=document.getElementById('d-type').value;
-  const total=parseFloat(document.getElementById('d-total').value);
-  const monthly=parseFloat(document.getElementById('d-monthly').value);
-  const rate=parseFloat(document.getElementById('d-rate').value);
-  const start=document.getElementById('d-start').value;
-  const end=document.getElementById('d-end').value;
-  const lender=(document.getElementById('d-lender').value||'').trim();
-  if(!name||isNaN(total)||isNaN(monthly)){toast('Please fill name, total, and monthly payment.');return;}
-  S.debts.push({name,type,total,remaining:total,monthly,rate,start,end,lender});
-  save();toast(`Added ${name}`);
-  ['d-name','d-total','d-monthly','d-rate','d-start','d-end','d-lender'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('d-type').value='loan';
-  renderDebts();renderOverview();
+  const name=(document.getElementById('dName').value||'').trim();
+  const type=document.getElementById('dType').value;
+  const total=parseFloat(document.getElementById('dTotal').value)||0;
+  const remaining=parseFloat(document.getElementById('dRemaining').value)||total;
+  const monthly=parseFloat(document.getElementById('dMonthly').value)||0;
+  const rate=parseFloat(document.getElementById('dRate').value)||0;
+  const start=document.getElementById('dStart').value;
+  const end=document.getElementById('dEnd').value;
+  const lender=(document.getElementById('dLender').value||'').trim();
+  const notes=document.getElementById('dNotes').value;
+  if(!name||!total){ toast('Please enter name and total amount.'); return; }
+  S.debts.push({name,type,total,remaining,monthly,rate,start,end,lender,notes});
+  _addTx({txtype:'payment',date:start||new Date().toISOString().split('T')[0],desc:`Debt: ${name}`,amount:total,pnl:-total,notes:`${fmt(monthly)}/month · ${rate}% APR`});
+  save(); toast(`Added: ${name}`); renderDebts(); renderOverview();
+  ['dName','dTotal','dRemaining','dMonthly','dRate','dStart','dEnd','dLender','dNotes'].forEach(id=>document.getElementById(id).value='');
 }
 
-function deleteDebt(i){
-  S.debts.splice(i,1);
-  save();renderDebts();renderOverview();toast('Deleted');
+function deleteDebt(i){ S.debts.splice(i,1); save(); renderDebts(); renderOverview(); toast('Removed'); }
+
+function openEditDebt(i){
+  editingDebtIdx=i;
+  const d=S.debts[i];
+  document.getElementById('editDebtGrid').innerHTML=`
+    <div class="ff"><label>Name</label><input type="text" id="ed-name" value="${d.name}"/></div>
+    <div class="ff"><label>Type</label>
+      <select id="ed-type">${['loan','mortgage','credit-card','student','car','other'].map(t=>`<option value="${t}"${d.type===t?' selected':''}>${t}</option>`).join('')}</select>
+    </div>
+    <div class="ff"><label>Original total (£)</label><input type="number" id="ed-total" value="${d.total||''}"/></div>
+    <div class="ff"><label>Remaining (£)</label><input type="number" id="ed-remaining" value="${d.remaining??d.total??''}"/></div>
+    <div class="ff"><label>Monthly payment (£)</label><input type="number" id="ed-monthly" value="${d.monthly||''}"/></div>
+    <div class="ff"><label>Interest rate (%)</label><input type="number" id="ed-rate" value="${d.rate||''}" step=".1"/></div>
+    <div class="ff"><label>Start date</label><input type="date" id="ed-start" value="${d.start||''}"/></div>
+    <div class="ff"><label>End date</label><input type="date" id="ed-end" value="${d.end||''}"/></div>
+    <div class="ff"><label>Lender</label><input type="text" id="ed-lender" value="${d.lender||''}"/></div>
+    <div class="ff full-col"><label>Notes</label><textarea id="ed-notes">${d.notes||''}</textarea></div>`;
+  document.getElementById('editDebtModal').classList.remove('hidden');
 }
 
-// ══════════════════════════════════════════════
-// GOALS
-// ══════════════════════════════════════════════
+function saveEditDebt(){
+  if(editingDebtIdx===null) return;
+  const d=S.debts[editingDebtIdx];
+  d.name=document.getElementById('ed-name').value;
+  d.type=document.getElementById('ed-type').value;
+  d.total=parseFloat(document.getElementById('ed-total').value)||d.total;
+  d.remaining=parseFloat(document.getElementById('ed-remaining').value)??d.remaining;
+  d.monthly=parseFloat(document.getElementById('ed-monthly').value)||0;
+  d.rate=parseFloat(document.getElementById('ed-rate').value)||0;
+  d.start=document.getElementById('ed-start').value;
+  d.end=document.getElementById('ed-end').value;
+  d.lender=document.getElementById('ed-lender').value;
+  d.notes=document.getElementById('ed-notes').value;
+  save(); closeModal('editDebtModal'); renderDebts(); toast('Saved');
+}
+
+// ═══════════════════════════════════════════════════
+// 17. JS: GOALS
+// ═══════════════════════════════════════════════════
+const GOAL_COLS=['#5046e5','#0a8f5c','#1d6fca','#b87309','#b03070','#0b7a6e'];
 function renderGoals(){
-  const grid=document.getElementById('goals-grid');
-  if(!S.goals.length){grid.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="big">◐</div><p>No goals set.</p></div>`;return;}
+  const grid=document.getElementById('goalsGrid');
+  if(!S.goals.length){ grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">◐</div><p>No goals yet.</p></div>`; return; }
   grid.innerHTML=S.goals.map((g,i)=>{
-    const p=Math.min((g.saved/g.target)*100,100);
-    const remaining=g.target-g.saved;
-    const monthly=remaining/Math.max(1,Math.ceil((new Date(g.date)-new Date())/(1000*60*60*24*30)));
+    const p=clamp(g.saved/g.target,0,1), col=GOAL_COLS[i%GOAL_COLS.length];
+    const rem=g.target-g.saved, now=new Date(), end=g.date?new Date(g.date):null;
+    const mo=end?Math.max(0,Math.round((end-now)/(1000*60*60*24*30.5))):null;
+    const onTrack=g.monthly&&mo?g.monthly*mo>=rem:null;
     return`<div class="goal-card">
-      <div class="goal-name">${g.emoji||'🎯'} ${g.name}</div>
-      <div class="goal-meta">Target: ${fmt(g.target)} by ${fmtDate(g.date)}</div>
-      <div class="goal-bar-outer"><div class="goal-bar-inner" style="width:${p.toFixed(1)}%;"></div></div>
-      <div class="goal-stats"><span>${fmt(g.saved)} saved</span><span>${fmt(remaining)} left</span></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:8px;">${fmt(monthly)}/month needed</div>
-      <div style="margin-top:8px;text-align:right;"><button class="icon-btn del" onclick="deleteGoal(${i})">✕</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="goal-name">${g.emoji||'◐'} ${g.name}</div>
+          <div class="goal-meta">Target: ${fmtDate(g.date)}${mo!=null?' · '+mo+' months':''}</div>
+        </div>
+        <div style="display:flex;gap:5px;">
+          ${onTrack!=null?`<span class="pill ${onTrack?'p-income':'p-payment'}">${onTrack?'on track':'behind'}</span>`:''}
+          <button class="icon-btn del" onclick="deleteGoal(${i})">✕</button>
+        </div>
+      </div>
+      <div class="goal-saved val" style="color:${col};">${fmt(g.saved)} <span style="font-size:14px;color:var(--muted);font-variation-settings:'wght' 400;">of ${fmt(g.target)}</span></div>
+      <div class="prog-outer" style="margin:8px 0 5px;"><div class="prog-fill" style="width:${(p*100).toFixed(1)}%;background:${col};"></div></div>
+      <div class="goal-stats">
+        <span style="color:${col};font-variation-settings:'wght' 600;">${Math.round(p*100)}% complete</span>
+        <span style="color:var(--muted);">${fmt(rem)} to go${g.monthly?' · '+fmt(g.monthly)+'/mo':''}</span>
+      </div>
     </div>`;
   }).join('');
 }
 
 function addGoal(){
-  const name=(document.getElementById('g-name').value||'').trim();
-  const target=parseFloat(document.getElementById('g-target').value);
-  const saved=parseFloat(document.getElementById('g-saved').value)||0;
-  const date=document.getElementById('g-date').value;
-  const monthly=parseFloat(document.getElementById('g-monthly').value)||0;
-  const emoji=(document.getElementById('g-emoji').value||'').trim();
-  if(!name||isNaN(target)||!date){toast('Please fill name, target, and date.');return;}
+  const name=(document.getElementById('gName').value||'').trim();
+  const target=parseFloat(document.getElementById('gTarget').value);
+  const saved=parseFloat(document.getElementById('gSaved').value)||0;
+  const date=document.getElementById('gDate').value;
+  const monthly=parseFloat(document.getElementById('gMonthly').value)||0;
+  const emoji=document.getElementById('gEmoji').value||'◐';
+  if(!name||isNaN(target)||!date){ toast('Please fill name, target, and date.'); return; }
   S.goals.push({name,target,saved,date,monthly,emoji});
-  save();toast(`Added ${name}`);
-  ['g-name','g-target','g-saved','g-date','g-monthly','g-emoji'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  save(); toast(`Added: ${name}`);
+  ['gName','gTarget','gSaved','gDate','gMonthly','gEmoji'].forEach(id=>document.getElementById(id).value='');
   renderGoals();
 }
+function deleteGoal(i){ S.goals.splice(i,1); save(); renderGoals(); toast('Removed'); }
 
-function deleteGoal(i){
-  S.goals.splice(i,1);
-  save();renderGoals();toast('Deleted');
+// ═══════════════════════════════════════════════════
+// 18. JS: STOCKS / LIVE PRICES
+// ═══════════════════════════════════════════════════
+async function _fetchPrice(ticker){
+  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=2d`;
+  try {
+    const res=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,{headers:{'Accept':'application/json'}});
+    if(!res.ok) return null;
+    const data=await res.json();
+    const q=data?.chart?.result?.[0];
+    if(!q) return null;
+    const meta=q.meta;
+    const price=meta.regularMarketPrice??meta.previousClose??0;
+    const prev=meta.chartPreviousClose??meta.previousClose??price;
+    const change=prev?((price-prev)/prev*100):0;
+    return{price,change,currency:meta.currency||'USD',name:meta.longName||meta.shortName||ticker};
+  } catch(e){ return null; }
 }
 
-// ══════════════════════════════════════════════
-// TRANSACTIONS
-// ══════════════════════════════════════════════
-function renderTransactions(){
-  const q=(document.getElementById('tx-search')||{}).value||'';
-  let tx=S.transactions;
-  if(currentTxFilter!=='all')tx=tx.filter(t=>t.txtype===currentTxFilter);
-  if(q)tx=tx.filter(t=>t.desc.toLowerCase().includes(q.toLowerCase())||t.notes.toLowerCase().includes(q.toLowerCase()));
-  tx.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const tbody=document.getElementById('tx-body');
-  if(!tx.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><div class="big">≡</div><p>No transactions.</p></div></td></tr>`;return;}
-  tbody.innerHTML=tx.map(t=>`
-    <tr>
-      <td>${fmtDate(t.date)}</td>
-      <td><span class="tx-badge tx-${t.txtype}">${t.txtype}</span></td>
-      <td>${t.desc}</td>
-      <td class="${t.amount>=0?'pos':'neg'}">${fmt(Math.abs(t.amount))}</td>
-      <td class="${cls(t.pnl||0)}">${t.pnl?fmtS(t.pnl):'—'}</td>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;">${t.notes||'—'}</td>
-    </tr>`).join('');
+async function refreshPrices(){
+  const tickers=[...new Set([
+    ...S.holdings.filter(h=>h.ticker).map(h=>h.ticker.toUpperCase()),
+    ...S.watchlist.map(t=>t.toUpperCase())
+  ])];
+  if(!tickers.length){ toast('No tickers to refresh. Add holdings with ticker symbols.'); return; }
+  toast(`Fetching ${tickers.length} price${tickers.length>1?'s':''}…`);
+  const results=await Promise.allSettled(tickers.map(async t=>({t,data:await _fetchPrice(t)})));
+  let ok=0;
+  results.forEach(r=>{ if(r.status==='fulfilled'&&r.value?.data){ livePrices[r.value.t]=r.value.data; ok++; } });
+  const time=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('lastRefreshTime').textContent=`refreshed ${time} · ${ok}/${tickers.length} ok`;
+  toast(`Updated ${ok}/${tickers.length} prices`);
+  renderStocks(); renderHoldings();
 }
+
+function renderStocks(){
+  const all=[...new Set([...S.holdings.filter(h=>h.ticker).map(h=>h.ticker.toUpperCase()),...S.watchlist])];
+  const grid=document.getElementById('stocksGrid');
+  if(!all.length){ grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">◬</div><p>No tickers tracked yet.<br>Add a holding with a ticker, or use the watchlist above.</p></div>`; return; }
+  grid.innerHTML=all.map(t=>{
+    const p=livePrices[t];
+    const isWatch=!S.holdings.find(h=>(h.ticker||'').toUpperCase()===t);
+    const sym=p?.currency==='GBp'?'p':p?.currency==='GBP'?'£':'$';
+    return`<div class="stock-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="stock-ticker">${t}</div>
+          <div class="stock-name">${p?.name||'—'}</div>
+        </div>
+        ${isWatch?`<button class="icon-btn del" onclick="removeWatch('${t}')">✕</button>`:''}
+      </div>
+      ${p
+        ?`<div class="stock-price val">${sym}${p.price<1?p.price.toFixed(4):p.price.toFixed(2)}</div>
+          <div class="stock-chg ${p.change>=0?'pos':'neg'}">${p.change>=0?'▲':'▼'} ${Math.abs(p.change).toFixed(2)}%</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:5px;">${p.currency} · 15-min delay</div>`
+        :`<div style="color:var(--muted);font-size:12px;margin-top:8px;">Click ↻ Refresh to load</div>`}
+    </div>`;
+  }).join('');
+}
+
+function addWatchTicker(){
+  const t=(document.getElementById('watchTicker').value||'').trim().toUpperCase();
+  if(!t) return;
+  if(!S.watchlist.includes(t)){ S.watchlist.push(t); save(); }
+  document.getElementById('watchTicker').value='';
+  renderStocks(); toast(`Added ${t} to watchlist`);
+}
+function removeWatch(t){ S.watchlist=S.watchlist.filter(x=>x!==t); save(); renderStocks(); }
+
+// ═══════════════════════════════════════════════════
+// 19. JS: TRANSACTIONS
+// ═══════════════════════════════════════════════════
+function _addTx(tx){ S.transactions.push({id:Date.now(),...tx}); }
 
 function setTxFilter(f,el){
-  currentTxFilter=f;
+  txFilter=f;
   document.querySelectorAll('#page-transactions .filter-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
+  if(el) el.classList.add('active');
   renderTransactions();
 }
 
-function addTransaction(t){
-  S.transactions.push({...t,id:Date.now()});
+function renderTransactions(){
+  const q=(document.getElementById('txSearch')||{}).value||'';
+  let T=S.transactions;
+  if(txFilter!=='all') T=T.filter(t=>t.txtype===txFilter);
+  if(q) T=T.filter(t=>(t.desc||'').toLowerCase().includes(q.toLowerCase())||(t.notes||'').toLowerCase().includes(q.toLowerCase()));
+  T=[...T].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const tb=document.getElementById('txBody');
+  if(!T.length){ tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="ei">≡</div><p>No transactions yet.</p></div></td></tr>`; return; }
+  tb.innerHTML=T.map(t=>`
+    <tr>
+      <td>${fmtDate(t.date)}</td>
+      <td><span class="pill p-${t.txtype}">${t.txtype}</span></td>
+      <td>${t.desc||'—'}</td>
+      <td class="${t.amount>=0?'pos':'neg'} val">${fmt(Math.abs(t.amount))}</td>
+      <td class="${cls(t.pnl||0)}">${t.pnl?fmtS(t.pnl):'—'}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;">${t.notes||'—'}</td>
+    </tr>`).join('');
 }
 
-// ══════════════════════════════════════════════
-// TAX SUMMARY
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// 20. JS: TAX SUMMARY
+// ═══════════════════════════════════════════════════
 function renderTax(){
-  const grid=document.getElementById('tax-grid');
   const isaUsed=S.accounts.filter(a=>ISA_INFO[a.type]).reduce((s,a)=>s+(a.contrib||0),0);
-  const isaLimit=20000; // 2025/26
-  const isaLeft=isaLimit-isaUsed;
-  const pension=S.accounts.filter(a=>a.type==='pension').reduce((s,a)=>s+a.balance,0);
-  const salary=S.salaries.reduce((s,sal)=>s+sal.gross,0);
-  const taxFree=pension+isaUsed;
-  grid.innerHTML=`
-    <div class="tax-card"><div class="stat-label">ISA allowance used</div><div class="stat-val">${fmt(isaUsed)}</div><div class="stat-sub">of ${fmt(isaLimit)} total</div></div>
-    <div class="tax-card"><div class="stat-label">ISA allowance left</div><div class="stat-val pos">${fmt(Math.max(isaLeft,0))}</div><div class="stat-sub">2025/26 tax year</div></div>
-    <div class="tax-card"><div class="stat-label">Pension savings</div><div class="stat-val">${fmt(pension)}</div><div class="stat-sub">tax-relieved</div></div>
-    <div class="tax-card"><div class="stat-label">Annual salary</div><div class="stat-val">${fmt(salary)}</div><div class="stat-sub">gross income</div></div>`;
-  const detail=document.getElementById('tax-isa-detail');
-  const byType={};
-  S.accounts.filter(a=>ISA_INFO[a.type]).forEach(a=>{
-    byType[a.type]=(byType[a.type]||0)+(a.contrib||0);
-  });
-  detail.innerHTML=Object.keys(byType).map(t=>`
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
-      <span>${ISA_INFO[t].name}</span>
-      <span style="color:var(--green);font-weight:500;">${fmt(byType[t])}</span>
-    </div>`).join('');
+  const isaLimit=20000, isaLeft=Math.max(0,isaLimit-isaUsed);
+  const realisedGains=S.closedHoldings.filter(h=>(h.soldFor||0)>h.invested).reduce((s,h)=>s+(h.soldFor-h.invested),0);
+  const realisedLosses=S.closedHoldings.filter(h=>(h.soldFor||0)<h.invested).reduce((s,h)=>s+(h.invested-(h.soldFor||0)),0);
+  const netGain=realisedGains-realisedLosses;
+  const CGT_ALLOWANCE=3000;
+  const cgtLiable=Math.max(0,netGain-CGT_ALLOWANCE);
+  const pbWins=S.premiumBonds.wins.reduce((s,w)=>s+w.amount,0);
+  const sal=S.salaries.length?S.salaries[S.salaries.length-1]:null;
+
+  document.getElementById('taxGrid').innerHTML=`
+    <div class="tax-card"><div class="stat-label">Realised P&amp;L (total)</div><div class="stat-val ${cls(netGain)} val">${fmtS(netGain)}</div><div class="stat-sub val">Gains: ${fmt(realisedGains)} · Losses: ${fmt(realisedLosses)}</div></div>
+    <div class="tax-card"><div class="stat-label">CGT allowance 2025/26</div><div class="stat-val val">${fmt(CGT_ALLOWANCE)}</div><div class="stat-sub ${cgtLiable>0?'neg':'pos'}">${cgtLiable>0?fmt(cgtLiable)+' potentially liable':'Within allowance ✓'}</div></div>
+    <div class="tax-card"><div class="stat-label">ISA allowance left</div><div class="stat-val pos val">${fmt(isaLeft)}</div><div class="stat-sub">of ${fmt(isaLimit)} · ${fmt(isaUsed)} used</div></div>
+    <div class="tax-card"><div class="stat-label">Premium bond wins</div><div class="stat-val pos val">${fmt(pbWins)}</div><div class="stat-sub">Tax-free ✓</div></div>
+    <div class="tax-card"><div class="stat-label">Unrealised P&amp;L</div><div class="stat-val ${cls(S.holdings.reduce((s,h)=>s+(h.current-h.invested),0))} val">${fmtS(S.holdings.reduce((s,h)=>s+(h.current-h.invested),0))}</div><div class="stat-sub">Not yet taxable</div></div>
+    <div class="tax-card"><div class="stat-label">Gross salary</div><div class="stat-val val">${sal?fmt(sal.gross):'—'}</div><div class="stat-sub">Personal allowance: ${fmt(UK_TAX.personalAllowance)}</div></div>`;
+
+  const el=document.getElementById('taxIsaDetail');
+  const relevant=S.accounts.filter(a=>ISA_INFO[a.type]);
+  if(!relevant.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">No ISA accounts added.</div>'; return; }
+  el.innerHTML=relevant.map(a=>{
+    const info=ISA_INFO[a.type], used=Math.min(a.contrib||0,info.limit), p=Math.min((used/info.limit)*100,100);
+    return`<div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:130px;font-size:12px;color:var(--muted2);">${info.name}</div>
+      <div style="flex:1;" class="prog-outer"><div class="prog-fill" style="width:${p.toFixed(1)}%;background:${info.color};"></div></div>
+      <div style="font-size:12px;font-variation-settings:'wght' 600;width:70px;text-align:right;color:${info.color};" class="val">${fmt(used)}</div>
+      <div style="font-size:11px;color:var(--muted);width:90px;text-align:right;">${fmt(info.limit-used)} left</div>
+    </div>`;
+  }).join('');
 }
 
-// ══════════════════════════════════════════════
-// SETTINGS
-// ══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// 21. JS: SETTINGS
+// ═══════════════════════════════════════════════════
 function saveSettings(){
-  S.settings.name=(document.getElementById('set-name').value||'').trim();
-  S.settings.title=(document.getElementById('set-title').value||'').trim();
-  S.settings.currency=(document.getElementById('set-currency').value||'£').trim();
-  save();renderOverview();toast('Settings saved');
+  S.settings.name    = (document.getElementById('setName').value||'').trim();
+  S.settings.title   = (document.getElementById('setTitle').value||'').trim()||'My Wealth';
+  S.settings.currency= (document.getElementById('setCurrency').value||'£').trim();
+  save(); renderOverview(); toast('Settings saved');
 }
 
 function clearAll(){
-  if(!confirm('Clear all data? This cannot be undone.'))return;
-  S={settings:{name:'',title:'My Wealth',currency:'£'},holdings:[],closedHoldings:[],accounts:[],premiumBonds:{amount:0,date:'',wins:[]},debts:[],goals:[],salaries:[],watchlist:[],netWorthHistory:[],transactions:[],contributions:[],lastUpdated:null};
-  save();location.reload();
+  if(!confirm('Clear all data? This cannot be undone.')) return;
+  localStorage.removeItem(SK);
+  location.reload();
 }
 
+// ═══════════════════════════════════════════════════
+// 22. JS: SAMPLE DATA & INIT
+// ═══════════════════════════════════════════════════
 function loadSample(){
-  S.holdings=[
-    {id:1,name:'Apple Inc.',ticker:'AAPL',type:'stocks',invested:1000,current:1200,buyPrice:'150.00',shares:'10',buyDate:'2023-01-15',notes:'Long-term hold'},
-    {id:2,name:'Vanguard FTSE All-World',ticker:'VWRL.L',type:'isa',invested:2000,current:2100,buyPrice:'85.00',shares:'23.5',buyDate:'2023-03-10',notes:'Index fund'},
-    {id:3,name:'Bitcoin',ticker:'BTC-GBP',type:'crypto',invested:500,current:450,buyPrice:'30000',shares:'0.0167',buyDate:'2024-01-01',notes:'Volatile'},
+  S.settings = { name:'Alex', title:"Alex's Wealth", currency:'£', household:true };
+  S.holdings = [
+    {id:1,name:'Apple Inc.',ticker:'AAPL',type:'stocks',invested:2000,current:2640,buyPrice:'148.50',shares:'15',buyDate:'2023-06-01',wrapper:'gia',notes:'Long-term hold'},
+    {id:2,name:'Vanguard S&P 500',ticker:'VUSA.L',type:'isa',invested:5000,current:6200,buyPrice:'80.20',shares:'70',buyDate:'2022-03-15',wrapper:'stocks-isa',notes:'Core holding'},
+    {id:3,name:'Bitcoin',ticker:'BTC-GBP',type:'crypto',invested:1500,current:1950,buyPrice:'22000',shares:'0.068',buyDate:'2023-01-10',wrapper:'',notes:''},
+    {id:4,name:'Tesla',ticker:'TSLA',type:'stocks',invested:800,current:590,buyPrice:'220',shares:'4',buyDate:'2023-09-20',wrapper:'gia',notes:'Speculative position'},
+    {id:5,name:'iShares MSCI World',ticker:'SWDA.L',type:'isa',invested:3000,current:3600,buyPrice:'81.50',shares:'42',buyDate:'2022-08-01',wrapper:'stocks-isa',notes:'Global diversification'},
   ];
+  S.closedHoldings=[{id:99,name:'Ethereum',ticker:'ETH-GBP',type:'crypto',invested:700,soldFor:1044,buyPrice:'1200',buyDate:'2022-05-01',sellPrice:'1800',sellDate:'2024-02-15'}];
   S.accounts=[
-    {name:'Monzo Current',type:'current',provider:'Monzo',balance:2500,contrib:0},
-    {name:'Vanguard ISA',type:'stocks-isa',provider:'Vanguard',balance:15000,contrib:12000},
-    {name:'Santander Cash ISA',type:'cash-isa',provider:'Santander',balance:5000,contrib:5000},
+    {name:'Monzo Current',type:'current',provider:'Monzo',balance:3200,contrib:0},
+    {name:'Marcus Savings',type:'savings',provider:'Marcus',balance:8500,contrib:0},
+    {name:'Vanguard ISA',type:'stocks-isa',provider:'Vanguard',balance:9800,contrib:8000},
+    {name:'Moneybox LISA',type:'lifetime-isa',provider:'Moneybox',balance:12000,contrib:3200},
+    {name:'Barclays HTB ISA',type:'help-to-buy-isa',provider:'Barclays',balance:3400,contrib:2400},
   ];
-  S.premiumBonds={amount:5000,date:'2024-01-01',wins:[{amount:25,date:'2024-06-01',prizeType:'£25'},{amount:50,date:'2024-08-15',prizeType:'£50'}]};
+  S.premiumBonds={amount:10000,date:'2023-04-01',wins:[
+    {amount:25,date:'2024-07-01',month:7,year:2024,autoAdded:false},
+    {amount:50,date:'2024-09-01',month:9,year:2024,autoAdded:true},
+    {amount:25,date:'2025-01-01',month:1,year:2025,autoAdded:false},
+    {amount:25,date:'2025-03-01',month:3,year:2025,autoAdded:false},
+  ]};
   S.debts=[
-    {name:'Student Loan',type:'student',total:15000,remaining:12000,monthly:150,rate:0,start:'2020-09-01',end:'2035-09-01',lender:'SLP'},
+    {name:'Car finance',type:'car',total:12000,remaining:8400,monthly:350,rate:6.9,start:'2023-01-01',end:'2026-01-01',lender:'Santander',notes:'Final balloon payment Jan 2026'},
+    {name:'Student loan',type:'student',total:27000,remaining:24000,monthly:180,rate:4.5,start:'2020-09-01',end:'2035-09-01',lender:'SLC',notes:'Plan 2'},
   ];
   S.goals=[
-    {name:'House Deposit',target:50000,saved:15000,date:'2026-12-31',monthly:800,emoji:'🏠'},
+    {name:'House deposit',target:40000,saved:24000,date:'2027-06-01',monthly:600,emoji:'🏠'},
+    {name:'Emergency fund',target:10000,saved:8500,date:'2025-12-01',monthly:200,emoji:'🛡'},
+    {name:'New car',target:15000,saved:3200,date:'2026-09-01',monthly:400,emoji:'🚗'},
   ];
   S.salaries=[
-    {employer:'Tech Corp',gross:45000,netMonthly:2900,pensionPct:5,employerPension:3,date:'2023-01-01'},
+    {person:0,employer:'Acme Ltd',gross:48000,bonus:3000,pensionPct:5,employerPension:3,studentLoan:'plan2',startDate:'2022-09-01',ongoing:true,endDate:null,notes:'Includes £3k annual bonus'},
+    {person:1,employer:'NHS',gross:35000,bonus:0,pensionPct:7,employerPension:14,studentLoan:'none',startDate:'2021-03-01',ongoing:true,endDate:null,notes:'NHS pension scheme'},
   ];
-  S.watchlist=['AAPL','VWRL.L','BTC-GBP','^FTSE'];
-  save();toast('Sample data loaded');
+  S.watchlist=['NVDA','^FTSE','^GSPC','ETH-GBP'];
+  S.transactions=[
+    {id:1,txtype:'buy',date:'2023-06-01',desc:'Bought Apple Inc. (AAPL)',amount:2000,pnl:0,notes:''},
+    {id:2,txtype:'buy',date:'2022-03-15',desc:'Bought Vanguard S&P 500 (VUSA.L)',amount:5000,pnl:0,notes:''},
+    {id:3,txtype:'buy',date:'2023-01-10',desc:'Bought Bitcoin (BTC-GBP)',amount:1500,pnl:0,notes:''},
+    {id:4,txtype:'sell',date:'2024-02-15',desc:'Sold Ethereum (ETH-GBP)',amount:1044,pnl:344,notes:'Cost: £700 · Proceeds: £1,044'},
+    {id:5,txtype:'win',date:'2025-01-01',desc:'Premium Bond prize',amount:25,pnl:25,notes:'£25 prize · paid to bank'},
+    {id:6,txtype:'income',date:'2022-09-01',desc:'Salary: Acme Ltd',amount:48000,pnl:0,notes:'Person 1'},
+    {id:7,txtype:'payment',date:'2023-01-01',desc:'Debt: Car finance',amount:12000,pnl:-12000,notes:'£350/month · 6.9% APR'},
+  ];
+  S.netWorthHistory=[];
+  for(let i=60;i>=0;i--){
+    const dt=new Date(); dt.setDate(dt.getDate()-i);
+    S.netWorthHistory.push({date:dt.toISOString().split('T')[0],value:Math.round(42000+Math.random()*3000-500+(60-i)*200)});
+  }
+  save(); toast('Sample data loaded! 🎉'); renderOverview();
 }
 
-// ══════════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════════
-function toast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg;
-  el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),3000);
-}
-
-// ══════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════
+// ── INIT ──
 loadState();
+_updateSidebarMeta();
 renderOverview();
-updateLastUpdatedUI();
+// Set the current month/year in PB win form
+document.getElementById('pbWinMonth').value=new Date().getMonth()+1;
+document.getElementById('pbWinYear').value=new Date().getFullYear();
 </script>
 </body>
 </html>
