@@ -1,7 +1,6 @@
 // ── Stocks & live prices ─────────────────────────────
 // 18. JS: STOCKS / LIVE PRICES
 // ═══════════════════════════════════════════════════
-window.liveHistory = {};
 async function _fetchPrice(ticker){
   const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=2d`;
   try {
@@ -15,21 +14,6 @@ async function _fetchPrice(ticker){
     const prev=meta.chartPreviousClose??meta.previousClose??price;
     const change=prev?((price-prev)/prev*100):0;
     return{price,change,currency:meta.currency||'USD',name:meta.longName||meta.shortName||ticker};
-  } catch(e){ return null; }
-}
-
-async function _fetchHistory(ticker, range='1y'){
-  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=${range}`;
-  try {
-    const res=await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,{headers:{'Accept':'application/json'}});
-    if(!res.ok) return null;
-    const data=await res.json();
-    const q=data?.chart?.result?.[0];
-    if(!q) return null;
-    const timestamps=q.timestamp;
-    const closes=q.indicators.quote[0].close;
-    const history=timestamps.map((t,i)=>({date:new Date(t*1000),price:closes[i]})).filter(p=>p.price);
-    return history;
   } catch(e){ return null; }
 }
 
@@ -63,10 +47,7 @@ function renderStocks(){
           <div class="stock-ticker">${t}</div>
           <div class="stock-name">${p?.name||'—'}</div>
         </div>
-        <div>
-          ${isWatch?`<button class="icon-btn" onclick="viewChart('${t}')" title="View chart">📈</button>`:''}
-          ${isWatch?`<button class="icon-btn del" onclick="removeWatch('${t}')">✕</button>`:''}
-        </div>
+        ${isWatch?`<button class="icon-btn del" onclick="removeWatch('${t}')">✕</button>`:''}
       </div>
       ${p
         ?`<div class="stock-price val">${sym}${p.price<1?p.price.toFixed(4):p.price.toFixed(2)}</div>
@@ -85,38 +66,3 @@ function addWatchTicker(){
   renderStocks(); toast(`Added ${t} to watchlist`);
 }
 function removeWatch(t){ S.watchlist=S.watchlist.filter(x=>x!==t); save(); renderStocks(); }
-
-function generateChart(history, width=500, height=200){
-  if(!history || history.length<2) return '<div style="color:var(--muted);font-size:14px;padding:20px;">No data available</div>';
-  const prices=history.map(p=>p.price);
-  const min=Math.min(...prices), max=Math.max(...prices);
-  const range=max-min||1;
-  const points=history.map((p,i)=>`${(i/(history.length-1))*width},${height - ((p.price-min)/range)*height}`).join(' ');
-  return `<svg width="${width}" height="${height}" style="border:1px solid var(--border);border-radius:4px;">
-    <polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${points}"/>
-  </svg>`;
-}
-
-async function viewChart(ticker){
-  document.getElementById('chartTitle').textContent=`${ticker} Chart`;
-  document.getElementById('chartModal').classList.remove('hidden');
-  await loadChart(ticker, '1y');
-}
-
-async function loadChart(ticker, range){
-  document.getElementById('chartContainer').innerHTML='<div style="padding:20px;">Loading...</div>';
-  const history = await _fetchHistory(ticker, range);
-  if(history){
-    window.liveHistory[ticker] = window.liveHistory[ticker] || {};
-    window.liveHistory[ticker][range] = history;
-  }
-  const chart = generateChart(history);
-  document.getElementById('chartContainer').innerHTML=chart;
-}
-
-function setChartRange(range, el){
-  document.querySelectorAll('#chartModal .filter-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  const ticker = document.getElementById('chartTitle').textContent.split(' ')[0];
-  loadChart(ticker, range);
-}

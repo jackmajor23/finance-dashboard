@@ -1,55 +1,8 @@
 // ── Debts ─────────────────────────────────────────────
 // 16. JS: DEBTS
 // ═══════════════════════════════════════════════════
-let currentDebtPersonIdx=0;
-
-function switchDebtPerson(idx){
-  currentDebtPersonIdx = idx;
-  renderDebts();
-}
-
-function populateDebtForm(){
-  const personSel = document.getElementById('dPerson');
-  personSel.innerHTML = '<option value="shared">Shared (household)</option>' + 
-    S.settings.personNames.map((p,i) => `<option value="${i}">${p}</option>`).join('');
-}
 function renderDebts(){
-  // Sync people from salary settings
-  if(!S.settings.personNames || !Array.isArray(S.settings.personNames) || S.settings.personNames.length === 0) {
-    S.settings.personNames = ['Person 1'];
-    save();
-  }
-
-  // Render person tabs
-  const tabsEl = document.getElementById('debtPersonTabs');
-  const allPeople = [...S.settings.personNames];
-  if(allPeople.length > 1) allPeople.push('Household');
-  
-  if(allPeople.length > 1){
-    tabsEl.innerHTML = allPeople.map((p,i) => {
-      const isHousehold = i === allPeople.length - 1;
-      return `<button class="person-btn ${currentDebtPersonIdx === i ? 'active' : ''}" onclick="switchDebtPerson(${i})">${isHousehold ? '📊 ' + p : p}</button>`;
-    }).join('');
-  } else { 
-    tabsEl.innerHTML = ''; 
-    currentDebtPersonIdx = 0; 
-  }
-
-  // Get debts based on current view
-  const isHousehold = S.settings.personNames.length > 1 && currentDebtPersonIdx === S.settings.personNames.length;
-  let debts;
-  if(isHousehold){
-    debts = S.debts; // All debts for household view
-  } else {
-    debts = S.debts.filter(d => (d.person || 0) === currentDebtPersonIdx || d.shared);
-  }
-
-  // Filter out student debts if checkbox is unchecked
-  const includeStudent = document.getElementById('includeStudentDebts')?.checked ?? true;
-  if(!includeStudent){
-    debts = debts.filter(d => d.type !== 'Student');
-  }
-
+  const debts=S.debts;
   const totOwed=debts.reduce((s,d)=>s+(d.remaining??d.total??0),0);
   const totMonthly=debts.reduce((s,d)=>s+(d.monthly||0),0);
   const estMonths=totMonthly>0?Math.ceil(totOwed/totMonthly):0;
@@ -59,7 +12,7 @@ function renderDebts(){
     <div class="stat-card sc-blue"><div class="stat-label">Est. payoff</div><div class="stat-val" style="font-size:20px;">${estMonths?estMonths+' months':'—'}</div><div class="stat-sub">at current rate</div></div>`;
 
   const grid=document.getElementById('debtGrid');
-  if(!debts.length){ grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">◉</div><p>No debts tracked${isHousehold ? ' for household' : ' for ' + S.settings.personNames[currentDebtPersonIdx]}.</p></div>`; return; }
+  if(!debts.length){ grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">◉</div><p>No debts tracked.</p></div>`; return; }
 
   grid.innerHTML=debts.map((d,i)=>{
     const remaining=d.remaining??d.total??0;
@@ -68,17 +21,16 @@ function renderDebts(){
     const paidPct=original>0?Math.min((paid/original)*100,100):0;
     const now=new Date(), end=d.end?new Date(d.end):null;
     const monthsLeft=end?Math.max(0,Math.round((end-now)/(1000*60*60*24*30.5))):d.monthly>0?Math.ceil(remaining/d.monthly):null;
-    const assignedTo = d.shared ? 'Shared' : (d.person !== undefined ? S.settings.personNames[d.person] || 'Unknown' : S.settings.personNames[0]);
     return`<div class="debt-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
         <div>
           <div class="debt-name">${d.name}</div>
-          <div class="debt-meta">${d.lender||d.type||'Debt'} · ${d.rate||0}% APR${d.shared ? ' · Shared' : ''}</div>
+          <div class="debt-meta">${d.lender||d.type||'Debt'} · ${d.rate||0}% APR</div>
         </div>
         <div style="display:flex;gap:5px;align-items:center;">
           <span class="pill p-debt">${(d.type||'other').toLowerCase().replace(/-/g,' ')}</span>
-          <button class="icon-btn edit" onclick="openEditDebt(${S.debts.indexOf(d)})">✎</button>
-          <button class="icon-btn del"  onclick="deleteDebt(${S.debts.indexOf(d)})">✕</button>
+          <button class="icon-btn edit" onclick="openEditDebt(${i})">✎</button>
+          <button class="icon-btn del"  onclick="deleteDebt(${i})">✕</button>
         </div>
       </div>
       <div class="debt-owed val">${fmt(remaining)}</div>
@@ -98,8 +50,6 @@ function renderDebts(){
 function addDebt(){
   const name=(document.getElementById('dName').value||'').trim();
   const type=document.getElementById('dType').value;
-  const personSel = document.getElementById('dPerson').value;
-  const shared = document.getElementById('dShared').checked;
   const total=parseMoney(document.getElementById('dTotal').value)||0;
   const remaining=parseMoney(document.getElementById('dRemaining').value)||total;
   const monthly=parseMoney(document.getElementById('dMonthly').value)||0;
@@ -109,13 +59,10 @@ function addDebt(){
   const lender=(document.getElementById('dLender').value||'').trim();
   const notes=document.getElementById('dNotes').value;
   if(!name||!total){ toast('Please enter name and total amount.'); return; }
-  
-  const person = personSel === 'shared' ? undefined : parseInt(personSel);
-  S.debts.push({name,type,total,remaining,monthly,rate,start,end,lender,notes,person,shared});
+  S.debts.push({name,type,total,remaining,monthly,rate,start,end,lender,notes});
   _addTx({txtype:'payment',date:start||new Date().toISOString().split('T')[0],desc:`Debt: ${name}`,amount:total,pnl:-total,notes:`${fmt(monthly)}/month · ${rate}% APR`});
   save(); toast(`Added: ${name}`); renderDebts(); renderOverview();
   ['dName','dTotal','dRemaining','dMonthly','dRate','dStart','dEnd','dLender','dNotes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('dShared').checked = false;
 }
 
 function deleteDebt(i){ S.debts.splice(i,1); save(); renderDebts(); renderOverview(); toast('Removed'); }
@@ -127,12 +74,6 @@ function openEditDebt(i){
     <div class="ff"><label>Name</label><input type="text" id="ed-name" value="${d.name}"/></div>
     <div class="ff"><label>Type</label>
       <select id="ed-type">${['Loan','Mortgage','Credit-card','Student','Car','Other'].map(t=>`<option value="${t}"${d.type===t?' selected':''}>${t}</option>`).join('')}</select>
-    </div>
-    <div class="ff"><label>Assigned to</label>
-      <select id="ed-person">${'<option value="shared">Shared (household)</option>' + S.settings.personNames.map((p,idx)=>`<option value="${idx}"${(d.person||0)===idx&&!d.shared?' selected':''}>${p}</option>`).join('')}</select>
-    </div>
-    <div class="ff"><label>Shared debt?</label>
-      <label class="toggle"><input type="checkbox" id="ed-shared"${d.shared?' checked':''}><span class="toggle-track"></span></label>
     </div>
     <div class="ff money-field"><label>Original total</label><input type="text" id="ed-total" value="${d.total ? d.total.toLocaleString('en-GB') : ''}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
     <div class="ff money-field"><label>Remaining</label><input type="text" id="ed-remaining" value="${d.remaining ? d.remaining.toLocaleString('en-GB') : (d.total ? d.total.toLocaleString('en-GB') : '')}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
@@ -150,9 +91,6 @@ function saveEditDebt(){
   const d=S.debts[editingDebtIdx];
   d.name=document.getElementById('ed-name').value;
   d.type=document.getElementById('ed-type').value;
-  const personSel = document.getElementById('ed-person').value;
-  d.person = personSel === 'shared' ? undefined : parseInt(personSel);
-  d.shared = document.getElementById('ed-shared').checked;
   d.total=parseMoney(document.getElementById('ed-total').value)||d.total;
   d.remaining=parseMoney(document.getElementById('ed-remaining').value)??d.remaining;
   d.monthly=parseMoney(document.getElementById('ed-monthly').value)||0;

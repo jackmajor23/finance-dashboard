@@ -3,11 +3,12 @@
 // ═══════════════════════════════════════════════════
 const PAGE_RENDERS = {
   'overview':       renderOverview,
-  'investments':    renderInvestments,
+  'holdings':       ()=>{ renderHoldings(); renderClosed(); },
   'accounts':       renderAccounts,
   'premium-bonds':  renderPremiumBonds,
+  'stocks-page':    renderStocks,
   'salary':         renderSalary,
-  'debts':          ()=>{ renderDebts(); populateDebtForm(); },
+  'debts':          renderDebts,
   'goals':          renderGoals,
   'transactions':   renderTransactions,
   'tax':            renderTax,
@@ -29,14 +30,12 @@ function nav(page, el){
   if(PAGE_RENDERS[page]) PAGE_RENDERS[page]();
 }
 
-function invTab(tab, el){
-  document.querySelectorAll('#page-investments .tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('#page-investments .tab-pane').forEach(p=>p.classList.remove('active'));
+function hTab(tab, el){
+  document.querySelectorAll('#page-holdings .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#page-holdings .tab-pane').forEach(p=>p.classList.remove('active'));
   if(el) el.classList.add('active');
-  const pane=document.getElementById('invtab-'+tab);
+  const pane=document.getElementById('htab-'+tab);
   if(pane) pane.classList.add('active');
-  if(tab==='all') { hFilter='all'; renderHoldings(); renderInvestmentStats(); }
-  if(tab==='stocks') { renderStocksHoldings(); renderStocksStats(); }
-  if(tab==='crypto') { renderCryptoHoldings(); renderCryptoStats(); }
-  if(tab==='watchlist') renderStocks();
+  if(tab==='open') renderHoldings();
+  if(tab==='closed') renderClosed();
 }
