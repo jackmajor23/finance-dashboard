@@ -44,12 +44,8 @@ function calcUKTax(gross, pensionPct, bonus, studentLoanPlan){
   if(totalIncome>ptAnnual) ni += Math.min(totalIncome,uelAnnual)-ptAnnual > 0 ? (Math.min(totalIncome,uelAnnual)-ptAnnual)*UK_TAX.ni.mainRate/100 : 0;
   if(totalIncome>uelAnnual) ni += (totalIncome-uelAnnual)*UK_TAX.ni.upperRate/100;
 
-  // Student loan
-  let slRepayment=0;
-  if(studentLoanPlan && studentLoanPlan!=='none' && UK_TAX.studentLoan[studentLoanPlan]){
-    const sl=UK_TAX.studentLoan[studentLoanPlan];
-    if(totalIncome>sl.threshold) slRepayment=(totalIncome-sl.threshold)*sl.rate/100;
-  }
+  // Student loan (no longer calculated here - moved to debts page)
+  const slRepayment=0;
 
   const totalDeductions=incomeTax+ni+pensionAmt+slRepayment;
   const takeHome=totalIncome-totalDeductions;
@@ -150,9 +146,8 @@ function renderPersonSalary(el,personIdx){
       <div class="sal-card"><div class="sal-label">Income tax</div><div class="sal-val neg val">${fmt(calc.incomeTax)}</div><div class="sal-sub">PAYE 2025/26</div></div>
       <div class="sal-card"><div class="sal-label">National Insurance</div><div class="sal-val neg val">${fmt(calc.ni)}</div><div class="sal-sub">employee NI</div></div>
       <div class="sal-card"><div class="sal-label">Pension (yours)</div><div class="sal-val val">${fmt(calc.pensionAmt)}</div><div class="sal-sub">${sal.pensionPct||0}% of gross</div></div>
-      ${calc.slRepayment>0?`<div class="sal-card"><div class="sal-label">Student loan</div><div class="sal-val neg val">${fmt(calc.slRepayment)}</div><div class="sal-sub">${sal.studentLoan} plan</div></div>`:''}
-      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Take-home (annual)</div><div class="sal-val pos val">${fmt(calc.takeHome)}</div><div class="sal-sub"><span class="val">${fmt(calc.takeHomeMonthly)}</span>/month</div></div>
-      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Take-home (monthly)</div><div class="sal-val pos val">${fmt(calc.takeHomeMonthly)}</div><div class="sal-sub">estimated net</div></div>
+      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Take-home (annual)</div><div class="sal-val pos val">${fmt(calc.takeHome)}</div><div class="sal-sub">after tax & NI</div></div>
+      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Take-home (monthly)</div><div class="sal-val pos val">${fmt(calc.takeHomeMonthly)}</div><div class="sal-sub">approximate</div></div>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
@@ -211,10 +206,10 @@ function renderPersonSalary(el,personIdx){
     window._salChart=new Chart(ctx,{
       type:'doughnut',
       data:{
-        labels:['Take-home','Income tax','NI','Pension',...(calc.slRepayment>0?['Student loan']:[])],
-        datasets:[{data:[Math.round(calc.takeHome),Math.round(calc.incomeTax),Math.round(calc.ni),Math.round(calc.pensionAmt),...(calc.slRepayment>0?[Math.round(calc.slRepayment)]:[])],backgroundColor:['#0a8f5c','#cc3333','#b87309','#5046e5','#0b7a6e'],borderWidth:0}]
+        labels:['Take-home','Income tax','NI','Pension'],
+        datasets:[{data:[Math.round(calc.takeHome),Math.round(calc.incomeTax),Math.round(calc.ni),Math.round(calc.pensionAmt)],backgroundColor:['#0a8f5c','#cc3333','#1d6fca','#5046e5']}]
       },
-      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:10}},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`}}}}
+      options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10,padding:10}},tooltip:{callbacks:{label:ctx=>`£${fmt(ctx.parsed)}`}}}}
     });
   },50);
 }
@@ -252,9 +247,8 @@ function renderHouseholdSalary(el){
       <div class="sal-card"><div class="sal-label">Income tax</div><div class="sal-val neg val">${fmt(totals.incomeTax)}</div><div class="sal-sub">combined PAYE</div></div>
       <div class="sal-card"><div class="sal-label">National Insurance</div><div class="sal-val neg val">${fmt(totals.ni)}</div><div class="sal-sub">combined NI</div></div>
       <div class="sal-card"><div class="sal-label">Pensions</div><div class="sal-val val">${fmt(totals.pensionAmt)}</div><div class="sal-sub">combined</div></div>
-      ${totals.slRepayment>0?`<div class="sal-card"><div class="sal-label">Student loans</div><div class="sal-val neg val">${fmt(totals.slRepayment)}</div><div class="sal-sub">combined repayment</div></div>`:''}
-      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Combined take-home (annual)</div><div class="sal-val pos val">${fmt(totals.takeHome)}</div><div class="sal-sub"><span class="val">${fmt(totals.takeHome/12)}</span>/month</div></div>
-      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Combined take-home (monthly)</div><div class="sal-val pos val">${fmt(totals.takeHome/12)}</div><div class="sal-sub">estimated combined net</div></div>
+      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Combined take-home (annual)</div><div class="sal-val pos val">${fmt(totals.takeHome)}</div><div class="sal-sub">after tax & NI</div></div>
+      <div class="sal-card" style="border-color:var(--green);"><div class="sal-label">Combined take-home (monthly)</div><div class="sal-val pos val">${fmt(totals.takeHome/12)}</div><div class="sal-sub">approximate</div></div>
     </div>
 
     <div class="card" style="margin-bottom:16px;">
@@ -292,7 +286,8 @@ function addSalary(){
   if(!gross){ toast('Please enter a gross salary.'); return; }
   S.salaries.push({person,employer,gross,bonus,pensionPct,employerPension,studentLoan,startDate,endDate,ongoing,notes});
   const personName=S.settings.personNames[person]||'Person '+(person+1);
-  _addTx({txtype:'income',date:startDate||new Date().toISOString().split('T')[0],desc:`Salary: ${employer}`,amount:gross,pnl:0,notes:`${personName} · Net/mo ~${fmt(calcUKTax(gross,pensionPct,bonus,studentLoan).takeHomeMonthly)}`});
+  const calc=calcUKTax(gross,pensionPct,bonus,studentLoan);
+  _addTx({txtype:'income',date:startDate||new Date().toISOString().split('T')[0],desc:`Salary: ${employer}`,amount:gross,pnl:0,notes:`${personName} · Net/mo ~${fmt(calc.takeHomeMonthly)}`});
   save(); toast('Salary saved'); renderSalary();
 }
 
@@ -309,11 +304,6 @@ function openEditSalary(i){
     <div class="ff money-field"><label>Gross</label><input type="text" id="es-gross" value="${sal.gross ? sal.gross.toLocaleString('en-GB') : ''}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
     <div class="ff money-field"><label>Bonus</label><input type="text" id="es-bonus" value="${sal.bonus ? sal.bonus.toLocaleString('en-GB') : ''}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
     <div class="ff"><label>Your pension (%)</label><input type="number" id="es-pension" value="${sal.pensionPct||''}"/></div>
-    <div class="ff"><label>Student loan</label>
-      <select id="es-sl">
-        ${['none','plan1','plan2','plan4','plan5','postgrad'].map(v=>`<option value="${v}"${sal.studentLoan===v?' selected':''}>${v}</option>`).join('')}
-      </select>
-    </div>
     <div class="ff"><label>Start date</label><input type="date" id="es-start" value="${sal.startDate||''}"/></div>
     <div class="ff full-col"><label>Notes</label><textarea id="es-notes">${sal.notes||''}</textarea></div>`;
   document.getElementById('editSalaryModal').classList.remove('hidden');
@@ -326,7 +316,6 @@ function saveEditSalary(){
   sal.gross=parseMoney(document.getElementById('es-gross').value)||sal.gross;
   sal.bonus=parseMoney(document.getElementById('es-bonus').value)||0;
   sal.pensionPct=parseFloat(document.getElementById('es-pension').value)||0;
-  sal.studentLoan=document.getElementById('es-sl').value;
   sal.startDate=document.getElementById('es-start').value;
   sal.notes=document.getElementById('es-notes').value;
   save(); closeModal('editSalaryModal'); renderSalary(); toast('Saved');

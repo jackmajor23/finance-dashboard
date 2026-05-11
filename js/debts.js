@@ -1,6 +1,14 @@
 // ── Debts ─────────────────────────────────────────────
-// 16. JS: DEBTS
+// 16. JS: DEBTS (with Student Loan Tracking)
 // ═══════════════════════════════════════════════════
+const UK_STUDENT_LOAN_RULES = {
+  plan1: { threshold: 24990, rate: 9, writeoff: 2027 },
+  plan2: { threshold: 28470, rate: 9, writeoff: 2042 },
+  plan4: { threshold: 32745, rate: 9, writeoff: 2036 },
+  plan5: { threshold: 25000, rate: 9, writeoff: 2051 },
+  postgrad: { threshold: 21000, rate: 6, writeoff: 2033 }
+};
+
 let currentDebtPersonIdx=0;
 
 function switchDebtPerson(idx){
@@ -13,6 +21,130 @@ function populateDebtForm(){
   personSel.innerHTML = '<option value="shared">Shared (household)</option>' + 
     S.settings.personNames.map((p,i) => `<option value="${i}">${p}</option>`).join('');
 }
+
+// Calculate student loan balance based on salary history and interest
+function calculateStudentLoanBalance(personIdx, studentLoanPlan, overrideBalance=null){
+  if(!studentLoanPlan || studentLoanPlan === 'none') return 0;
+  if(overrideBalance !== null && overrideBalance >= 0) return overrideBalance;
+
+  // Get salary history for this person
+  const personSals = S.salaries.filter(s => (s.person || 0) === personIdx);
+  if(!personSals.length) return 0;
+
+  const rules = UK_STUDENT_LOAN_RULES[studentLoanPlan] || {threshold:0, rate:9};
+  let balance = 0;
+  let lastCalcDate = new Date();
+
+  // Sum all repayments from salary history
+  personSals.forEach(sal => {
+    if(sal.studentLoan === studentLoanPlan || (sal.studentLoan === 'none' && !sal.studentLoan)){
+      const gross = sal.gross || 0;
+      const repayment = gross > rules.threshold ? (gross - rules.threshold) * rules.rate / 100 : 0;
+      
+      // Calculate interest accrual for months this salary was active
+      const startDate = sal.startDate ? new Date(sal.startDate) : new Date();
+      const endDate = sal.endDate && !sal.ongoing ? new Date(sal.endDate) : new Date();
+      const months = Math.max(1, Math.round((endDate - startDate) / (1000 * 60 * 60 * 24 * 30.5)));
+      
+      // Simple accrual: interest accrues while balance exists
+      for(let i = 0; i < months; i++){
+        balance = (balance - repayment) * (1 + rules.rate / 100 / 12);
+      }
+    }
+  });
+
+  return Math.max(0, balance);
+}
+
+function renderStudentLoanSection(personIdx){
+  const personSals = S.salaries.filter(s => (s.person || 0) === personIdx);
+  if(!personSals.length) return '';
+
+  const latestSal = personSals[personSals.length - 1];
+  const plan = latestSal.studentLoan || 'none';
+  if(plan === 'none') return '';
+
+  const rules = UK_STUDENT_LOAN_RULES[plan];
+  const calcBalance = calculateStudentLoanBalance(personIdx, plan);
+
+  // Look for existing student loan entry
+  let slDebt = S.debts.find(d => d.type === 'Student' && (d.person || 0) === personIdx && !d.shared);
+  
+  return `
+    <div class="form-box" style="background:var(--accent-dim);border:1px solid var(--accent);">
+      <h3>Student Loan (${plan})</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;font-variation-settings:'wght' 600;">Plan</div>
+          <div style="font-size:14px;font-variation-settings:'wght' 600;">${plan.toUpperCase()}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Threshold: £${fmt(rules.threshold)}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;font-variation-settings:'wght' 600;">Calculated Balance</div>
+          <div style="font-size:14px;font-variation-settings:'wght' 600;color:var(--accent);" class="val">${fmt(calcBalance)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">Based on salary history</div>
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div class="ff">
+          <label>Current balance (override)</label>
+          <input type="text" id="slBalance" placeholder="${calcBalance.toLocaleString('en-GB')}" oninput="formatMoney(this)"/>
+        </div>
+        <div class="ff">
+          <label>Interest rate</label>
+          <input type="number" id="slRate" value="${rules.rate}" step="0.1" min="0" max="15" style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:7px 10px;"/>
+          <span style="position:absolute;font-size:10px;color:var(--muted);margin-top:2px;">% per annum</span>
+        </div>
+      </div>
+
+      <div class="ff full-col" style="margin-bottom:12px;">
+        <label>Notes</label>
+        <textarea id="slNotes" placeholder="e.g. Started repayments June 2022, on Plan 2..." style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:7px 10px;min-height:50px;"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="saveStudentLoan(${personIdx},'${plan}')">Update student loan in debts</button>
+      </div>
+    </div>
+  `;
+}
+
+function saveStudentLoan(personIdx, plan){
+  const overrideBalance = parseMoney(document.getElementById('slBalance').value) || null;
+  const finalBalance = overrideBalance !== null ? overrideBalance : calculateStudentLoanBalance(personIdx, plan);
+  const rate = parseFloat(document.getElementById('slRate').value) || 9;
+  const notes = document.getElementById('slNotes').value;
+
+  // Find or create student loan debt
+  let slDebt = S.debts.find(d => d.type === 'Student' && (d.person || 0) === personIdx && !d.shared);
+  
+  if(slDebt){
+    slDebt.remaining = finalBalance;
+    slDebt.rate = rate;
+    slDebt.notes = notes;
+  } else {
+    S.debts.push({
+      name: `Student Loan (${plan})`,
+      type: 'Student',
+      total: finalBalance,
+      remaining: finalBalance,
+      monthly: 0,
+      rate: rate,
+      start: new Date().toISOString().split('T')[0],
+      end: null,
+      lender: 'UK Government',
+      notes: notes,
+      person: personIdx,
+      shared: false
+    });
+  }
+
+  save();
+  toast('Student loan updated');
+  renderDebts();
+}
+
 function renderDebts(){
   // Sync people from salary settings
   if(!S.settings.personNames || !Array.isArray(S.settings.personNames) || S.settings.personNames.length === 0) {
@@ -59,7 +191,7 @@ function renderDebts(){
     <div class="stat-card sc-blue"><div class="stat-label">Est. payoff</div><div class="stat-val" style="font-size:20px;">${estMonths?estMonths+' months':'—'}</div><div class="stat-sub">at current rate</div></div>`;
 
   const grid=document.getElementById('debtGrid');
-  if(!debts.length){ grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">◉</div><p>No debts tracked${isHousehold ? ' for household' : ' for ' + S.settings.personNames[currentDebtPersonIdx]}.</p></div>`; return; }
+  if(!debts.length){ grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="ei">◉</div><p>No debts tracked${isHousehold ? ' for household' : ' for ' + S.settings.personNames[currentDebtPersonIdx] || 'this person'}</p></div>`; return; }
 
   grid.innerHTML=debts.map((d,i)=>{
     const remaining=d.remaining??d.total??0;
@@ -93,6 +225,16 @@ function renderDebts(){
       ${d.notes?`<div style="margin-top:8px;font-size:11px;color:var(--muted2);background:var(--surface2);border-radius:6px;padding:7px 10px;">📝 ${d.notes}</div>`:''}
     </div>`;
   }).join('');
+
+  // Render student loan section if person has salary with student loan
+  if(!isHousehold){
+    const personSals = S.salaries.filter(s => (s.person || 0) === currentDebtPersonIdx);
+    const hasSL = personSals.some(s => s.studentLoan && s.studentLoan !== 'none');
+    const slSection = document.getElementById('studentLoanSection');
+    if(slSection){
+      slSection.innerHTML = hasSL ? renderStudentLoanSection(currentDebtPersonIdx) : '';
+    }
+  }
 }
 
 function addDebt(){

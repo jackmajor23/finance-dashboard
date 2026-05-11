@@ -7,6 +7,8 @@ const PAGE_RENDERS = {
   'accounts':       renderAccounts,
   'premium-bonds':  renderPremiumBonds,
   'salary':         renderSalary,
+  'utilities':      renderUtilities,
+  'pension':        renderPension,
   'debts':          ()=>{ renderDebts(); populateDebtForm(); },
   'goals':          renderGoals,
   'transactions':   renderTransactions,
