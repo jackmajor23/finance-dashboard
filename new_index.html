@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Wealth Dashboard</title>
+
+<!-- Fonts & Libraries -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,100..900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<!-- Stylesheets -->
+<link rel="stylesheet" href="src/styles/main.css">
+
+<!-- ═══════════════════════════════════════════════════
+     HTML SHELL: Navigation & Main
+     ═══════════════════════════════════════════════════ -->
+<style>
+  body { --sidebar-w: 200px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar" role="navigation">
+    <div class="logo">
+      <div class="logo-name" id="sidebarTitle">Wealth Dashboard</div>
+      <div class="logo-sub">v4 · modular</div>
+    </div>
+    
+    <div class="nav-scroll" role="main">
+      <div class="nav-group">
+        <div class="nav-label">DASHBOARD</div>
+        <button class="nav-item active" onclick="showPage('overview')">
+          <span class="nav-icon">◆</span>
+          <span>Overview</span>
+        </button>
+        <button class="nav-item" onclick="showPage('holdings')">
+          <span class="nav-icon">◫</span>
+          <span>Holdings</span>
+        </button>
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-label">ACCOUNTS & TRACKING</div>
+        <button class="nav-item" onclick="showPage('accounts')">
+          <span class="nav-icon">🏦</span>
+          <span>Accounts & ISAs</span>
+        </button>
+        <button class="nav-item" onclick="showPage('premium-bonds')">
+          <span class="nav-icon">🎰</span>
+          <span>Premium Bonds</span>
+        </button>
+        <button class="nav-item" onclick="showPage('transactions')">
+          <span class="nav-icon">≡</span>
+          <span>Transactions</span>
+        </button>
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-label">FINANCIAL</div>
+        <button class="nav-item" onclick="showPage('stocks-page')">
+          <span class="nav-icon">📈</span>
+          <span>Stocks & Prices</span>
+        </button>
+        <button class="nav-item" onclick="showPage('salary')">
+          <span class="nav-icon">💼</span>
+          <span>Salary & Income</span>
+        </button>
+        <button class="nav-item" onclick="showPage('debts')">
+          <span class="nav-icon">💳</span>
+          <span>Debts</span>
+        </button>
+        <button class="nav-item" onclick="showPage('goals')">
+          <span class="nav-icon">◐</span>
+          <span>Goals</span>
+        </button>
+        <button class="nav-item" onclick="showPage('tax')">
+          <span class="nav-icon">📋</span>
+          <span>Tax Summary</span>
+        </button>
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-label">ADMIN</div>
+        <button class="nav-item" onclick="showPage('settings')">
+          <span class="nav-icon">⚙</span>
+          <span>Settings</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">W</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">Financial Tracker</div>
+          <div class="user-sub" id="lastUpdated">never saved</div>
+        </div>
+      </div>
+      <button class="refresh-btn" onclick="refreshPrices()">↻ &nbsp;Refresh prices</button>
+      <div class="last-refresh" id="lastRefreshTime">prices not yet loaded</div>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="main">
+    <!-- Pages will be rendered here -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <h2 id="overviewGreeting">Overview</h2>
+        <p id="overviewDate"></p>
+      </div>
+      <div id="overviewContent"></div>
+    </div>
+    
+    <!-- Placeholder for other pages -->
+    <div id="page-holdings" class="page"></div>
+    <div id="page-accounts" class="page"></div>
+    <div id="page-premium-bonds" class="page"></div>
+    <div id="page-stocks-page" class="page"></div>
+    <div id="page-salary" class="page"></div>
+    <div id="page-debts" class="page"></div>
+    <div id="page-goals" class="page"></div>
+    <div id="page-transactions" class="page"></div>
+    <div id="page-tax" class="page"></div>
+    <div id="page-settings" class="page"></div>
+  </main>
+</div>
+
+<!-- Eye/Hide Button -->
+<div class="eye-fab" id="eyeBtn" onclick="toggleHide()" title="Hide values">👁</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     SCRIPTS: Module Imports & Initialization
+     ═══════════════════════════════════════════════════ -->
+
+<!-- Core modules -->
+<script src="src/state.js"></script>
+<script src="src/utils/format.js"></script>
+<script src="src/services/calculations.js"></script>
+
+<!-- Main application logic (refactored from original) -->
+<script>
+let currentPage = 'overview';
+let hFilter = 'all', txFilter = 'all', editingId = null;
+let donutChart = null, barChart = null, nwChart = null;
+let livePrices = {};
+
+/**
+ * Show a specific page
+ */
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if(page) {
+    page.classList.add('active');
+    currentPage = pageId;
+    const btn = event.target.closest('.nav-item');
+    if(btn) btn.classList.add('active');
+    if(PAGE_RENDERS[pageId]) PAGE_RENDERS[pageId]();
+  }
+}
+
+const PAGE_RENDERS = {
+  'overview': renderOverview,
+  'holdings': renderHoldings,
+  'accounts': renderAccounts,
+  'premium-bonds': renderPremiumBonds,
+  'stocks-page': renderStocks,
+  'salary': renderSalary,
+  'debts': renderDebts,
+  'goals': renderGoals,
+  'transactions': renderTransactions,
+  'tax': renderTax,
+  'settings': renderSettings
+};
+
+/**
+ * Initialize app on page load
+ */
+function initApp() {
+  loadState();
+  _updateSidebarMeta();
+  renderOverview();
+  console.log('✓ Finance Dashboard v4 initialized');
+}
+
+// Placeholder render functions (to be populated from original code)
+function renderOverview() { document.getElementById('overviewContent').innerHTML = '<p>Overview content loading...</p>'; }
+function renderHoldings() { alert('Holdings page'); }
+function renderAccounts() { alert('Accounts page'); }
+function renderPremiumBonds() { alert('Premium Bonds page'); }
+function renderStocks() { alert('Stocks page'); }
+function renderSalary() { alert('Salary page'); }
+function renderDebts() { alert('Debts page'); }
+function renderGoals() { alert('Goals page'); }
+function renderTransactions() { alert('Transactions page'); }
+function renderTax() { alert('Tax page'); }
+function renderSettings() { alert('Settings page'); }
+
+// Placeholder for price refresh
+function refreshPrices() { toast('Price refresh not yet implemented'); }
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', initApp);
+</script>
+
+<!-- Toast styling -->
+<style>
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--text);
+    color: var(--surface);
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+    z-index: 1000;
+  }
+  #toast.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>
+
+</body>
+</html>
