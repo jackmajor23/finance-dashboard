@@ -4,601 +4,449 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Wealth Dashboard</title>
+
+<!-- Fonts & Libraries -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/main.css">
-</head>
-<body>
-<button class="eye-fab" id="eyeBtn" onclick="toggleHide()" title="Show/hide figures">👁</button>
-
-<div class="app">
-
-<!-- ─── SIDEBAR ─── -->
-<nav class="sidebar" id="sidebar">
-  <div class="logo">
-    <div class="logo-name" id="sidebarTitle">Financial Tracker</div>
-    <div class="logo-sub">personal finance dashboard</div>
-  </div>
-
-  <div class="nav-scroll">
-    <div class="nav-group">
-      <div class="nav-label">Overview</div>
-      <button class="nav-item active" data-page="overview" onclick="nav('overview',this)"><span class="nav-icon">◈</span>Overview</button>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">Assets</div>
-      <button class="nav-item" data-page="investments"   onclick="nav('investments',this)"><span class="nav-icon">◫</span>Investments</button>
-      <button class="nav-item" data-page="accounts"      onclick="nav('accounts',this)"><span class="nav-icon">◳</span>Accounts &amp; ISAs</button>
-      <button class="nav-item" data-page="premium-bonds" onclick="nav('premium-bonds',this)"><span class="nav-icon">◎</span>Premium Bonds</button>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">Finances</div>
-      <button class="nav-item" data-page="salary"  onclick="nav('salary',this)"><span class="nav-icon">◈</span>Salary</button>
-      <button class="nav-item" data-page="debts"   onclick="nav('debts',this)"><span class="nav-icon">◉</span>Debts</button>
-      <button class="nav-item" data-page="goals"   onclick="nav('goals',this)"><span class="nav-icon">◐</span>Goals</button>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">History</div>
-      <button class="nav-item" data-page="transactions" onclick="nav('transactions',this)"><span class="nav-icon">≡</span>Transactions</button>
-      <button class="nav-item" data-page="tax"          onclick="nav('tax',this)"><span class="nav-icon">◷</span>Tax Summary</button>
-    </div>
-    <div class="nav-divider"></div>
-    <div class="nav-group">
-      <button class="nav-item" data-page="settings" onclick="nav('settings',this)"><span class="nav-icon">⚙</span>Settings</button>
-    </div>
-  </div>
-
-  <div class="sidebar-bottom">
-    <div class="user-chip">
-      <div class="user-avatar" id="userAvatar">W</div>
-      <div class="user-info">
-        <div class="user-name" id="userName">Financial Tracker</div>
-        <div class="user-sub" id="lastUpdated">never saved</div>
-      </div>
-    </div>
-    <button class="refresh-btn" onclick="refreshPrices()">↻ &nbsp;Refresh prices</button>
-    <div class="last-refresh" id="lastRefreshTime">prices not yet loaded</div>
-  </div>
-</nav>
-
-<!-- ═══════════════════════════════════════════════════
-     6. HTML PAGES
-     ═══════════════════════════════════════════════════ -->
-<main class="main">
-
-<!-- ─── PAGE: OVERVIEW ─── -->
-<div class="page active" id="page-overview">
-  <div class="page-header">
-    <h2 id="overviewGreeting">Overview</h2>
-    <p id="overviewDate"></p>
-  </div>
-  <div class="summary-grid" id="summarycards"></div>
-  <div class="charts-2col">
-    <div class="card">
-      <div class="card-header"><span class="card-title">Allocation</span></div>
-      <div class="donut-wrap">
-        <canvas id="donutChart"></canvas>
-        <div class="donut-center"><div class="dc-big val" id="donutCenterVal">—</div><div class="dc-sm">total value</div></div>
-      </div>
-      <div class="legend-list" id="donutLegend"></div>
-    </div>
-    <div class="card">
-  <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-    <span class="card-title">Net worth over time</span>
-    <select id="nwPeriod" onchange="renderOverview()" style="font-size:12.5px;padding:5px 10px;border:1px solid var(--border2);border-radius:6px;">
-      <option value="1w">1 Week</option>
-      <option value="1m">1 Month</option>
-      <option value="3m">3 Months</option>
-      <option value="6m" selected>6 Months</option>
-      <option value="1y">1 Year</option>
-      <option value="5y">5 Years</option>
-      <option value="all">All Time</option>
-    </select>
-  </div>
-  <div class="nw-wrap"><canvas id="nwChart"></canvas></div>
-  <div id="nwSub" style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted2);"></div>
-</div>
-  </div>
-  <div class="charts-equal">
-    <div class="card">
-      <div class="card-header"><span class="card-title">P&amp;L by holding</span></div>
-      <div class="bar-wrap"><canvas id="barChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span class="card-title">Goals progress</span></div>
-      <div id="goalsRings" style="padding:4px 0;"></div>
-    </div>
-  </div>
-  <div class="card" style="margin-bottom:18px;">
-    <div class="card-header"><span class="card-title">ISA allowances 2025/26</span></div>
-    <div class="isa-mini-grid" id="isaMiniGrid"></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: ACCOUNTS & ISA ─── -->
-<div class="page" id="page-accounts">
-  <div class="page-header">
-    <h2>Accounts &amp; ISAs</h2>
-    <p>Bank accounts, ISA wrappers and savings · 2025/26 annual ISA allowance: <strong style="color:var(--green)">£20,000</strong></p>
-  </div>
-  <div class="section-label">ISA allowance tracker</div>
-  <div class="isa-grid" id="isaTracker"></div>
-  <div class="section-label">Your accounts</div>
-  <div class="accounts-grid" id="accountsGrid"></div>
-  <div class="form-box">
-    <h3>+ Add account or ISA</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Account name</label><input type="text" id="accName" placeholder="e.g. Vanguard ISA"/></div>
-      <div class="ff"><label>Type</label>
-        <select id="accType">
-          <optgroup label="Bank Accounts">
-            <option value="current">Current account</option>
-            <option value="savings">Savings account</option>
-            <option value="joint">Joint account</option>
-          </optgroup>
-          <optgroup label="ISAs">
-            <option value="stocks-isa">Stocks &amp; Shares ISA</option>
-            <option value="cash-isa">Cash ISA</option>
-            <option value="lifetime-isa">Lifetime ISA (LISA)</option>
-            <option value="help-to-buy-isa">Help to Buy ISA</option>
-            <option value="innovative-isa">Innovative Finance ISA</option>
-            <option value="junior-isa">Junior ISA</option>
-          </optgroup>
-          <optgroup label="Other">
-            <option value="pension">Pension / SIPP</option>
-            <option value="premium-bonds-acc">Premium Bonds</option>
-            <option value="other">Other</option>
-          </optgroup>
-        </select>
-      </div>
-      <div class="ff"><label>Provider</label><input type="text" id="accProvider" placeholder="e.g. Vanguard"/></div>
-      <div class="ff money-field"><label>Balance</label><input type="text" id="accBalance" placeholder="5,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Contributed this tax year</label><input type="text" id="accContrib" placeholder="0" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-    </div>
-    <div class="form-actions"><button class="btn btn-primary" onclick="addAccount()">Add account</button></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: PREMIUM BONDS ─── -->
-<div class="page" id="page-premium-bonds">
-  <div class="page-header">
-    <h2>Premium Bonds</h2>
-    <p>NS&amp;I premium bonds · max holding £50,000 · all prizes are tax-free</p>
-  </div>
-  <div class="pb-summary" id="pbSummary"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
-    <div class="form-box" style="margin-bottom:0;">
-      <h3>Update bond holding</h3>
-      <div class="form-grid">
-        <div class="ff money-field"><label>Total bonds held</label><input type="text" id="pbAmount" placeholder="50,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-        <div class="ff"><label>Date purchased / updated</label><input type="date" id="pbDate"/></div>
-      </div>
-      <div class="form-actions"><button class="btn btn-primary" onclick="updatePB()">Update</button></div>
-    </div>
-    <div class="form-box" style="margin-bottom:0;">
-      <h3>Log a prize win</h3>
-      <div class="form-grid">
-        <div class="ff"><label>Prize tier</label>
-          <select id="pbWinTier">
-            <option value="25">£25</option><option value="50">£50</option>
-            <option value="100">£100</option><option value="500">£500</option>
-            <option value="1000">£1,000</option><option value="5000">£5,000</option>
-            <option value="25000">£25,000</option><option value="50000">£50,000</option>
-            <option value="100000">£100,000</option><option value="1000000">£1,000,000</option>
-          </select>
-        </div>
-        <div class="ff"><label>Month</label>
-          <select id="pbWinMonth">
-            <option value="1">January</option><option value="2">February</option><option value="3">March</option>
-            <option value="4">April</option><option value="5">May</option><option value="6">June</option>
-            <option value="7">July</option><option value="8">August</option><option value="9">September</option>
-            <option value="10">October</option><option value="11">November</option><option value="12">December</option>
-          </select>
-        </div>
-        <div class="ff"><label>Year</label><input type="number" id="pbWinYear" placeholder="2025" min="2000" max="2100"/></div>
-      </div>
-      <div style="margin-bottom:12px;">
-        <label class="toggle-wrap">
-          <span>Add winnings to bond holding automatically</span>
-          <label class="toggle"><input type="checkbox" id="pbAutoAdd"><span class="toggle-track"></span></label>
-        </label>
-      </div>
-      <div class="form-actions"><button class="btn btn-primary" onclick="addPBWin()">Log win 🎉</button></div>
-    </div>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <div class="section-label">Winnings history</div>
-    <button class="icon-btn" title="Undo last deletion" id="pbUndoBtn" onclick="undoLastPBDelete()" style="opacity:0;pointer-events:none;transition:opacity .15s;font-size:14px;">↺</button>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Month / year</th><th>Amount</th><th>Cumulative total</th><th>Where went</th><th></th></tr></thead>
-      <tbody id="pbWinsBody"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ─── PAGE: STOCKS ─── -->
-<div class="page" id="page-investments">
-  <div class="page-header">
-    <h2>Investments</h2>
-    <p>Holdings, live prices & watchlist · Yahoo Finance (15-min delayed)</p>
-  </div>
-  <div class="alert alert-amber">⚠ Prices are 15-min delayed. Examples: <code>AAPL</code> · <code>VUSA.L</code> · <code>BTC-GBP</code> · <code>^FTSE</code> · <code>^GSPC</code></div>
-  <div class="tab-row">
-    <button class="tab-btn active" onclick="invTab('all',this)">All</button>
-    <button class="tab-btn"        onclick="invTab('stocks',this)">Stocks</button>
-    <button class="tab-btn"        onclick="invTab('crypto',this)">Crypto</button>
-    <button class="tab-btn"        onclick="invTab('watchlist',this)">Watchlist</button>
-  </div>
-  <div class="tab-pane active" id="invtab-all">
-    <div class="investment-stats" id="investmentStats"></div>
-    <div class="table-wrap">
-      <div class="table-toolbar">
-        <input class="search-box" id="holdingsSearch" placeholder="Search holdings…" oninput="renderHoldings()"/>
-        <button class="btn btn-primary" onclick="document.getElementById('addHoldingModal').classList.remove('hidden')">+ Add holding</button>
-      </div>
-      <table>
-        <thead><tr><th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Invested</th><th>Value</th><th>Unreal. P&amp;L</th><th>Return</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="holdingsBody"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="tab-pane" id="invtab-stocks">
-    <div class="investment-stats" id="stocksStats"></div>
-    <div class="table-wrap">
-      <div class="table-toolbar">
-        <input class="search-box" id="holdingsSearch" placeholder="Search holdings…" oninput="renderStocksHoldings()"/>
-        <button class="btn btn-primary" onclick="document.getElementById('addHoldingModal').classList.remove('hidden')">+ Add holding</button>
-      </div>
-      <table>
-        <thead><tr><th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Invested</th><th>Value</th><th>Unreal. P&amp;L</th><th>Return</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="stocksBody"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="tab-pane" id="invtab-crypto">
-    <div class="investment-stats" id="cryptoStats"></div>
-    <div class="table-wrap">
-      <div class="table-toolbar">
-        <input class="search-box" id="cryptoSearch" placeholder="Search crypto…" oninput="renderCryptoHoldings()"/>
-      </div>
-      <table>
-        <thead><tr><th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Invested</th><th>Value</th><th>Unreal. P&amp;L</th><th>Return</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="cryptoBody"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="tab-pane" id="invtab-watchlist">
-    <div class="form-box" style="margin-bottom:18px;">
-      <h3>Add to watchlist</h3>
-      <div style="display:flex;gap:10px;align-items:flex-end;">
-        <div class="ff" style="flex:1;"><label>Ticker symbol</label><input type="text" id="watchTicker" placeholder="NVDA, BTC-GBP, ^FTSE…" style="width:100%;" onkeydown="if(event.key==='Enter')addWatchTicker()"/></div>
-        <button class="btn btn-primary" onclick="addWatchTicker()">Add</button>
-      </div>
-    </div>
-    <div class="stocks-grid" id="stocksGrid"></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: SALARY ─── -->
-<div class="page" id="page-salary">
-  <div class="page-header">
-  <h2>Salary &amp; Income</h2>
-</div>
-  <div class="person-tab" id="personTabs"></div>
-  <div id="salaryContent"></div>
-  <div class="form-box" id="salaryAddForm">
-    <h3>Manage people</h3>
-    <div id="personManagement" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;"></div>
-    <div class="form-actions" style="margin-bottom:20px;">
-      <button class="btn btn-secondary" onclick="addNewPerson()">+ Add person</button>
-    </div>
-    <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);">
-    <h3 style="margin-top:20px;">Add salary</h3>
-    <div class="form-grid wide">
-      <div class="ff"><label>Person</label>
-        <select id="salPerson"></select>
-      </div>
-      <div class="ff"><label>Employer</label><input type="text" id="salEmployer" placeholder="e.g. Acme Ltd"/></div>
-      <div class="ff money-field"><label>Gross annual salary</label><input type="text" id="salGross" placeholder="45,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Annual bonus</label><input type="text" id="salBonus" placeholder="0" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Your pension (%)</label><input type="number" id="salPensionPct" placeholder="5%" min="0" max="100" step=".5"/></div>
-      <div class="ff"><label>Employer pension (%)</label><input type="number" id="salEmployerPension" placeholder="3%" min="0" max="100" step=".5"/></div>
-      <div class="ff"><label>Student loan plan</label>
-        <select id="salStudentLoan">
-          <option value="none">None</option>
-          <option value="plan1">Plan 1 (pre-2012)</option>
-          <option value="plan2">Plan 2 (2012–2023)</option>
-          <option value="plan4">Plan 4 (Scotland)</option>
-          <option value="plan5">Plan 5 (2023+)</option>
-          <option value="postgrad">Postgraduate</option>
-        </select>
-      </div>
-      <div class="ff"><label>Start date</label><input type="date" id="salStartDate"/></div>
-      <div class="ff" id="salEndDateWrap" style="display:none;"><label>End date</label><input type="date" id="salEndDate"/></div>
-      <div class="ff full-col" style="display:flex;flex-direction:row;align-items:center;gap:10px;margin-top:2px;">
-        <label class="cb-row"><input type="checkbox" id="salOngoing" checked onchange="document.getElementById('salEndDateWrap').style.display=this.checked?'none':'flex'"> Ongoing (no end date)</label>
-      </div>
-      <div class="ff full-col"><label>Notes</label><textarea id="salNotes" placeholder="e.g. includes car allowance…"></textarea></div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-primary" onclick="addSalary()">Save salary</button>
-    </div>
-  </div>
-</div>
-
-<!-- ─── PAGE: DEBTS ─── -->
-<div class="page" id="page-debts">
-  <div class="page-header">
-    <h2>Debts</h2>
-    <p>Track everything you owe · monthly payments · payoff timeline</p>
-  </div>
-  <div class="person-tab" id="debtPersonTabs"></div>
-  <div style="margin-bottom:12px;">
-    <label class="toggle-wrap">
-      <span>Include student debts in totals</span>
-      <label class="toggle"><input type="checkbox" id="includeStudentDebts" onchange="renderDebts()" checked><span class="toggle-track"></span></label>
-    </label>
-  </div>
-  <div class="summary-grid" id="debtSummaryCards" style="grid-template-columns:repeat(3,1fr);"></div>
-  <div class="debt-grid" id="debtGrid" style="margin-top:16px;"></div>
-  <div class="form-box">
-    <h3>Add debt</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Name</label><input type="text" id="dName" placeholder="e.g. Car loan"/></div>
-      <div class="ff"><label>Type</label>
-        <select id="dType">
-          <option value="Loan">Personal loan</option><option value="Mortgage">Mortgage</option>
-          <option value="Credit-card">Credit card</option><option value="Student">Student loan</option>
-          <option value="Car">Car finance</option><option value="Other">Other</option>
-        </select>
-      </div>
-      <div class="ff"><label>Assigned to</label>
-        <select id="dPerson">
-          <option value="shared">Shared (household)</option>
-        </select>
-      </div>
-      <div class="ff"><label>Shared debt?</label>
-        <label class="toggle"><input type="checkbox" id="dShared"><span class="toggle-track"></span></label>
-      </div>
-      <div class="ff money-field"><label>Original total</label><input type="text" id="dTotal" placeholder="8,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Remaining balance</label><input type="text" id="dRemaining" placeholder="6,500" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Monthly payment</label><input type="text" id="dMonthly" placeholder="250" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Interest rate (%)</label><input type="number" id="dRate" placeholder="6.5%" step=".1" min="0"/></div>
-      <div class="ff"><label>Start date</label><input type="date" id="dStart"/></div>
-      <div class="ff"><label>End / payoff date</label><input type="date" id="dEnd"/></div>
-      <div class="ff"><label>Lender</label><input type="text" id="dLender" placeholder="e.g. Halifax"/></div>
-      <div class="ff full-col"><label>Notes</label><textarea id="dNotes" placeholder="e.g. 0% ends Jan 2026, then 29.9% APR…"></textarea></div>
-    </div>
-    <div class="form-actions"><button class="btn btn-primary" onclick="addDebt()">Add debt</button></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: GOALS ─── -->
-<div class="page" id="page-goals">
-  <div class="page-header">
-    <h2>Goals</h2>
-    <p>Financial targets with progress tracking · also shown on Overview</p>
-  </div>
-  <div class="goals-grid" id="goalsGrid"></div>
-  <div class="form-box">
-    <h3>Add goal</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Goal name</label><input type="text" id="gName" placeholder="e.g. House deposit"/></div>
-      <div class="ff money-field"><label>Target</label><input type="text" id="gTarget" placeholder="40,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Currently saved</label><input type="text" id="gSaved" placeholder="12,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Target date</label><input type="date" id="gDate"/></div>
-      <div class="ff money-field"><label>Monthly contribution</label><input type="text" id="gMonthly" placeholder="500" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Icon / emoji</label><select id="gEmoji">
-        <option value="🏠" selected>🏠 House</option>
-        <option value="🚗">🚗 Car</option>
-        <option value="✈️">✈️ Vacation</option>
-        <option value="🎓">🎓 Education</option>
-        <option value="🏖️">🏖️ Retirement</option>
-        <option value="💰">💰 Savings</option>
-        <option value="🏦">🏦 Bank</option>
-        <option value="📈">📈 Investment</option>
-        <option value="🎯">🎯 Goal</option>
-        <option value="🏆">🏆 Achievement</option>
-        <option value="💍">💍 Wedding</option>
-        <option value="🏥">🏥 Health</option>
-        <option value="📚">📚 Books</option>
-        <option value="🎮">🎮 Gaming</option>
-        <option value="🍔">🍔 Food</option>
-        <option value="🛡️">🛡️ Emergency</option>
-        <option value="🎁">🎁 Gift</option>
-        <option value="🏃">🏃 Fitness</option>
-        <option value="🎨">🎨 Hobby</option>
-        <option value="◐">◐ Default</option>
-      </select></div>
-    </div>
-    <div class="form-actions"><button class="btn btn-primary" onclick="addGoal()">Add goal</button></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: TRANSACTIONS ─── -->
-<div class="page" id="page-transactions">
-  <div class="page-header">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div><h2>Transaction history</h2><p>All buys, sells, wins, income and payments</p></div>
-      <button class="icon-btn" title="Undo last deletion" id="txUndoBtn" onclick="undoLastTxDelete()" style="opacity:0;pointer-events:none;transition:opacity .15s;font-size:14px;">↺</button>
-    </div>
-  </div>
-  <div class="table-toolbar" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:14px;padding:10px 12px;">
-    <input class="search-box" id="txSearch" placeholder="Search…" oninput="renderTransactions()"/>
-    <button class="filter-btn active" onclick="setTxFilter('all',this)">All</button>
-    <button class="filter-btn" onclick="setTxFilter('buy',this)">Buys</button>
-    <button class="filter-btn" onclick="setTxFilter('sell',this)">Sells</button>
-    <button class="filter-btn" onclick="setTxFilter('win',this)">Wins</button>
-    <button class="filter-btn" onclick="setTxFilter('income',this)">Income</button>
-    <button class="filter-btn" onclick="setTxFilter('payment',this)">Payments</button>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th>P&amp;L</th><th>Notes</th><th></th></tr></thead>
-      <tbody id="txBody"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ─── PAGE: TAX ─── -->
-<div class="page" id="page-tax">
-  <div class="page-header">
-    <h2>Tax summary</h2>
-    <p>2025/26 tax year · guidance only — please consult a qualified professional</p>
-  </div>
-  <div class="alert alert-amber">ℹ This is an estimate. Actual tax may differ. For advice, speak to an accountant.</div>
-  <div class="tax-grid" id="taxGrid"></div>
-  <div class="card" style="margin-top:14px;">
-    <div class="card-header"><span class="card-title">ISA allowances across all wrappers</span></div>
-    <div id="taxIsaDetail" style="display:flex;flex-direction:column;gap:8px;"></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: SETTINGS ─── -->
-<div class="page" id="page-settings">
-  <div class="page-header"><h2>Settings</h2><p>Personalise your dashboard</p></div>
-  <div class="form-box">
-    <h3>Personal details</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Your name</label><input type="text" id="setName" placeholder="e.g. Alex"/></div>
-      <div class="ff"><label>Dashboard title</label><input type="text" id="setTitle" placeholder="Alex's Wealth"/></div>
-      <div class="ff"><label>Currency symbol</label><input type="text" id="setCurrency" placeholder="£" maxlength="3"/></div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
-      <button class="btn btn-secondary" onclick="loadSample()">Load sample data</button>
-      <button class="btn btn-danger" style="margin-left:auto;" onclick="clearAll()">Clear all data</button>
-    </div>
-  </div>
-</div>
-
-</main>
-</div><!-- /.app -->
-
-<!-- ═══════════════════════════════════════════════════
-     7. HTML MODALS
-     ═══════════════════════════════════════════════════ -->
-
-<!-- Edit holding modal -->
-<div class="modal-overlay hidden" id="editModal">
-  <div class="modal">
-    <h3>Edit holding</h3>
-    <div class="form-grid" id="editFormGrid"></div>
-    <div class="modal-section">
-      <div class="modal-section-title">Mark as sold</div>
-      <div class="form-grid">
-        <div class="ff money-field"><label>Sell price / unit</label><input type="text" id="editSellPrice" placeholder="200.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-        <div class="ff"><label>Sell date</label><input type="date" id="editSellDate"/></div>
-        <div class="ff money-field"><label>Total sold for</label><input type="text" id="editSellTotal" placeholder="2,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
-      <button class="btn btn-danger"    onclick="sellHolding()">Mark sold</button>
-      <button class="btn btn-primary"   onclick="saveEditHolding()">Save changes</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add holding modal -->
-<div class="modal-overlay hidden" id="addHoldingModal">
-  <div class="modal">
-    <h3>Add holding</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Name</label><input type="text" id="hName" placeholder="e.g. Apple Inc."/></div>
-      <div class="ff"><label>Ticker (optional)</label><input type="text" id="hTicker" placeholder="AAPL"/></div>
-      <div class="ff"><label>Asset type</label>
-        <select id="hType">
-          <option value="stocks">Stock</option><option value="isa">ISA holding</option>
-          <option value="crypto">Crypto</option><option value="cash">Cash</option>
-          <option value="pension">Pension</option><option value="property">Property</option><option value="other">Other</option>
-        </select>
-      </div>
-      <div class="ff money-field"><label>Amount invested</label><input type="text" id="hInvested" placeholder="1,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Current value</label><input type="text" id="hCurrent" placeholder="1,200" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Buy price / unit</label><input type="text" id="hBuyPrice" placeholder="150.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Shares / units</label><input type="number" id="hShares" placeholder="10" step="any"/></div>
-      <div class="ff"><label>Buy date</label><input type="date" id="hBuyDate"/></div>
-      <div class="ff"><label>Wrapper</label>
-        <select id="hWrapper">
-          <option value="">— none —</option><option value="stocks-isa">S&amp;S ISA</option>
-          <option value="cash-isa">Cash ISA</option><option value="lifetime-isa">Lifetime ISA</option>
-          <option value="pension">Pension/SIPP</option><option value="gia">GIA</option>
-        </select>
-      </div>
-      <div class="ff full-col"><label>Notes</label><textarea id="hNotes" placeholder="e.g. Long-term hold, bought the dip…"></textarea></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('addHoldingModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="addHolding()">Save holding</button>
-    </div>
-  </div>
-</div>
-
-<!-- Chart modal -->
-<div class="modal-overlay hidden" id="chartModal">
-  <div class="modal" style="max-width:600px;">
-    <h3 id="chartTitle">Chart</h3>
-    <div style="margin-bottom:12px;">
-      <button class="filter-btn active" onclick="setChartRange('1y',this)">1 Year</button>
-      <button class="filter-btn" onclick="setChartRange('6mo',this)">6 Months</button>
-      <button class="filter-btn" onclick="setChartRange('3mo',this)">3 Months</button>
-      <button class="filter-btn" onclick="setChartRange('1mo',this)">1 Month</button>
-    </div>
-    <div id="chartContainer" style="text-align:center;"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('chartModal')">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Edit debt modal -->
-<div class="modal-overlay hidden" id="editDebtModal">
-  <div class="modal">
-    <h3>Edit debt</h3>
-    <div class="form-grid" id="editDebtGrid"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('editDebtModal')">Cancel</button>
-      <button class="btn btn-primary"   onclick="saveEditDebt()">Save changes</button>
-    </div>
-  </div>
-</div>
-
-<!-- Edit salary modal -->
-<div class="modal-overlay hidden" id="editSalaryModal">
-  <div class="modal">
-    <h3>Edit salary</h3>
-    <div class="form-grid" id="editSalaryGrid"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('editSalaryModal')">Cancel</button>
-      <button class="btn btn-primary"   onclick="saveEditSalary()">Save changes</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<!-- Chart.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
-<!-- App modules (load order matters - globals must exist before use) -->
-<script src="js/state.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/transactions.js"></script>
-<script src="js/accounts.js"></script>
-<script src="js/overview.js"></script>
-<script src="js/investments.js"></script>
-<script src="js/premium-bonds.js"></script>
-<script src="js/salary.js"></script>
-<script src="js/debts.js"></script>
-<script src="js/goals.js"></script>
-<script src="js/stocks.js"></script>
-<script src="js/tax.js"></script>
-<script src="js/settings.js"></script>
-<script src="js/nav.js"></script>
-<script src="js/init.js"></script>
+<!-- Stylesheets -->
+<link rel="stylesheet" href="src/styles/main.css">
+</head>
+<body>
+
+<div class="app">
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar" role="navigation">
+    <div class="logo">
+      <div class="logo-name" id="sidebarTitle">Wealth Dashboard</div>
+      <div class="logo-sub">v4 · modular</div>
+    </div>
+    
+    <div class="nav-scroll" role="main">
+      <div class="nav-group">
+        <div class="nav-label">DASHBOARD</div>
+        <button class="nav-item active" onclick="nav('overview',this)">
+          <span class="nav-icon">◆</span>
+          <span>Overview</span>
+        </button>
+        <button class="nav-item" onclick="nav('holdings',this)">
+          <span class="nav-icon">◫</span>
+          <span>Holdings</span>
+        </button>
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-label">ACCOUNTS & TRACKING</div>
+        <button class="nav-item" onclick="nav('accounts',this)">
+          <span class="nav-icon">🏦</span>
+          <span>Accounts & ISAs</span>
+        </button>
+        <button class="nav-item" onclick="nav('premium-bonds',this)">
+          <span class="nav-icon">🎰</span>
+          <span>Premium Bonds</span>
+        </button>
+        <button class="nav-item" onclick="nav('transactions',this)">
+          <span class="nav-icon">≡</span>
+          <span>Transactions</span>
+        </button>
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-label">FINANCIAL</div>
+        <button class="nav-item" onclick="nav('stocks-page',this)">
+          <span class="nav-icon">📈</span>
+          <span>Stocks & Prices</span>
+        </button>
+        <button class="nav-item" onclick="nav('salary',this)">
+          <span class="nav-icon">💼</span>
+          <span>Salary & Income</span>
+        </button>
+        <button class="nav-item" onclick="nav('debts',this)">
+          <span class="nav-icon">💳</span>
+          <span>Debts</span>
+        </button>
+        <button class="nav-item" onclick="nav('bills',this)">
+          <span class="nav-icon">📋</span>
+          <span>Bills</span>
+        </button>
+        <button class="nav-item" onclick="nav('goals',this)">
+          <span class="nav-icon">◐</span>
+          <span>Goals</span>
+        </button>
+        <button class="nav-item" onclick="nav('tax',this)">
+          <span class="nav-icon">📋</span>
+          <span>Tax Summary</span>
+        </button>
+      </div>
+      
+      <div class="nav-group">
+        <div class="nav-label">ADMIN</div>
+        <button class="nav-item" onclick="nav('settings',this)">
+          <span class="nav-icon">⚙</span>
+          <span>Settings</span>
+        </button>
+      </div>
+    </div>
+    
+    <div class="sidebar-bottom">
+      <div class="user-chip">
+        <div class="user-avatar" id="userAvatar">W</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">Financial Tracker</div>
+          <div class="user-sub" id="lastUpdated">never saved</div>
+        </div>
+      </div>
+      <button class="refresh-btn" onclick="refreshPrices()">↻ &nbsp;Refresh prices</button>
+      <div class="last-refresh" id="lastRefreshTime">prices not yet loaded</div>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="main">
+    <!-- PAGE: OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <h2 id="overviewGreeting">Overview</h2>
+        <p id="overviewDate"></p>
+      </div>
+      <div class="summary-grid" id="summarycards"></div>
+      <div class="charts-2col">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Allocation</span></div>
+          <div class="donut-wrap">
+            <canvas id="donutChart"></canvas>
+            <div class="donut-center"><div class="dc-big val" id="donutCenterVal">—</div><div class="dc-sm">total value</div></div>
+          </div>
+          <div class="legend-list" id="donutLegend"></div>
+        </div>
+        <div class="card">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="card-title">Net worth over time</span>
+            <select id="nwPeriod" onchange="renderOverview()" style="font-size:12.5px;padding:5px 10px;border:1px solid var(--border2);border-radius:6px;">
+              <option value="1w">1 Week</option>
+              <option value="1m">1 Month</option>
+              <option value="3m">3 Months</option>
+              <option value="6m" selected>6 Months</option>
+              <option value="1y">1 Year</option>
+              <option value="5y">5 Years</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <div class="nw-wrap"><canvas id="nwChart"></canvas></div>
+          <div id="nwSub" style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted2);"></div>
+        </div>
+      </div>
+      <div class="charts-equal">
+        <div class="card">
+          <div class="card-header"><span class="card-title">P&L by holding</span></div>
+          <div class="bar-wrap"><canvas id="barChart"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Goals progress</span></div>
+          <div id="goalsRings" style="padding:4px 0;"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-header"><span class="card-title">ISA allowances 2025/26</span></div>
+        <div class="isa-mini-grid" id="isaMiniGrid"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: HOLDINGS -->
+    <div class="page" id="page-holdings">
+      <div class="page-header">
+        <h2>Holdings</h2>
+        <p>Track investments · edit, mark as sold, add buy & sell prices</p>
+      </div>
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="hTab('open',this)">Open positions</button>
+        <button class="tab-btn" onclick="hTab('closed',this)">Closed / sold</button>
+        <button class="tab-btn" onclick="hTab('add',this)">+ Add holding</button>
+      </div>
+      <div class="tab-pane active" id="htab-open">
+        <div class="table-wrap">
+          <div class="table-toolbar">
+            <input class="search-box" id="holdingsSearch" placeholder="Search holdings…" oninput="renderHoldings()"/>
+            <button class="filter-btn active" onclick="setHFilter('all',this)">All</button>
+            <button class="filter-btn" onclick="setHFilter('stocks',this)">Stocks</button>
+            <button class="filter-btn" onclick="setHFilter('isa',this)">ISA</button>
+            <button class="filter-btn" onclick="setHFilter('crypto',this)">Crypto</button>
+            <button class="filter-btn" onclick="setHFilter('pension',this)">Pension</button>
+          </div>
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Invested</th><th>Value</th><th>Unreal. P&L</th><th>Return</th><th>Notes</th><th></th></tr></thead>
+            <tbody id="holdingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tab-pane" id="htab-closed">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Sell price</th><th>Sell date</th><th>Invested</th><th>Sold for</th><th>Realised P&L</th><th>Return %</th><th></th></tr></thead>
+            <tbody id="closedBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tab-pane" id="htab-add">
+        <div class="form-box">
+          <h3>Add holding</h3>
+          <div class="form-grid">
+            <div class="ff"><label>Name</label><input type="text" id="hName" placeholder="e.g. Apple Inc."/></div>
+            <div class="ff"><label>Ticker (optional)</label><input type="text" id="hTicker" placeholder="AAPL"/></div>
+            <div class="ff"><label>Asset type</label>
+              <select id="hType">
+                <option value="stocks">Stock</option><option value="isa">ISA holding</option>
+                <option value="crypto">Crypto</option><option value="cash">Cash</option>
+                <option value="pension">Pension</option><option value="property">Property</option><option value="other">Other</option>
+              </select>
+            </div>
+            <div class="ff money-field"><label>Amount invested</label><input type="text" id="hInvested" placeholder="1,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+            <div class="ff money-field"><label>Current value</label><input type="text" id="hCurrent" placeholder="1,200" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+            <div class="ff money-field"><label>Buy price / unit</label><input type="text" id="hBuyPrice" placeholder="150.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+            <div class="ff"><label>Shares / units</label><input type="number" id="hShares" placeholder="10" step="any"/></div>
+            <div class="ff"><label>Buy date</label><input type="date" id="hBuyDate"/></div>
+            <div class="ff"><label>Wrapper</label>
+              <select id="hWrapper">
+                <option value="">— none —</option><option value="stocks-isa">S&S ISA</option>
+                <option value="cash-isa">Cash ISA</option><option value="lifetime-isa">Lifetime ISA</option>
+                <option value="pension">Pension/SIPP</option><option value="gia">GIA</option>
+              </select>
+            </div>
+            <div class="ff full-col"><label>Notes</label><textarea id="hNotes" placeholder="e.g. Long-term hold, bought the dip…"></textarea></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="addHolding()">Save holding</button>
+            <button class="btn btn-secondary" onclick="loadSample()">Load sample data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: BILLS -->
+    <div class="page" id="page-bills">
+      <div class="page-header">
+        <h2>Bills & Recurring Payments</h2>
+        <p>Track mortgage, utilities, subscriptions, insurance & more</p>
+      </div>
+      
+      <div class="form-box" style="margin-bottom:18px;">
+        <h3>+ Add new bill</h3>
+        <div class="form-grid">
+          <div class="ff"><label>Bill name</label><input type="text" id="billName" placeholder="e.g. Mortgage, Water, Netflix"/></div>
+          <div class="ff"><label>Category</label>
+            <select id="billCategory">
+              <option value="housing">Housing</option>
+              <option value="utilities">Utilities</option>
+              <option value="transport">Transport</option>
+              <option value="insurance">Insurance</option>
+              <option value="subscription">Subscription</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="ff money-field"><label>Amount (£)</label><input type="text" id="billAmount" placeholder="500.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+          <div class="ff"><label>Frequency</label>
+            <select id="billFrequency">
+              <option value="Weekly">Weekly</option>
+              <option value="Fortnightly">Fortnightly</option>
+              <option value="Monthly" selected>Monthly</option>
+              <option value="Quarterly">Quarterly</option>
+              <option value="Yearly">Yearly</option>
+            </select>
+          </div>
+          <div class="ff"><label>Next payment date</label><input type="date" id="billNextPayment"/></div>
+          <div class="ff"><label>Payment type</label>
+            <select id="billRecurring" onchange="document.getElementById('billEndDateWrap').style.display = this.value==='never' ? '' : 'none'">
+              <option value="monthly" selected>Monthly (ongoing)</option>
+              <option value="weekly">Weekly (ongoing)</option>
+              <option value="yearly">Yearly (ongoing)</option>
+              <option value="never">Fixed end date</option>
+            </select>
+          </div>
+          <div class="ff" id="billEndDateWrap" style="display:none;"><label>End date</label><input type="date" id="billEndDate"/></div>
+          <div class="ff full-col"><label>Notes (optional)</label><textarea id="billNotes" placeholder="e.g. Account ref, provider contact"></textarea></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="addBill()">+ Add bill</button>
+        </div>
+      </div>
+      
+      <div class="bills-grid" id="billsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;"></div>
+    </div>
+
+    <!-- Remaining pages (structure placeholders) -->
+    <div class="page" id="page-accounts"></div>
+    <div class="page" id="page-premium-bonds"></div>
+    <div class="page" id="page-stocks-page"></div>
+    <div class="page" id="page-salary"></div>
+    <div class="page" id="page-debts"></div>
+    <div class="page" id="page-goals"></div>
+    <div class="page" id="page-transactions"></div>
+    <div class="page" id="page-tax"></div>
+    <div class="page" id="page-settings"></div>
+  </main>
+</div>
+
+<!-- Eye/Hide Button -->
+<div class="eye-fab" id="eyeBtn" onclick="toggleHide()" title="Hide values">👁</div>
+
+<!-- Toast Notification -->
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     MODULE IMPORTS & INITIALIZATION
+     ═══════════════════════════════════════════════════ -->
+
+<!-- Core modules (load in order) -->
+<script src="src/state.js"></script>
+<script src="src/utils/format.js"></script>
+<script src="src/services/calculations.js"></script>
+<script src="src/services/api.js"></script>
+<script src="src/pages/helpers.js"></script>
+<script src="src/pages/index.js"></script>
+
+<!-- Navigation & initialization -->
+<script>
+// Chart instances and UI state
+let donutChart = null, barChart = null, nwChart = null;
+let hFilter = 'all', txFilter = 'all', editingId = null, editingDebtIdx = null, editingSalaryIdx = null;
+let livePrices = {};
+let currentPersonIdx = 0;
+let lastPBDelete = null;
+
+/**
+ * Navigation handler
+ */
+function nav(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const p = document.getElementById('page-' + page);
+  if(p) {
+    p.classList.add('active');
+    if(el) el.classList.add('active');
+    if(PAGE_RENDERS[page]) PAGE_RENDERS[page]();
+  }
+}
+
+const PAGE_RENDERS = {
+  'overview': renderOverview,
+  'holdings': () => { renderHoldings(); renderClosed(); },
+  'accounts': renderAccounts,
+  'premium-bonds': renderPremiumBonds,
+  'stocks-page': renderStocks,
+  'salary': renderSalary,
+  'debts': renderDebts,
+  'bills': renderBills,
+  'goals': renderGoals,
+  'transactions': renderTransactions,
+  'tax': renderTax,
+  'settings': renderSettings
+};
+
+/**
+ * Initialize app
+ */
+function initApp() {
+  loadState();
+  _updateSidebarMeta();
+  renderOverview();
+  document.getElementById('pbWinMonth').value = new Date().getMonth() + 1;
+  document.getElementById('pbWinYear').value = new Date().getFullYear();
+  console.log('✓ Finance Dashboard v4 initialized (modular structure)');
+}
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', initApp);
+</script>
+
+<!-- Toast styling -->
+<style>
+  #toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--text);
+    color: var(--surface);
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+    z-index: 1000;
+  }
+  #toast.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  /* Additional CSS for layouts */
+  .charts-2col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; }
+  .charts-equal { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px; }
+  .tab-row { display:flex; gap:6px; margin-bottom:14px; }
+  .tab-btn { padding:7px 14px; background:var(--bg); border:1px solid var(--border2); border-radius:var(--radius-sm); color:var(--muted2); font-size:12px; cursor:pointer; transition:all .13s; }
+  .tab-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .tab-pane { display:none; }
+  .tab-pane.active { display:block; }
+  .form-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; margin-bottom:18px; }
+  .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:14px; }
+  .form-grid.wide { grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+  .ff { display:flex; flex-direction:column; }
+  .ff label { font-size:11px; color:var(--muted); margin-bottom:5px; font-variation-settings:'wght' 600; text-transform:uppercase; letter-spacing:.05em; }
+  .ff input, .ff select, .ff textarea { background:var(--bg); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:8px 10px; color:var(--text); font-size:12.5px; outline:none; transition:border .15s; }
+  .ff input:focus, .ff select:focus, .ff textarea:focus { border-color:var(--accent); }
+  .ff.money-field { position:relative; }
+  .ff.money-field .currency { position:absolute; right:10px; top:25px; color:var(--muted2); font-size:12px; pointer-events:none; }
+  .ff.full-col { grid-column:1/-1; }
+  .form-actions { display:flex; gap:10px; flex-wrap:wrap; }
+  .btn { padding:8px 14px; border:none; border-radius:var(--radius-sm); font-size:12px; font-variation-settings:'wght' 600; cursor:pointer; transition:all .13s; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-primary:hover { opacity:.87; }
+  .btn-secondary { background:var(--bg); border:1px solid var(--border2); color:var(--muted2); }
+  .btn-secondary:hover { background:var(--surface2); border-color:var(--border); }
+  .btn-danger { background:var(--red); color:#fff; }
+  .btn-danger:hover { opacity:.87; }
+  .icon-btn { background:none; border:none; cursor:pointer; padding:4px; font-size:14px; opacity:.6; transition:opacity .15s; }
+  .icon-btn:hover { opacity:1; }
+  .icon-btn.edit { color:var(--accent); }
+  .icon-btn.del { color:var(--red); }
+  .empty { padding:40px 20px; text-align:center; color:var(--muted); }
+  .empty .ei { font-size:32px; margin-bottom:10px; opacity:.5; }
+  .pill { display:inline-block; padding:3px 8px; border-radius:12px; font-size:10px; font-variation-settings:'wght' 600; }
+  .p-stocks { background:rgba(10,143,92,.15); color:#0a8f5c; }
+  .p-isa { background:rgba(10,143,92,.15); color:#0a8f5c; }
+  .p-crypto { background:rgba(80,70,229,.15); color:#5046e5; }
+  .p-cash { background:rgba(29,111,202,.15); color:#1d6fca; }
+  .p-pension { background:rgba(80,70,229,.15); color:#5046e5; }
+  .p-property { background:rgba(184,115,9,.15); color:#b87309; }
+  .p-other { background:rgba(124,122,138,.15); color:#7c7b8a; }
+  .prog-outer { width:100%; height:6px; background:var(--bg); border-radius:3px; overflow:hidden; }
+  .prog-fill { height:100%; background:var(--accent); transition:width .2s; }
+  .bar-wrap { position:relative; width:100%; height:180px; }
+  .nw-wrap { position:relative; width:100%; height:200px; }
+  .stock-card { background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; }
+  .stock-ticker { font-size:13px; font-variation-settings:'wght' 700; }
+  .stock-name { font-size:11px; color:var(--muted); }
+  .stock-price { font-size:18px; font-variation-settings:'wght' 700; margin:8px 0 4px; }
+  .stock-chg { font-size:12px; font-variation-settings:'wght' 600; }
+  .hidden-vals .val { filter:blur(7px); pointer-events:none; user-select:none; transition:filter .25s; }
+  .isa-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin-bottom:18px; }
+  .isa-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; }
+  .isa-mini-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
+</style>
+
+<!-- Edit Bill Modal -->
+<div id="editBillModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;">
+  <div style="background:var(--surface);border-radius:var(--radius-md);padding:28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">
+    <h3 style="margin-bottom:18px;">Edit bill</h3>
+    <div class="form-grid" id="editBillGrid"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveEditBill()" style="flex:1;">Save changes</button>
+      <button class="btn btn-secondary" onclick="closeModal('editBillModal')" style="flex:1;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

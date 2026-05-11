@@ -1,3 +1,4 @@
+<style>
 :root {
   /* Color tokens */
   --bg:       #fafafa;
@@ -405,3 +406,17 @@ tbody tr:hover { background:var(--bg); }
   .eye-fab { top:14px; right:14px; }
 }
 </style>
+
+/* ── Bills ── */
+.bill-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; }
+.bill-name { font-size:13px; font-variation-settings:'wght' 700; }
+.bill-cat { font-size:10px; color:var(--muted); }
+.bill-amount { font-size:14px; font-variation-settings:'wght' 700; }
+.bill-status { padding:4px 8px; border-radius:6px; display:inline-block; }
+.bill-status.due-soon { background:var(--amber-dim); color:var(--amber); }
+.bill-status.overdue { background:var(--red-dim); color:var(--red); }
+.bill-status.upcoming { background:var(--green-dim); color:var(--green); }
+.bills-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; }
+
+/* ── Modals ── */
+.hidden { display:none !important; }
