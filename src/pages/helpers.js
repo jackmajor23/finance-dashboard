@@ -1123,3 +1123,127 @@ function renderTax(){
 // 21. JS: SETTINGS
 // ═══════════════════════════════════════════════════
 function saveSettings(){
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BILLS CRUD OPERATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+let editingBillIdx = null;
+
+function addBill(){
+  const name = (document.getElementById('billName').value || '').trim();
+  const category = document.getElementById('billCategory').value;
+  const amount = parseMoney(document.getElementById('billAmount').value);
+  const frequency = document.getElementById('billFrequency').value;
+  const nextPaymentDate = document.getElementById('billNextPayment').value;
+  const recurring = document.getElementById('billRecurring').value;
+  const endDate = recurring === 'never' ? document.getElementById('billEndDate').value : '';
+  const notes = (document.getElementById('billNotes').value || '').trim();
+  
+  if(!name || !amount || !nextPaymentDate){
+    toast('Please fill: bill name, amount, and next payment date');
+    return;
+  }
+  
+  S.bills.push({
+    id: Date.now(),
+    name,
+    category,
+    amount,
+    frequency,
+    nextPaymentDate,
+    recurring,
+    endDate,
+    notes,
+    createdDate: new Date().toISOString().split('T')[0]
+  });
+  
+  save();
+  toast(`Added bill: ${name}`);
+  
+  // Clear form
+  ['billName','billAmount','billNotes'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  document.getElementById('billCategory').value = 'utilities';
+  document.getElementById('billFrequency').value = 'Monthly';
+  document.getElementById('billRecurring').value = 'monthly';
+  
+  renderBills();
+}
+
+function deleteBill(idx){
+  if(!confirm('Delete this bill?')) return;
+  S.bills.splice(idx, 1);
+  save();
+  renderBills();
+  toast('Bill removed');
+}
+
+function openEditBill(idx){
+  editingBillIdx = idx;
+  const b = S.bills[idx];
+  if(!b) return;
+  
+  document.getElementById('editBillGrid').innerHTML = `
+    <div class="ff"><label>Bill name</label><input type="text" id="ebm-name" value="${b.name}"/></div>
+    <div class="ff"><label>Category</label>
+      <select id="ebm-cat">
+        <option value="utilities"${b.category==='utilities'?' selected':''}>Utilities</option>
+        <option value="housing"${b.category==='housing'?' selected':''}>Housing</option>
+        <option value="transport"${b.category==='transport'?' selected':''}>Transport</option>
+        <option value="insurance"${b.category==='insurance'?' selected':''}>Insurance</option>
+        <option value="subscription"${b.category==='subscription'?' selected':''}>Subscription</option>
+        <option value="other"${b.category==='other'?' selected':''}>Other</option>
+      </select>
+    </div>
+    <div class="ff money-field"><label>Amount (£)</label><input type="text" id="ebm-amt" value="${b.amount.toFixed(2)}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+    <div class="ff"><label>Frequency</label>
+      <select id="ebm-freq">
+        <option value="Weekly"${b.frequency==='Weekly'?' selected':''}>Weekly</option>
+        <option value="Fortnightly"${b.frequency==='Fortnightly'?' selected':''}>Fortnightly</option>
+        <option value="Monthly"${b.frequency==='Monthly'?' selected':''}>Monthly</option>
+        <option value="Quarterly"${b.frequency==='Quarterly'?' selected':''}>Quarterly</option>
+        <option value="Yearly"${b.frequency==='Yearly'?' selected':''}>Yearly</option>
+      </select>
+    </div>
+    <div class="ff"><label>Next payment date</label><input type="date" id="ebm-next" value="${b.nextPaymentDate}"/></div>
+    <div class="ff"><label>Recurring type</label>
+      <select id="ebm-rec" onchange="toggleBillEndDate()">
+        <option value="monthly"${b.recurring==='monthly'?' selected':''}>Monthly (ongoing)</option>
+        <option value="weekly"${b.recurring==='weekly'?' selected':''}>Weekly (ongoing)</option>
+        <option value="yearly"${b.recurring==='yearly'?' selected':''}>Yearly (ongoing)</option>
+        <option value="never"${b.recurring==='never'?' selected':''}>Fixed end date</option>
+      </select>
+    </div>
+    <div class="ff" id="ebm-enddate-wrap" style="${b.recurring==='never'?'':'display:none;'}"><label>End date</label><input type="date" id="ebm-end" value="${b.endDate || ''}"/></div>
+    <div class="ff full-col"><label>Notes</label><textarea id="ebm-notes">${b.notes || ''}</textarea></div>
+  `;
+  
+  document.getElementById('editBillModal').classList.remove('hidden');
+}
+
+function toggleBillEndDate(){
+  const recurring = document.getElementById('ebm-rec').value;
+  const wrap = document.getElementById('ebm-enddate-wrap');
+  if(wrap) wrap.style.display = recurring === 'never' ? '' : 'none';
+}
+
+function saveEditBill(){
+  const b = S.bills[editingBillIdx];
+  if(!b) return;
+  
+  b.name = document.getElementById('ebm-name').value;
+  b.category = document.getElementById('ebm-cat').value;
+  b.amount = parseMoney(document.getElementById('ebm-amt').value);
+  b.frequency = document.getElementById('ebm-freq').value;
+  b.nextPaymentDate = document.getElementById('ebm-next').value;
+  b.recurring = document.getElementById('ebm-rec').value;
+  b.endDate = b.recurring === 'never' ? document.getElementById('ebm-end').value : '';
+  b.notes = document.getElementById('ebm-notes').value;
+  
+  save();
+  closeModal('editBillModal');
+  renderBills();
+  toast('Bill updated');
+}

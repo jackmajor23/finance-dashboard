@@ -67,6 +67,10 @@
           <span class="nav-icon">💳</span>
           <span>Debts</span>
         </button>
+        <button class="nav-item" onclick="nav('bills',this)">
+          <span class="nav-icon">📋</span>
+          <span>Bills</span>
+        </button>
         <button class="nav-item" onclick="nav('goals',this)">
           <span class="nav-icon">◐</span>
           <span>Goals</span>
@@ -220,6 +224,57 @@
       </div>
     </div>
 
+    <!-- PAGE: BILLS -->
+    <div class="page" id="page-bills">
+      <div class="page-header">
+        <h2>Bills & Recurring Payments</h2>
+        <p>Track mortgage, utilities, subscriptions, insurance & more</p>
+      </div>
+      
+      <div class="form-box" style="margin-bottom:18px;">
+        <h3>+ Add new bill</h3>
+        <div class="form-grid">
+          <div class="ff"><label>Bill name</label><input type="text" id="billName" placeholder="e.g. Mortgage, Water, Netflix"/></div>
+          <div class="ff"><label>Category</label>
+            <select id="billCategory">
+              <option value="housing">Housing</option>
+              <option value="utilities">Utilities</option>
+              <option value="transport">Transport</option>
+              <option value="insurance">Insurance</option>
+              <option value="subscription">Subscription</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="ff money-field"><label>Amount (£)</label><input type="text" id="billAmount" placeholder="500.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+          <div class="ff"><label>Frequency</label>
+            <select id="billFrequency">
+              <option value="Weekly">Weekly</option>
+              <option value="Fortnightly">Fortnightly</option>
+              <option value="Monthly" selected>Monthly</option>
+              <option value="Quarterly">Quarterly</option>
+              <option value="Yearly">Yearly</option>
+            </select>
+          </div>
+          <div class="ff"><label>Next payment date</label><input type="date" id="billNextPayment"/></div>
+          <div class="ff"><label>Payment type</label>
+            <select id="billRecurring" onchange="document.getElementById('billEndDateWrap').style.display = this.value==='never' ? '' : 'none'">
+              <option value="monthly" selected>Monthly (ongoing)</option>
+              <option value="weekly">Weekly (ongoing)</option>
+              <option value="yearly">Yearly (ongoing)</option>
+              <option value="never">Fixed end date</option>
+            </select>
+          </div>
+          <div class="ff" id="billEndDateWrap" style="display:none;"><label>End date</label><input type="date" id="billEndDate"/></div>
+          <div class="ff full-col"><label>Notes (optional)</label><textarea id="billNotes" placeholder="e.g. Account ref, provider contact"></textarea></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="addBill()">+ Add bill</button>
+        </div>
+      </div>
+      
+      <div class="bills-grid" id="billsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;"></div>
+    </div>
+
     <!-- Remaining pages (structure placeholders) -->
     <div class="page" id="page-accounts"></div>
     <div class="page" id="page-premium-bonds"></div>
@@ -282,6 +337,7 @@ const PAGE_RENDERS = {
   'stocks-page': renderStocks,
   'salary': renderSalary,
   'debts': renderDebts,
+  'bills': renderBills,
   'goals': renderGoals,
   'transactions': renderTransactions,
   'tax': renderTax,
@@ -379,6 +435,18 @@ document.addEventListener('DOMContentLoaded', initApp);
   .isa-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:14px; }
   .isa-mini-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; }
 </style>
+
+<!-- Edit Bill Modal -->
+<div id="editBillModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;">
+  <div style="background:var(--surface);border-radius:var(--radius-md);padding:28px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">
+    <h3 style="margin-bottom:18px;">Edit bill</h3>
+    <div class="form-grid" id="editBillGrid"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="saveEditBill()" style="flex:1;">Save changes</button>
+      <button class="btn btn-secondary" onclick="closeModal('editBillModal')" style="flex:1;">Cancel</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

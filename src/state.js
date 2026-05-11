@@ -20,6 +20,7 @@ let S = {
   debts:     [], 
   goals:    [], 
   salaries: [],
+  bills:     [],
   watchlist: [], 
   netWorthHistory: [],
   transactions: [], 
@@ -57,7 +58,7 @@ function loadState() {
   } catch(e) {}
   
   // Guard all arrays
-  ['holdings','closedHoldings','accounts','debts','goals','salaries','watchlist','netWorthHistory','transactions']
+  ['holdings','closedHoldings','accounts','debts','goals','salaries','bills','watchlist','netWorthHistory','transactions']
     .forEach(k => { 
       if(!Array.isArray(S[k])) S[k]=[]; 
     });

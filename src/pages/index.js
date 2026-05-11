@@ -1089,3 +1089,74 @@ function loadSample(){
   ];
   S.netWorthHistory=[];
   for(let i=60;i>=0;i--){
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BILLS TRACKING
+// ═══════════════════════════════════════════════════════════════════════════
+function renderBills(){
+  const container = document.getElementById('billsGrid');
+  if(!container) return;
+  
+  if(!S.bills.length){
+    container.innerHTML=`<div class="empty" style="grid-column:1/-1;"><div class="ei">📋</div><p>No bills tracked yet.<br>Add one using the form below.</p></div>`;
+    return;
+  }
+  
+  // Calculate upcoming bills
+  const today = new Date();
+  const billsWithNext = S.bills.map(b=>{
+    let nextDate = new Date(b.nextPaymentDate);
+    let daysUntil = Math.ceil((nextDate - today)/(1000*60*60*24));
+    
+    // If past due, calculate next occurrence
+    if(daysUntil < 0 && b.recurring !== 'never'){
+      if(b.recurring === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+      else if(b.recurring === 'yearly') nextDate.setFullYear(nextDate.getFullYear() + 1);
+      else if(b.recurring === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+      daysUntil = Math.ceil((nextDate - today)/(1000*60*60*24));
+    }
+    
+    return {...b, nextDate, daysUntil};
+  });
+  
+  container.innerHTML = billsWithNext.map((b,i)=>{
+    const status = b.daysUntil < 0 ? 'overdue' : b.daysUntil < 7 ? 'due-soon' : 'upcoming';
+    const statusLabel = b.daysUntil < 0 ? '⚠ OVERDUE' : b.daysUntil === 0 ? '🔴 TODAY' : b.daysUntil < 7 ? '🟡 Due soon' : '🟢 Upcoming';
+    const amountClass = b.amount > 0 ? 'neg' : '';
+    
+    let durationText = '';
+    if(b.recurring === 'never' && b.endDate){
+      const end = new Date(b.endDate);
+      const monthsLeft = Math.ceil((end - today)/(1000*60*60*24*30));
+      durationText = `${monthsLeft} month${monthsLeft !== 1 ? 's' : ''} remaining`;
+    } else if(b.recurring !== 'never'){
+      durationText = `${b.recurring} (ongoing)`;
+    }
+    
+    return `<div class="bill-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div>
+          <div class="bill-name">${b.name}</div>
+          <div class="bill-cat" style="font-size:10px;color:var(--muted);margin-top:2px;">${b.category || 'Other'}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="bill-amount ${amountClass} val">£${Math.abs(b.amount).toFixed(2)}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">${b.frequency || 'Monthly'}</div>
+        </div>
+      </div>
+      
+      <div style="background:var(--bg);padding:8px;border-radius:6px;margin-bottom:10px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:3px;">Next payment</div>
+        <div style="font-size:12px;font-variation-settings:'wght' 600;">${fmtDate(b.nextDate)}</div>
+        <div class="bill-status ${status}" style="font-size:10px;margin-top:3px;">${statusLabel}</div>
+      </div>
+      
+      ${durationText ? `<div style="font-size:10px;color:var(--muted2);margin-bottom:10px;">⏱ ${durationText}</div>` : ''}
+      
+      <div style="display:flex;gap:6px;">
+        <button class="icon-btn edit" onclick="openEditBill(${i})" style="flex:1;text-align:center;padding:6px;background:var(--accent-dim);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-size:11px;cursor:pointer;">✎ Edit</button>
+        <button class="icon-btn del" onclick="deleteBill(${i})" style="flex:1;text-align:center;padding:6px;background:var(--red-dim);border:1px solid var(--red);border-radius:4px;color:var(--red);font-size:11px;cursor:pointer;">✕ Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+}
