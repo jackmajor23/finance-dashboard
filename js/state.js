@@ -1,5 +1,5 @@
 // ── State & Persistence ─────────────────────────────
-const SK = 'In progres';
+const SK = 'wealth-dashboard-v4';
 
 // Default state shape — add new keys here as features grow
 let S = {
@@ -7,6 +7,7 @@ let S = {
   holdings:  [], closedHoldings: [], accounts: [],
   premiumBonds: { amount:0, date:'', wins:[] },
   debts:     [], goals:    [], salaries: [],
+  bills:     [], properties: [],
   watchlist: [], netWorthHistory: [],
   transactions: [], lastUpdated: null
 };
@@ -34,7 +35,7 @@ function loadState(){
     }
   } catch(e){}
   // Guard all arrays
-  ['holdings','closedHoldings','accounts','debts','goals','salaries','watchlist','netWorthHistory','transactions']
+  ['holdings','closedHoldings','accounts','debts','goals','salaries','bills','properties','watchlist','netWorthHistory','transactions']
     .forEach(k=>{ if(!Array.isArray(S[k])) S[k]=[]; });
   if(!S.premiumBonds||typeof S.premiumBonds!=='object') S.premiumBonds={amount:0,date:'',wins:[]};
   if(!Array.isArray(S.premiumBonds.wins)) S.premiumBonds.wins=[];

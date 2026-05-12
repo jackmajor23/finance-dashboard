@@ -2,18 +2,18 @@
 // JS: NAVIGATION
 // ═══════════════════════════════════════════════════
 const PAGE_RENDERS = {
-  'overview':       renderOverview,
-  'investments':    renderInvestments,
-  'accounts':       renderAccounts,
-  'properties':     renderProperties,
-  'premium-bonds':  renderPremiumBonds,
-  'salary':         renderSalary,
-  'utilities':      renderBills,
-  'pension':        renderPension,
-  'debts':          ()=>{ renderDebts(); populateDebtForm(); },
-  'goals':          renderGoals,
-  'transactions':   renderTransactions,
-  'tax':            renderTax,
+  'overview':       () => renderOverview(),
+  'investments':    () => renderInvestments(),
+  'accounts':       () => renderAccounts(),
+  'properties':     () => renderProperties(),
+  'premium-bonds':  () => renderPremiumBonds(),
+  'salary':         () => renderSalary(),
+  'bills':          () => renderBills(),
+  'pension':        () => renderPension(),
+  'debts':          ()=>{ renderDebts(); if(typeof populateDebtForm !== 'undefined') populateDebtForm(); },
+  'goals':          () => renderGoals(),
+  'transactions':   () => renderTransactions(),
+  'tax':            () => renderTax(),
   'settings': ()=>{
     const sn=document.getElementById('setName'), st=document.getElementById('setTitle'), sc=document.getElementById('setCurrency');
     if(sn) sn.value=S.settings.name||'';

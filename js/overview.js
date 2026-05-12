@@ -79,35 +79,104 @@ function _renderBar(){
   });
 }
 
-function _renderNWChart(){
-  if(nwChart) nwChart.destroy();
-  const all=S.netWorthHistory;
-  const periodEl=document.getElementById('nwPeriod');
-  const period=periodEl?periodEl.value:'all';
-  const now=new Date();
-  const cutoff={
-    '1w': new Date(now - 7*86400000),
-    '1m': new Date(now - 30*86400000),
-    '3m': new Date(now - 90*86400000),
-    '6m': new Date(now - 180*86400000),
-    '1y': new Date(now - 365*86400000),
-    '5y': new Date(now - 5*365*86400000),
-    'all': new Date(0)
-  }[period]||new Date(0);
-  const hist=all.filter(h=>new Date(h.date)>=cutoff);
-  const el=document.getElementById('nwSub');
-  if(el) el.textContent = hist.length>=2 ? hist.length+' data points':'building history…';
-  if(hist.length<2) return;
-  const labels=hist.map(h=>new Date(h.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}));
-  const change=hist.length>=2?hist[hist.length-1].value-hist[0].value:0;
-  const trending=change>=0?'#5046e5':'#cc3333';
-  nwChart = new Chart(document.getElementById('nwChart'),{
-    type:'line',
-    data:{labels,datasets:[{data:hist.map(h=>h.value),borderColor:trending,backgroundColor:change>=0?'rgba(80,70,229,.07)':'rgba(204,51,51,.07)',borderWidth:2,pointRadius:0,tension:.4,fill:true}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmt(ctx.raw)}`}}},
-      scales:{x:{ticks:{color:'#7c7b8a',font:{size:10},maxTicksLimit:8},grid:{display:false}},
-        y:{ticks:{color:'#7c7b8a',font:{size:10},callback:v=>fmt(v)},grid:{color:'rgba(0,0,0,.04)'}}}}
+function _renderNWChart() {
+  if (nwChart) nwChart.destroy();
+
+  const all = S.netWorthHistory || [];
+  if (all.length < 2) {
+    const el = document.getElementById('nwSub');
+    if (el) el.textContent = 'building history…';
+    return;
+  }
+
+  const periodEl = document.getElementById('nwPeriod');
+  const now = new Date();
+  const oldest = new Date(Math.min(...all.map(h => new Date(h.date))));
+  const days = (now - oldest) / 86400000;
+
+  // Available periods
+  const avail = ['all'];
+  if (days >= 7) avail.push('1w');
+  if (days >= 30) avail.push('1m');
+  if (days >= 90) avail.push('3m');
+  if (days >= 180) avail.push('6m');
+  if (days >= 365) avail.push('1y');
+  if (days >= 1825) avail.push('5y');
+
+  // Populate dropdown only once or when needed
+  if (periodEl) {
+    if (periodEl.options.length !== avail.length) {
+      periodEl.innerHTML = '';
+      const opts = {all:'All Time', '1w':'1 Week', '1m':'1 Month', '3m':'3 Months', 
+                    '6m':'6 Months', '1y':'1 Year', '5y':'5 Years'};
+      
+      avail.forEach(p => {
+        const o = document.createElement('option');
+        o.value = p;
+        o.textContent = opts[p];
+        periodEl.appendChild(o);
+      });
+      periodEl.value = 'all';
+    }
+
+    // Add listener only once
+    if (!periodEl.dataset.listenerAdded) {
+      periodEl.addEventListener('change', _renderNWChart);
+      periodEl.dataset.listenerAdded = 'true';
+    }
+  }
+
+  const period = periodEl?.value || 'all';
+
+  const cutoffMs = {
+    '1w': 7*86400000,
+    '1m': 30*86400000,
+    '3m': 90*86400000,
+    '6m': 180*86400000,
+    '1y': 365*86400000,
+    '5y': 1825*86400000,
+    'all': 0
+  }[period];
+
+  const cutoffDate = cutoffMs ? new Date(now - cutoffMs) : new Date(0);
+
+  const hist = all.filter(h => new Date(h.date) >= cutoffDate);
+
+  const subEl = document.getElementById('nwSub');
+  if (subEl) subEl.textContent = hist.length + ' data points';
+
+  if (hist.length < 2) return;
+
+  const labels = hist.map(h => new Date(h.date).toLocaleDateString('en-GB', {day:'numeric', month:'short'}));
+  const change = hist.at(-1).value - hist[0].value;
+  const color = change >= 0 ? '#5046e5' : '#cc3333';
+
+  nwChart = new Chart(document.getElementById('nwChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: hist.map(h => h.value),
+        borderColor: color,
+        backgroundColor: change >= 0 ? 'rgba(80,70,229,.07)' : 'rgba(204,51,51,.07)',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { 
+        legend: { display: false }, 
+        tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw)}` }}
+      },
+      scales: {
+        x: { ticks: { color: '#7c7b8a', font: {size:10}, maxTicksLimit:8 }, grid: {display:false} },
+        y: { ticks: { color: '#7c7b8a', font: {size:10}, callback: v => fmt(v) }, grid: {color:'rgba(0,0,0,.04)'} }
+      }
+    }
   });
 }
 
