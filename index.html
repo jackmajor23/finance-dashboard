@@ -287,17 +287,6 @@
   </div>
 </div>
 
-<!-- ─── PAGE: Properties ─── -->
-<section id="page-properties"></section>
-
-  <!-- ── Top bar ─────────────────────────────────────── -->
-  <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-    <h2 class="page-title">🏠 Properties</h2>
-    <button class="btn" onclick="document.getElementById('addPropertyDrawer').classList.toggle('hidden')">
-      + Add property
-    </button>
-  </div>
-
   <!-- ── Person tabs ─────────────────────────────────── -->
   <div id="propPersonTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
 
@@ -789,7 +778,7 @@
 <div class="page" id="page-goals">
   <div class="page-header">
     <h2>Goals</h2>
-    <p>Financial targets with progress tracking · also shown on Overview</p>
+    <p>Financial targets with progress tracking</p>
   </div>
   <div class="goals-grid" id="goalsGrid"></div>
   <div class="form-box">
@@ -801,7 +790,8 @@
       <div class="ff"><label>Target date</label><input type="date" id="gDate"/></div>
       <div class="ff money-field"><label>Monthly contribution</label><input type="text" id="gMonthly" placeholder="500" oninput="formatMoney(this)"/><span class="currency">£</span></div>
       <div class="ff"><label>Icon / emoji</label><select id="gEmoji">
-        <option value="🏠" selected>🏠 House</option>
+        <option value="🎯"selected>🎯 Goal</option>
+        <option value="🏠">🏠 House</option>
         <option value="🚗">🚗 Car</option>
         <option value="✈️">✈️ Vacation</option>
         <option value="🎓">🎓 Education</option>
@@ -809,18 +799,17 @@
         <option value="💰">💰 Savings</option>
         <option value="🏦">🏦 Bank</option>
         <option value="📈">📈 Investment</option>
-        <option value="🎯">🎯 Goal</option>
         <option value="🏆">🏆 Achievement</option>
         <option value="💍">💍 Wedding</option>
         <option value="🏥">🏥 Health</option>
         <option value="📚">📚 Books</option>
         <option value="🎮">🎮 Gaming</option>
         <option value="🍔">🍔 Food</option>
-        <option value="🛡️">🛡️ Emergency</option>
+        <option value="🚨">🚨 Emergency</option>
         <option value="🎁">🎁 Gift</option>
         <option value="🏃">🏃 Fitness</option>
         <option value="🎨">🎨 Hobby</option>
-        <option value="◐">◐ Default</option>
+        <option value="✨">✨ Other</option>
       </select></div>
     </div>
     <div class="form-actions"><button class="btn btn-primary" onclick="addGoal()">Add goal</button></div>
