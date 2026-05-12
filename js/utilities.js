@@ -17,7 +17,7 @@ function toast(msg){
   el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'), 3200);
 }
-function closeModal(id){ document.getElementById(id).classList.add('hidden'); editingId=null; editingDebtIdx=null; editingSalaryIdx=null; }
+function closeModal(id){ document.getElementById(id).classList.add('hidden'); editingId=null; editingDebtIdx=null; editingSalaryIdx=null; editingBillIdx=null; }
 function toggleHide(){
   document.body.classList.toggle('hidden-vals');
   document.getElementById('eyeBtn').textContent = document.body.classList.contains('hidden-vals') ? '🙈' : '👁';
@@ -38,3 +38,5 @@ function formatMoney(input) {
 function parseMoney(value) {
   return parseFloat(value.replace(/,/g, '')) || 0;
 }
+
+let editingBillIdx = null;

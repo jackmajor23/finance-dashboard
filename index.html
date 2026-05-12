@@ -33,12 +33,13 @@
       <div class="nav-label">Assets</div>
       <button class="nav-item" data-page="investments"   onclick="nav('investments',this)"><span class="nav-icon material-symbols-outlined">Finance_Mode</span>Investments</button>
       <button class="nav-item" data-page="accounts"      onclick="nav('accounts',this)"><span class="nav-icon material-symbols-outlined">Savings</span>Accounts &amp; ISAs</button>
+      <button class="nav-item" data-page="properties"    onclick="nav('properties',this)"><span class="nav-icon material-symbols-outlined">House</span>Properties</button>
       <button class="nav-item" data-page="premium-bonds" onclick="nav('premium-bonds',this)"><span class="nav-icon material-symbols-outlined">Finance</span>Premium Bonds</button>
     </div>
     <div class="nav-group">
       <div class="nav-label">Finances</div>
      <button class="nav-item" data-page="salary" onclick="nav('salary',this)"><span class="nav-icon material-symbols-outlined">work</span>Salary</button>
-      <button class="nav-item" data-page="utilities"  onclick="nav('utilities',this)"><span class="nav-icon material-symbols-outlined">Electric_Meter</span>Utilities</button>
+      <button class="nav-item" data-page="utilities"  onclick="nav('utilities',this)"><span class="nav-icon material-symbols-outlined">Electric_Meter</span>Utilities & Subscriptions</button>
       <button class="nav-item" data-page="pension"  onclick="nav('pension',this)"><span class="nav-icon material-symbols-outlined">Person</span>Pension</button>
       <button class="nav-item" data-page="debts"   onclick="nav('debts',this)"><span class="nav-icon material-symbols-outlined">Credit_Card</span>Debts</button>
       <button class="nav-item" data-page="goals"   onclick="nav('goals',this)"><span class="nav-icon material-symbols-outlined">Star</span>Goals</button>
@@ -287,6 +288,352 @@
   </div>
 </div>
 
+<!-- ─── PAGE: Properties ─── -->
+<section id="page-properties"></section>
+
+  <!-- ── Top bar ─────────────────────────────────────── -->
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+    <h2 class="page-title">🏠 Properties</h2>
+    <button class="btn" onclick="document.getElementById('addPropertyDrawer').classList.toggle('hidden')">
+      + Add property
+    </button>
+  </div>
+
+  <!-- ── Person tabs ─────────────────────────────────── -->
+  <div id="propPersonTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
+
+  <!-- ── Dynamic content ─────────────────────────────── -->
+  <div id="propertiesContent"></div>
+
+  <!-- ═══════════════════════════════════════════════════
+       ADD PROPERTY DRAWER / PANEL
+       ═══════════════════════════════════════════════════ -->
+  <div id="addPropertyDrawer" class="card hidden" style="margin-top:16px;">
+    <div class="card-header">
+      <span class="card-title">Add property</span>
+      <button class="icon-btn" onclick="document.getElementById('addPropertyDrawer').classList.add('hidden')">✕</button>
+    </div>
+
+    <form id="addPropertyForm" onsubmit="event.preventDefault(); addProperty();">
+
+      <!-- Section: Identity -->
+      <div class="section-label">Property details</div>
+      <div class="form-grid">
+
+        <div class="ff">
+          <label>Owner</label>
+          <select id="propPerson"></select>
+        </div>
+
+        <div class="ff">
+          <label>Nickname <span class="opt">(e.g. "Main Home")</span></label>
+          <input type="text" id="propNickname" placeholder="e.g. Main Home"/>
+        </div>
+
+        <div class="ff full-col">
+          <label>Full address</label>
+          <input type="text" id="propAddress" placeholder="e.g. 1 Example Street, Leeds, LS1 1AB"/>
+        </div>
+
+        <div class="ff">
+          <label>Property type</label>
+          <select id="propType" onchange="togglePropMortgageFields()">
+            <option value="residential">Residential (Main Home)</option>
+            <option value="buy-to-let">Buy-to-Let</option>
+            <option value="holiday-let">Holiday Let</option>
+            <option value="commercial">Commercial</option>
+            <option value="land">Land / Plot</option>
+          </select>
+        </div>
+
+        <div class="ff">
+          <label>Tenure</label>
+          <select id="propTenure" onchange="togglePropLeaseFields()">
+            <option value="">— select —</option>
+            <option value="freehold">Freehold</option>
+            <option value="leasehold">Leasehold</option>
+            <option value="share">Share of Freehold</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- Leasehold fields (hidden by default) -->
+      <div id="propLeaseFields" style="display:none;">
+        <div class="form-grid">
+          <div class="ff">
+            <label>Years remaining on lease</label>
+            <input type="number" id="propLeaseYears" placeholder="e.g. 125"/>
+          </div>
+          <div class="ff money-field">
+            <label>Annual service charge</label>
+            <input type="text" id="propServiceCharge" placeholder="0" oninput="formatMoney(this)"/>
+            <span class="currency">£</span>
+          </div>
+          <div class="ff money-field">
+            <label>Annual ground rent</label>
+            <input type="text" id="propGroundRent" placeholder="0" oninput="formatMoney(this)"/>
+            <span class="currency">£</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Purchase -->
+      <div class="section-label">Purchase details</div>
+      <div class="form-grid">
+
+        <div class="ff money-field">
+          <label>Purchase price <span class="req">*</span></label>
+          <input type="text" id="propPurchasePrice" placeholder="0" oninput="formatMoney(this)" required/>
+          <span class="currency">£</span>
+        </div>
+
+        <div class="ff money-field">
+          <label>Deposit paid</label>
+          <input type="text" id="propDeposit" placeholder="0" oninput="formatMoney(this)"/>
+          <span class="currency">£</span>
+        </div>
+
+        <div class="ff">
+          <label>Purchase date</label>
+          <input type="date" id="propPurchaseDate"/>
+        </div>
+
+        <div class="ff money-field">
+          <label>Est. current value</label>
+          <input type="text" id="propEstValue" placeholder="Leave blank to use purchase price" oninput="formatMoney(this)"/>
+          <span class="currency">£</span>
+        </div>
+
+      </div>
+
+      <!-- Section: Mortgage -->
+      <div class="section-label">Mortgage</div>
+      <div class="form-grid">
+
+        <div class="ff">
+          <label>Mortgage type</label>
+          <select id="propMortgageType" onchange="togglePropMortgageFields()">
+            <option value="repayment">Repayment</option>
+            <option value="interest-only">Interest Only</option>
+            <option value="none">No mortgage</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div id="propMortgageFields">
+        <div class="form-grid">
+
+          <div class="ff">
+            <label>Lender</label>
+            <input type="text" id="propMortgageLender" placeholder="e.g. Nationwide, Halifax…"/>
+          </div>
+
+          <div class="ff">
+            <label>Account / reference no.</label>
+            <input type="text" id="propMortgageAccountNo" placeholder="Optional"/>
+          </div>
+
+          <div class="ff money-field">
+            <label>Outstanding balance</label>
+            <input type="text" id="propMortgageBalance" placeholder="0" oninput="formatMoney(this)"/>
+            <span class="currency">£</span>
+          </div>
+
+          <div class="ff">
+            <label>Interest rate (%)</label>
+            <input type="number" id="propMortgageRate" step="0.01" placeholder="e.g. 4.49"/>
+          </div>
+
+          <div class="ff">
+            <label>Deal / fix end date</label>
+            <input type="date" id="propMortgageEndDate"/>
+          </div>
+
+          <div class="ff money-field">
+            <label>
+              Monthly payment
+              <button type="button" class="inline-link" onclick="calcAndFillMonthlyPayment()" title="Estimate from balance, rate & end date">↻ estimate</button>
+            </label>
+            <input type="text" id="propMortgageMonthly" placeholder="0" oninput="formatMoney(this)"/>
+            <span class="currency">£</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section: Rental -->
+      <div class="section-label">Rental</div>
+      <div class="form-grid">
+
+        <div class="ff" style="display:flex;align-items:center;gap:10px;">
+          <label style="margin:0;">Rented out?</label>
+          <label class="toggle">
+            <input type="checkbox" id="propIsRented" onchange="togglePropRentalFields()"/>
+            <span></span>
+          </label>
+        </div>
+
+      </div>
+
+      <div id="propRentalFields" style="display:none;">
+        <div class="form-grid">
+
+          <div class="ff money-field">
+            <label>Monthly rent received</label>
+            <input type="text" id="propRentalMonthly" placeholder="0" oninput="formatMoney(this)"/>
+            <span class="currency">£</span>
+          </div>
+
+          <div class="ff">
+            <label>Tenancy start date</label>
+            <input type="date" id="propTenancyStart"/>
+          </div>
+
+          <div class="ff">
+            <label>Tenancy end date</label>
+            <input type="date" id="propTenancyEnd"/>
+          </div>
+
+          <div class="ff">
+            <label>Letting agent fees (%)</label>
+            <input type="number" id="propAgentFees" step="0.1" placeholder="e.g. 10"/>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-grid" style="margin-top:8px;">
+        <div class="ff full-col">
+          <label>Notes</label>
+          <textarea id="propNotes" rows="2" placeholder="Anything else — insurance info, keys location, plans to sell, etc."></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('addPropertyDrawer').classList.add('hidden')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save property</button>
+      </div>
+
+    </form>
+  </div><!-- /addPropertyDrawer -->
+
+</section><!-- /page-properties -->
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     EDIT PROPERTY MODAL
+     Add this near your other modals (e.g. beside editSalaryModal)
+     ════════════════════════════════════════════════════════════════ -->
+
+<div id="editPropertyModal" class="modal-backdrop hidden">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-header">
+      <span class="modal-title">Edit property</span>
+      <button class="icon-btn" onclick="closeModal('editPropertyModal')">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:75vh;overflow-y:auto;">
+
+      <!-- Identity -->
+      <div class="section-label">Property details</div>
+      <div class="form-grid">
+        <div class="ff"><label>Nickname</label><input type="text" id="ep-nickname"/></div>
+        <div class="ff full-col"><label>Address</label><input type="text" id="ep-address"/></div>
+        <div class="ff">
+          <label>Type</label>
+          <select id="ep-type">
+            <option value="residential">Residential (Main Home)</option>
+            <option value="buy-to-let">Buy-to-Let</option>
+            <option value="holiday-let">Holiday Let</option>
+            <option value="commercial">Commercial</option>
+            <option value="land">Land / Plot</option>
+          </select>
+        </div>
+        <div class="ff">
+          <label>Tenure</label>
+          <select id="ep-tenure" onchange="toggleEditPropLeaseFields()">
+            <option value="">— select —</option>
+            <option value="freehold">Freehold</option>
+            <option value="leasehold">Leasehold</option>
+            <option value="share">Share of Freehold</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="editPropLeaseFields" style="display:none;">
+        <div class="form-grid">
+          <div class="ff"><label>Lease years remaining</label><input type="number" id="ep-leaseyears"/></div>
+          <div class="ff money-field"><label>Service charge/yr</label><input type="text" id="ep-servicecharge" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+          <div class="ff money-field"><label>Ground rent/yr</label><input type="text" id="ep-groundrent" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+        </div>
+      </div>
+
+      <!-- Purchase -->
+      <div class="section-label">Purchase details</div>
+      <div class="form-grid">
+        <div class="ff money-field"><label>Purchase price</label><input type="text" id="ep-purchase" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+        <div class="ff money-field"><label>Deposit paid</label><input type="text" id="ep-deposit" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+        <div class="ff"><label>Purchase date</label><input type="date" id="ep-purchasedate"/></div>
+        <div class="ff money-field"><label>Est. current value</label><input type="text" id="ep-estvalue" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      </div>
+
+      <!-- Mortgage -->
+      <div class="section-label">Mortgage</div>
+      <div class="form-grid">
+        <div class="ff">
+          <label>Mortgage type</label>
+          <select id="ep-morttype" onchange="toggleEditPropMortgageFields()">
+            <option value="repayment">Repayment</option>
+            <option value="interest-only">Interest Only</option>
+            <option value="none">No mortgage</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="editPropMortgageFields">
+        <div class="form-grid">
+          <div class="ff"><label>Lender</label><input type="text" id="ep-lender"/></div>
+          <div class="ff"><label>Account / reference no.</label><input type="text" id="ep-mortaccno"/></div>
+          <div class="ff money-field"><label>Outstanding balance</label><input type="text" id="ep-balance" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+          <div class="ff"><label>Interest rate (%)</label><input type="number" step="0.01" id="ep-rate"/></div>
+          <div class="ff"><label>Deal end date</label><input type="date" id="ep-mortend"/></div>
+          <div class="ff money-field"><label>Monthly payment</label><input type="text" id="ep-monthly" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+        </div>
+      </div>
+
+      <!-- Rental -->
+      <div class="section-label">Rental</div>
+      <div class="form-grid">
+        <div class="ff" style="display:flex;align-items:center;gap:10px;">
+          <label style="margin:0;">Rented out?</label>
+          <label class="toggle"><input type="checkbox" id="ep-rented" onchange="toggleEditPropRentalFields()"/><span></span></label>
+        </div>
+      </div>
+
+      <div id="editPropRentalFields" style="display:none;">
+        <div class="form-grid">
+          <div class="ff money-field"><label>Monthly rent received</label><input type="text" id="ep-rental" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+          <div class="ff"><label>Tenancy start</label><input type="date" id="ep-tenancystart"/></div>
+          <div class="ff"><label>Tenancy end</label><input type="date" id="ep-tenancyend"/></div>
+          <div class="ff"><label>Agent fees (%)</label><input type="number" step="0.1" id="ep-agentfees"/></div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-grid" style="margin-top:8px;">
+        <div class="ff full-col"><label>Notes</label><textarea id="ep-notes" rows="2"></textarea></div>
+      </div>
+
+    </div><!-- /modal-body -->
+    <div class="modal-footer" style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeModal('editPropertyModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditProperty()">Save changes</button>
+    </div>
+  </div>
+</div><!-- /editPropertyModal -->
+
 <!-- ─── PAGE: SALARY ─── -->
 <div class="page" id="page-salary">
   <div class="page-header">
@@ -332,6 +679,64 @@
       <button class="btn btn-primary" onclick="addSalary()">Save salary</button>
     </div>
   </div>
+</div>
+
+<!-- ─── PAGE: UTILITIES & SUBSCRIPTIONS ─── -->
+<div class="page" id="page-utilities">
+  <div class="page-header">
+    <h2>Utilities & Subscriptions</h2>
+    <p>Track utility bills and recurring expenses</p>
+  </div>
+  <div class="bill-grid" id="billsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
+  <div class="form-box">
+    <h3>Add bill</h3>
+    <div class="form-grid">
+      <div class="ff"><label>Name</label><input type="text" id="billName" placeholder="e.g. Electricity"/></div>
+      <div class="ff"><label>Category</label>
+        <select id="billCategory">
+          <option value="utilities">Utilities</option>
+          <option value="housing">Housing</option>
+          <option value="transport">Transport</option>
+          <option value="insurance">Insurance</option>
+          <option value="subscription">Subscription</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="ff money-field"><label>Amount</label><input type="text" id="billAmount" placeholder="120.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <div class="ff"><label>Frequency</label>
+        <select id="billFrequency">
+          <option value="Weekly">Weekly</option>
+          <option value="Fortnightly">Fortnightly</option>
+          <option value="Monthly" selected>Monthly</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="Yearly">Yearly</option>
+        </select>
+      </div>
+      <div class="ff"><label>Recurring</label>
+        <select id="billRecurring" onchange="document.getElementById('billEndDateWrap').style.display=this.value==='never'?'':'none'">
+          <option value="weekly">Weekly</option>
+          <option value="monthly" selected>Monthly</option>
+          <option value="yearly">Yearly</option>
+          <option value="never">Never (one-off)</option>
+        </select>
+      </div>
+      <div class="ff"><label>Next payment date</label><input type="date" id="billNextPayment"/></div>
+      <div class="ff" id="billEndDateWrap" style="display:none;"><label>End date</label><input type="date" id="billEndDate"/></div>
+      <div class="ff full-col"><label>Notes</label><textarea id="billNotes" placeholder="e.g. includes gas and water…"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="addBill()">Add bill</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PAGE: PENSION ─── -->
+<div class="page" id="page-pension">
+  <div class="page-header">
+    <h2>Pension</h2>
+    <p>Track pension pots and retirement planning</p>
+  </div>
+  <div id="pensionContent"></div>
 </div>
 
 <!-- ─── PAGE: DEBTS ─── -->
@@ -539,6 +944,52 @@
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('addHoldingModal')">Cancel</button>
       <button class="btn btn-primary" onclick="addHolding()">Save holding</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit bill modal -->
+<div class="modal-overlay hidden" id="editBillModal">
+  <div class="modal">
+    <h3>Edit bill</h3>
+    <div class="form-grid">
+      <div class="ff"><label>Name</label><input type="text" id="eb-name"/></div>
+      <div class="ff"><label>Category</label>
+        <select id="eb-category">
+          <option value="utilities">Utilities</option>
+          <option value="housing">Housing</option>
+          <option value="transport">Transport</option>
+          <option value="insurance">Insurance</option>
+          <option value="subscription">Subscription</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="ff money-field"><label>Amount</label><input type="text" id="eb-amount" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <div class="ff"><label>Frequency</label>
+        <select id="eb-frequency">
+          <option value="Weekly">Weekly</option>
+          <option value="Fortnightly">Fortnightly</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="Yearly">Yearly</option>
+        </select>
+      </div>
+      <div class="ff"><label>Recurring</label>
+        <select id="eb-recurring" onchange="toggleBillEndDate()">
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+          <option value="never">Never (one-off)</option>
+        </select>
+      </div>
+      <div class="ff"><label>Next payment date</label><input type="date" id="eb-nextPayment"/></div>
+      <div class="ff" id="eb-endDateWrap" style="display:none;"><label>End date</label><input type="date" id="eb-endDate"/></div>
+      <div class="ff full-col"><label>Notes</label><textarea id="eb-notes"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('editBillModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="deleteBill(editingBillIdx); closeModal('editBillModal');">Delete</button>
+      <button class="btn btn-primary" onclick="saveEditBill()">Save changes</button>
     </div>
   </div>
 </div>
