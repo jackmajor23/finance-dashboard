@@ -1,5 +1,5 @@
 // ── Accounts & ISA ───────────────────────────────────
-// 13. JS: ACCOUNTS & ISA
+// JS: ACCOUNTS & ISA
 // ═══════════════════════════════════════════════════
 const ISA_INFO={
   'stocks-isa':{name:'Stocks & Shares ISA',limit:20000,color:'#0a8f5c',desc:'Invest in stocks, funds & ETFs. Tax-free gains. £20k/yr.'},

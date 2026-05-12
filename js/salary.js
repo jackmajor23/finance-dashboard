@@ -1,5 +1,5 @@
 // ── Salary & UK tax ──────────────────────────────────
-// 15. JS: SALARY (UK tax calculation)
+// JS: SALARY (UK tax calculation)
 // ═══════════════════════════════════════════════════
 // UK 2025/26 tax bands
 const UK_TAX = {

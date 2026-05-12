@@ -1,5 +1,5 @@
 // ── Premium Bonds ────────────────────────────────────
-// 14. JS: PREMIUM BONDS (with holding history)
+// JS: PREMIUM BONDS (with holding history)
 // ═══════════════════════════════════════════════════
 
 function renderPremiumBonds(){

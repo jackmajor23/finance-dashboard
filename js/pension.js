@@ -1,5 +1,5 @@
 // ── Pension ──────────────────────────────────
-// 15. JS: PENSION (UK tax calculation)
+// JS: PENSION (UK tax calculation)
 // ═══════════════════════════════════════════════════
 // Pension
 

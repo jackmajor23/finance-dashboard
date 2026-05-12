@@ -1,5 +1,5 @@
 // ── Stocks & live prices ─────────────────────────────
-// 18. JS: STOCKS / LIVE PRICES
+// JS: STOCKS / LIVE PRICES
 // ═══════════════════════════════════════════════════
 window.liveHistory = {};
 async function _fetchPrice(ticker){

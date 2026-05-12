@@ -1,5 +1,5 @@
 // ── Navigation & routing ────────────────────────────
-// 10. JS: NAVIGATION
+// JS: NAVIGATION
 // ═══════════════════════════════════════════════════
 const PAGE_RENDERS = {
   'overview':       renderOverview,

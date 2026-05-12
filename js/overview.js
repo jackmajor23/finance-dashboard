@@ -1,6 +1,5 @@
 // ── Overview page & charts
-// Depends on: state.js, utils.js, accounts.js (ISA_INFO) ──────────────────────────
-// 11. JS: OVERVIEW
+// JS: OVERVIEW
 // ═══════════════════════════════════════════════════
 function renderOverview(){
   const now = new Date();
@@ -39,7 +38,7 @@ function renderOverview(){
 }
 
 // Colour map for asset types
-const TC = {stocks:'#1d6fca',isa:'#0a8f5c',crypto:'#b87309',cash:'#7c7b8a',pension:'#5046e5',property:'#b03070',other:'#0b7a6e',current:'#6b7280',savings:'#0a8f5c',joint:'#1d6fca','premium bonds':'#b87309'};
+const TC = {stocks:'#3664a9',isa:'#41c99c',crypto:'#b48745',cash:'#2b21b4',pension:'#3737c8',property:'#6e676b',other:'#38baa4',current:'#4477de',savings:'#479283',joint:'#112b60','premium bonds':'#9e5f1f'};
 
 function _renderDonut(){
   const groups={};

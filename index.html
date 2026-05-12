@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Wealth Dashboard</title>
+<title>Finance Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,100..900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/main.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-</head>
 <body>
 <button class="eye-fab" id="eyeBtn" onclick="toggleHide()" title="Show/hide figures">
   <span class="material-symbols-outlined">visibility</span>
@@ -39,7 +38,7 @@
     <div class="nav-group">
       <div class="nav-label">Finances</div>
      <button class="nav-item" data-page="salary" onclick="nav('salary',this)"><span class="nav-icon material-symbols-outlined">work</span>Salary</button>
-      <button class="nav-item" data-page="utilities"  onclick="nav('utilities',this)"><span class="nav-icon material-symbols-outlined">Electric_Meter</span>Utilities & Subscriptions</button>
+      <button class="nav-item" data-page="bills"  onclick="nav('bills',this)"><span class="nav-icon material-symbols-outlined">Receipt</span>Bills</button>
       <button class="nav-item" data-page="pension"  onclick="nav('pension',this)"><span class="nav-icon material-symbols-outlined">Person</span>Pension</button>
       <button class="nav-item" data-page="debts"   onclick="nav('debts',this)"><span class="nav-icon material-symbols-outlined">Credit_Card</span>Debts</button>
       <button class="nav-item" data-page="goals"   onclick="nav('goals',this)"><span class="nav-icon material-symbols-outlined">Star</span>Goals</button>
@@ -681,10 +680,10 @@
   </div>
 </div>
 
-<!-- ─── PAGE: UTILITIES & SUBSCRIPTIONS ─── -->
-<div class="page" id="page-utilities">
+<!-- ─── PAGE: BILLS ─── -->
+<div class="page" id="page-bills">
   <div class="page-header">
-    <h2>Utilities & Subscriptions</h2>
+    <h2>Bills</h2>
     <p>Track utility bills and recurring expenses</p>
   </div>
   <div class="bill-grid" id="billsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
@@ -1042,7 +1041,7 @@
 
 <!-- App modules (load order matters - globals must exist before use) -->
 <script src="js/state.js"></script>
-<script src="js/utilities.js"></script>
+<script src="js/bills.js"></script>
 <script src="js/transactions.js"></script>
 <script src="js/accounts.js"></script>
 <script src="js/overview.js"></script>

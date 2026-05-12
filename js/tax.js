@@ -1,5 +1,5 @@
 // ── Tax summary ──────────────────────────────────────
-// 20. JS: TAX SUMMARY
+// JS: TAX SUMMARY
 // ═══════════════════════════════════════════════════
 function renderTax(){
   const isaUsed=S.accounts.filter(a=>ISA_INFO[a.type]).reduce((s,a)=>s+(a.contrib||0),0);

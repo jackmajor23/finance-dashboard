@@ -1,5 +1,5 @@
 // ── State & Persistence ─────────────────────────────
-const SK = 'wealth_v4';
+const SK = 'In progres';
 
 // Default state shape — add new keys here as features grow
 let S = {
@@ -52,4 +52,33 @@ function _updateSidebarMeta(){
       'saved ' + d.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + ' ' +
       d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
   }
+}
+const CUR = () => S.settings.currency || '£';
+function fmt(n){ return CUR() + Math.abs(Math.round(n)).toLocaleString('en-GB'); }
+function fmtS(n){ return (n>=0?'+':'-') + CUR() + Math.abs(Math.round(n)).toLocaleString('en-GB'); }
+function fmtP(n){ return (n>=0?'+':'') + n.toFixed(1) + '%'; }
+function pct(cur,inv){ return inv===0?0:((cur-inv)/inv*100); }
+function cls(n){ return n>=0?'pos':'neg'; }
+function fmtDate(s){ if(!s)return'—'; const d=new Date(s); return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function monthYear(m,y){ const d=new Date(y,m-1); return d.toLocaleDateString('en-GB',{month:'long',year:'numeric'}); }
+function clamp(v,mn,mx){ return Math.min(Math.max(v,mn),mx); }
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 3200);
+}
+function closeModal(id){ 
+  document.getElementById(id).classList.add('hidden'); 
+  editingId=null; 
+  editingDebtIdx=null; 
+  editingSalaryIdx=null; 
+  editingBillIdx=null; 
+}
+function toggleHide(){
+  const isHidden = document.body.classList.toggle('hidden-vals');
+  
+  const icon = document.getElementById('eyeBtn').querySelector('span');
+  icon.textContent = isHidden ? 'visibility_off' : 'visibility';
 }

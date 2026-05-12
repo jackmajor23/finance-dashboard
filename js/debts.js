@@ -1,5 +1,5 @@
 // ── Debts ─────────────────────────────────────────────
-// 16. JS: DEBTS (with Student Loan Tracking)
+// JS: DEBTS (with Student Loan Tracking)
 // ═══════════════════════════════════════════════════
 const UK_STUDENT_LOAN_RULES = {
   plan1: { threshold: 24990, rate: 9, writeoff: 2027 },

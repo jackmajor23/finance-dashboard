@@ -1,5 +1,5 @@
-// ── Holdings ─────────────────────────────────────────
-// 12. JS: HOLDINGS
+// ── Investments ─────────────────────────────────────────
+// 12. JS: Investments
 // ═══════════════════════════════════════════════════
 function renderInvestments(){
   invTab('stocks', document.querySelector('#page-investments .tab-btn.active') || document.querySelector('#page-investments .tab-btn'));
@@ -8,16 +8,16 @@ function setHFilter(f,el){
   hFilter=f;
   document.querySelectorAll('#htab-open .filter-btn').forEach(b=>b.classList.remove('active'));
   if(el) el.classList.add('active');
-  renderHoldings();
+  renderInvestments();
 }
 
-function renderHoldings(){
-  const q=(document.getElementById('holdingsSearch')||{}).value||'';
+function renderInvestments(){
+  const q=(document.getElementById('investmentsSearch')||{}).value||'';
   let H=S.holdings;
   if(hFilter!=='all') H=H.filter(h=>h.type===hFilter);
   if(q) H=H.filter(h=>h.name.toLowerCase().includes(q.toLowerCase())||(h.ticker||'').toLowerCase().includes(q.toLowerCase()));
-  const tb=document.getElementById('holdingsBody');
-  if(!H.length){ tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="ei">◫</div><p>No holdings yet.<br>Add one via the Add tab.</p></div></td></tr>`; return; }
+  const tb=document.getElementById('investmentsBody');
+  if(!H.length){ tb.innerHTML=`<tr><td colspan="10"><div class="empty"><div class="ei">◫</div><p>No investments yet.<br>Add one via the Add tab.</p></div></td></tr>`; return; }
   tb.innerHTML=H.map(h=>{
     const originalIndex = S.holdings.findIndex(x => x.id === h.id);
     const pl=h.current-h.invested, ret=pct(h.current,h.invested);
@@ -162,7 +162,7 @@ function renderClosed(){
   }).join('');
 }
 
-function addHolding(){
+function addInvestments(){
   const name=(document.getElementById('hName').value||'').trim();
   const ticker=(document.getElementById('hTicker').value||'').trim().toUpperCase();
   const type=document.getElementById('hType').value;

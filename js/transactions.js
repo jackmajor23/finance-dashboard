@@ -1,5 +1,5 @@
 // ── Transactions ─────────────────────────────────────
-// 19. JS: TRANSACTIONS
+// JS: TRANSACTIONS
 // ═══════════════════════════════════════════════════
 function _addTx(tx){ S.transactions.push({id:Date.now(),...tx}); }
 

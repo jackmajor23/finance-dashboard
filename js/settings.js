@@ -1,5 +1,5 @@
 // ── Settings, sample data & clear ───────────────────
-// 21. JS: SETTINGS
+// JS: SETTINGS
 // ═══════════════════════════════════════════════════
 function saveSettings(){
   S.settings.name    = (document.getElementById('setName').value||'').trim();
@@ -16,7 +16,7 @@ function clearAll(){
 }
 
 // ═══════════════════════════════════════════════════
-// 22. JS: SAMPLE DATA & INIT
+// JS: SAMPLE DATA & INIT
 // ═══════════════════════════════════════════════════
 function loadSample(){
   S.settings = { name:'Alex', title:"Alex's Wealth", currency:'£', household:true, personNames:['Alex','Partner'] };
