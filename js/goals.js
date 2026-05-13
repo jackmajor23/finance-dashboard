@@ -17,7 +17,7 @@ function renderGoals(){
           <div class="goal-meta">Target: ${fmtDate(g.date)}${mo!=null?' · '+mo+' months':''}</div>
         </div>
         <div style="display:flex;gap:5px;">
-          ${onTrack!=null?`<span class="pill ${onTrack?'p-income':'p-payment'}">${onTrack?'on track':'behind'}</span>`:''}
+          <button class="icon-btn edit" onclick="openEditGoal(${i})">✎</button>
           <button class="icon-btn del" onclick="deleteGoal(${i})">✕</button>
         </div>
       </div>
