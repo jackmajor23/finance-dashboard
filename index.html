@@ -61,10 +61,6 @@
         <div class="user-name" id="userName">Financial Tracker</div>
         <div class="user-sub" id="lastUpdated">never saved</div>
       </div>
-    </div>
-    <button class="refresh-btn" onclick="refreshPrices()">↻ &nbsp;Refresh prices</button>
-    <div class="last-refresh" id="lastRefreshTime">prices not yet loaded</div>
-  </div>
 </nav>
 
 <!-- ═══════════════════════════════════════════════════
@@ -78,8 +74,13 @@
     <h2 id="overviewGreeting">Overview</h2>
     <p id="overviewDate"></p>
   </div>
+  
   <div class="summary-grid" id="summarycards"></div>
   <div class="charts-2col">
+    <div style="overflow-x:auto;padding:4px 0;">
+    <div id="eventsTicker" style="margin-bottom:16px; overflow-x:auto; white-space:nowrap;"></div>
+  </div>
+  <br>
     <div class="card">
       <div class="card-header"><span class="card-title">Allocation</span></div>
       <div class="donut-wrap">
@@ -88,7 +89,8 @@
       </div>
       <div class="legend-list" id="donutLegend"></div>
     </div>
-    <div class="card">
+    
+  <div class="card">
   <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
     <span class="card-title">Net worth over time</span>
     <select id="nwPeriod" onchange="renderOverview()" style="font-size:12.5px;padding:5px 10px;border:1px solid var(--border2);border-radius:6px;">
@@ -101,6 +103,8 @@
       <option value="all">All Time</option>
     </select>
   </div>
+   <div id="nwChangeCallout" style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted2);"></div>
+   <div id="nwCalloutWrap"></div>
   <div class="nw-wrap"><canvas id="nwChart"></canvas></div>
   <div id="nwSub" style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted2);"></div>
 </div>
@@ -119,6 +123,32 @@
     <div class="card-header"><span class="card-title">ISA allowances 2025/26</span></div>
     <div class="isa-mini-grid" id="isaMiniGrid"></div>
   </div>
+  <div class="chart-section" style="margin-top:24px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div class="section-title">Monthly Cash Flow</div>
+    <div style="font-size:11px;color:var(--muted);">Income vs Expenses · last 6 months</div>
+  </div>
+  <div class="chart-empty" style="display:none;font-size:12px;color:var(--muted);padding:20px 0;">
+    Add transactions to see your cash flow summary.
+  </div>
+  <div style="height:180px;position:relative;">
+    <canvas id="cashFlowChart"></canvas>
+  </div>
+</div>
+<div class="chart-section" style="margin-top:24px;">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div class="section-title">Debt Payoff Timeline</div>
+    <div style="font-size:11px;color:var(--muted);">Projected to zero</div>
+  </div>
+  <div class="chart-empty" style="display:none;font-size:12px;color:var(--muted);padding:20px 0;">
+    Add debts with a monthly payment to see your payoff timeline.
+  </div>
+  <div style="height:200px;position:relative;">
+    <canvas id="debtTimelineChart"></canvas>
+  </div>
+  <!-- Extra payment "what if" slider — injected by JS automatically -->
+  <div id="debtExtraWrap"></div>
+</div>
 </div>
 
 <!-- ─── PAGE: ACCOUNTS & ISA ─── -->
@@ -241,7 +271,7 @@
     <div class="investment-stats" id="investmentStats"></div>
     <div class="table-wrap">
       <div class="table-toolbar">
-        <input class="search-box" id="holdingsSearch" placeholder="Search holdings…" oninput="renderHoldings()"/>
+        <input class="search-box" id="investmentsSearch" placeholder="Search investments…" oninput="renderHoldings()"/>
         <button class="btn btn-primary" onclick="document.getElementById('addHoldingModal').classList.remove('hidden')">+ Add holding</button>
       </div>
       <table>
@@ -681,7 +711,7 @@
     <p>Track utility bills and recurring expenses</p>
   </div>
   <div class="bill-grid" id="billsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
-  <div class="form-box">
+  <div class="form-box" style="margin-top:16px;">
     <h3>Add bill</h3>
     <div class="form-grid">
       <div class="ff"><label>Name</label><input type="text" id="billName" placeholder="e.g. Electricity"/></div>
@@ -1029,6 +1059,10 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+class="stat-card sc-red clickable-card"
+onclick="openDebtBreakdownModal('total-owed')"
+<div class="card-expand-hint">↗ breakdown</div>
 
 <!-- Chart.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>

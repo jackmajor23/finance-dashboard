@@ -66,6 +66,7 @@ function renderAccounts(){
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
           <span style="font-size:22px;">${ACC_ICONS[a.type]||'◈'}</span>
+          <span class="drag-handle" title="Drag to reorder" style="cursor:grab;color:var(--muted);font-size:16px;padding:2px 4px;user-select:none;">⠿</span>
           <button class="icon-btn del" onclick="deleteAccount(${i})">✕</button>
         </div>
       </div>
