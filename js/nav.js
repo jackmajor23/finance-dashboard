@@ -14,12 +14,7 @@ const PAGE_RENDERS = {
   'goals':          () => renderGoals(),
   'transactions':   () => renderTransactions(),
   'tax':            () => renderTax(),
-  'settings': ()=>{
-    const sn=document.getElementById('setName'), st=document.getElementById('setTitle'), sc=document.getElementById('setCurrency');
-    if(sn) sn.value=S.settings.name||'';
-    if(st) st.value=S.settings.title||'';
-    if(sc) sc.value=S.settings.currency||'£';
-  }
+  'settings': () => renderSettings()
 };
 
 function nav(page, el){

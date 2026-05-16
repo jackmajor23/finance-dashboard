@@ -19,11 +19,6 @@ const SP_YRS   = 35;       // NI years for full State Pension
 let txBand  = 20;          // active tax band for tax relief tab
 let pChart  = null;        // Chart.js instance (destroyed on re-render)
 
-// ── Formatters ──
-const f   = n => '£' + Math.round(n).toLocaleString('en-GB');
-const fK  = n => n >= 1000 ? '£' + (n / 1000).toFixed(0) + 'k' : f(n);
-const fKd = n => n >= 1000 ? '£' + (n / 1000).toFixed(1) + 'k' : f(n);
-
 // ── Helpers ──
 function monthlyContrib(a) {
   return (a.fixedM || 0) + (a.salary ? a.salary * (a.empP + a.erP) / 100 / 12 : 0);
@@ -32,6 +27,15 @@ function totalBalance()     { return accs.reduce((s, a) => s + a.balance, 0); }
 function totalMonthly()     { return accs.reduce((s, a) => s + monthlyContrib(a), 0); }
 function annualContribs()   { return totalMonthly() * 12; }
 function statePensionAnn(yrs) { return (Math.min(yrs, SP_YRS) / SP_YRS) * SP_FULL; }
+
+function penTypePill(type) {
+  if (type === 'SIPP') return `<span class="pill p-pension">${type}</span>`;
+  if (type === 'Workplace') return `<span class="pill" style="background:var(--blue-dim);color:var(--blue);">${type}</span>`;
+  return `<span class="pill" style="background:var(--slate-dim);color:var(--slate);">${type}</span>`;
+}
+function penDivider() {
+  return '<div style="height:1px;background:var(--border);margin:12px 0;" role="presentation"></div>';
+}
 
 // ── Compound growth projection ──
 // Returns array of pot values from year 0 → years
@@ -53,7 +57,7 @@ function swTab(id, btn) {
     t.classList.toggle('active', active);
     t.style.display = active ? '' : 'none';
   });
-  document.querySelectorAll('#pensionContent .nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#pensionContent .tab-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 }
 
@@ -65,25 +69,25 @@ function rTopM() {
   const spY = parseInt(document.getElementById('slSP')?.value || 15);
 
   document.getElementById('topM').innerHTML = `
-    <div class="met">
-      <div class="ml">Total pension pot</div>
-      <div class="mv">${f(b)}</div>
-      <div class="ms">${accs.length} accounts</div>
+    <div class="stat-card sc-accent">
+      <div class="stat-label">Total pension pot</div>
+      <div class="stat-val val">${fmt(b)}</div>
+      <div class="stat-sub">${accs.length} accounts</div>
     </div>
-    <div class="met">
-      <div class="ml">Monthly contributions</div>
-      <div class="mv">${f(m)}</div>
-      <div class="ms">${f(m * 12)}/yr</div>
+    <div class="stat-card sc-green">
+      <div class="stat-label">Monthly contributions</div>
+      <div class="stat-val val">${fmt(m)}</div>
+      <div class="stat-sub">${fmt(m * 12)}/yr</div>
     </div>
-    <div class="met">
-      <div class="ml">Annual allowance used</div>
-      <div class="mv">${Math.round(ac / AA * 100)}%</div>
-      <div class="ms">${f(ac)} of ${f(AA)}</div>
+    <div class="stat-card sc-amber">
+      <div class="stat-label">Annual allowance used</div>
+      <div class="stat-val">${Math.round(ac / AA * 100)}%</div>
+      <div class="stat-sub">${fmt(ac)} of ${fmt(AA)}</div>
     </div>
-    <div class="met">
-      <div class="ml">State pension (est.)</div>
-      <div class="mv">${f(statePensionAnn(spY))}</div>
-      <div class="ms">${spY}/${SP_YRS} NI years</div>
+    <div class="stat-card sc-purple">
+      <div class="stat-label">State pension (est.)</div>
+      <div class="stat-val val">${fmt(statePensionAnn(spY))}</div>
+      <div class="stat-sub">${spY}/${SP_YRS} NI years</div>
     </div>
   `;
 }
@@ -98,83 +102,86 @@ function rOverview() {
   const ti = wi + sp;
 
   document.getElementById('ovC').innerHTML = `
-    <p class="sl" style="margin-bottom:10px;">Pension accounts</p>
+    <div class="section-label">Pension accounts</div>
+    <div class="pen-stack">
     ${accs.map(a => {
       const m     = monthlyContrib(a);
-      const badge = a.type === 'SIPP' ? 'bs' : a.type === 'Workplace' ? 'bw' : 'bp';
       return `
         <div class="card">
-          <div class="row" style="margin-bottom:8px;">
+          <div class="pen-row" style="margin-bottom:8px;">
             <div>
-              <span style="font-weight:500;font-size:14px;">${a.name}</span>
-              <span class="badge ${badge}" style="margin-left:8px;">${a.type}</span>
+              <span style="font-variation-settings:'wght' 600;font-size:14px;">${a.name}</span>
+              <span style="margin-left:8px;">${penTypePill(a.type)}</span>
             </div>
-            <span style="font-size:18px;font-weight:500;">${f(a.balance)}</span>
+            <span class="val" style="font-size:18px;font-variation-settings:'wght' 700;">${fmt(a.balance)}</span>
           </div>
-          <div class="row" style="font-size:12px;color:var(--muted);">
+          <div class="pen-row" style="font-size:12px;color:var(--muted2);">
             <span>${a.provider}</span>
-            <span>${m > 0 ? f(m) + '/mo' : 'No active contributions'}</span>
+            <span>${m > 0 ? fmt(m) + '/mo' : 'No active contributions'}</span>
           </div>
         </div>`;
     }).join('')}
 
     <div class="card">
-      <p class="sl">Retirement income estimate (moderate growth, age 67)</p>
+      <div class="card-header" style="margin-bottom:12px;">
+        <span class="card-title">Retirement income estimate</span>
+        <span class="card-sub">Moderate growth · age 67</span>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
         <div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:3px;">Pension drawdown (4% SWR)</div>
-          <div style="font-size:17px;font-weight:500;">${f(wi)}<span style="font-size:12px;font-weight:400;color:var(--muted);"> /yr</span></div>
+          <div style="font-size:10px;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;font-variation-settings:'wght' 600;">Pension drawdown (4% SWR)</div>
+          <div class="val" style="font-size:17px;font-variation-settings:'wght' 700;">${fmt(wi)}<span style="font-size:12px;font-variation-settings:'wght' 400;color:var(--muted2);"> /yr</span></div>
         </div>
         <div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:3px;">State pension (15 NI yrs)</div>
-          <div style="font-size:17px;font-weight:500;">${f(sp)}<span style="font-size:12px;font-weight:400;color:var(--muted);"> /yr</span></div>
+          <div style="font-size:10px;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;font-variation-settings:'wght' 600;">State pension (15 NI yrs)</div>
+          <div class="val" style="font-size:17px;font-variation-settings:'wght' 700;">${fmt(sp)}<span style="font-size:12px;font-variation-settings:'wght' 400;color:var(--muted2);"> /yr</span></div>
         </div>
       </div>
-      <hr class="div">
-      <div class="row">
-        <span style="font-size:13px;font-weight:500;">Combined annual income</span>
-        <span style="font-size:20px;font-weight:500;">${f(ti)}</span>
+      ${penDivider()}
+      <div class="pen-row">
+        <span style="font-size:13px;font-variation-settings:'wght' 600;">Combined annual income</span>
+        <span class="val" style="font-size:20px;font-variation-settings:'wght' 700;">${fmt(ti)}</span>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:4px;text-align:right;">${f(ti / 12)} per month</div>
+      <div style="font-size:12px;color:var(--muted2);margin-top:6px;text-align:right;">${fmt(ti / 12)} per month</div>
+    </div>
     </div>
   `;
 }
 
 // ── Accounts tab ──
 function rAccounts() {
-  document.getElementById('accC').innerHTML = accs.map(a => {
+  document.getElementById('accC').innerHTML = '<div class="pen-stack">' + accs.map(a => {
     const m     = monthlyContrib(a);
     const ann   = m * 12;
     const empM  = a.salary ? a.salary * a.empP / 100 / 12 : 0;
     const erM   = a.salary ? a.salary * a.erP  / 100 / 12 : 0;
-    const badge = a.type === 'SIPP' ? 'bs' : a.type === 'Workplace' ? 'bw' : 'bp';
 
     return `
       <div class="card">
-        <div class="row" style="margin-bottom:10px;">
+        <div class="pen-row" style="margin-bottom:10px;">
           <div>
-            <div style="font-weight:500;font-size:15px;margin-bottom:5px;">${a.name}</div>
-            <span class="badge ${badge}">${a.type}</span>
-            <span style="font-size:12px;color:var(--muted);margin-left:8px;">${a.provider}</span>
+            <div style="font-variation-settings:'wght' 600;font-size:15px;margin-bottom:6px;">${a.name}</div>
+            ${penTypePill(a.type)}
+            <span style="font-size:12px;color:var(--muted2);margin-left:8px;">${a.provider}</span>
           </div>
-          <div style="font-size:22px;font-weight:500;">${f(a.balance)}</div>
+          <div class="val" style="font-size:22px;font-variation-settings:'wght' 700;">${fmt(a.balance)}</div>
         </div>
-        <hr class="div">
+        ${penDivider()}
         ${a.salary ? `
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;font-size:12px;">
-            <div><div style="color:var(--muted);margin-bottom:3px;">Your contrib</div><div style="font-weight:500;">${a.empP}%</div><div style="color:var(--muted);">${f(empM)}/mo</div></div>
-            <div><div style="color:var(--muted);margin-bottom:3px;">Employer</div><div style="font-weight:500;">${a.erP}%</div><div style="color:var(--muted);">${f(erM)}/mo</div></div>
-            <div><div style="color:var(--muted);margin-bottom:3px;">Total gross</div><div style="font-weight:500;">${f(m)}/mo</div><div style="color:var(--muted);">${f(ann)}/yr</div></div>
-            <div><div style="color:var(--muted);margin-bottom:3px;">Salary</div><div style="font-weight:500;">${f(a.salary)}</div></div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;font-size:12px;">
+            <div><div style="color:var(--muted);margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-variation-settings:'wght' 600;">Your contrib</div><div style="font-variation-settings:'wght' 600;">${a.empP}%</div><div style="color:var(--muted2);">${fmt(empM)}/mo</div></div>
+            <div><div style="color:var(--muted);margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-variation-settings:'wght' 600;">Employer</div><div style="font-variation-settings:'wght' 600;">${a.erP}%</div><div style="color:var(--muted2);">${fmt(erM)}/mo</div></div>
+            <div><div style="color:var(--muted);margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-variation-settings:'wght' 600;">Total gross</div><div style="font-variation-settings:'wght' 600;">${fmt(m)}/mo</div><div style="color:var(--muted2);">${fmt(ann)}/yr</div></div>
+            <div><div style="color:var(--muted);margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-variation-settings:'wght' 600;">Salary</div><div style="font-variation-settings:'wght' 600;">${fmt(a.salary)}</div></div>
           </div>
         ` : a.fixedM ? `
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
-            <div><div style="color:var(--muted);margin-bottom:3px;">Monthly contribution</div><div style="font-weight:500;">${f(a.fixedM)}</div></div>
-            <div><div style="color:var(--muted);margin-bottom:3px;">Annual contribution</div><div style="font-weight:500;">${f(ann)}</div></div>
+            <div><div style="color:var(--muted);margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-variation-settings:'wght' 600;">Monthly contribution</div><div class="val" style="font-variation-settings:'wght' 600;">${fmt(a.fixedM)}</div></div>
+            <div><div style="color:var(--muted);margin-bottom:3px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-variation-settings:'wght' 600;">Annual contribution</div><div class="val" style="font-variation-settings:'wght' 600;">${fmt(ann)}</div></div>
           </div>
-        ` : `<div style="font-size:12px;color:var(--muted);">No active contributions — consider consolidating or restarting contributions.</div>`}
+        ` : `<div style="font-size:12px;color:var(--muted2);">No active contributions — consider consolidating or restarting contributions.</div>`}
       </div>`;
-  }).join('');
+  }).join('') + '</div>';
 }
 
 // ── Projections tab ──
@@ -205,34 +212,41 @@ function updProj() {
   const fm = m5[m5.length - 1];
   const fo = o7[o7.length - 1];
 
+  const tickCol = (typeof getComputedStyle !== 'undefined' && document.documentElement)
+    ? (getComputedStyle(document.documentElement).getPropertyValue('--muted3').trim() || '#9a999d')
+    : '#9a999d';
+  const gridCol = (typeof getComputedStyle !== 'undefined' && document.documentElement)
+    ? (getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || 'rgba(0,0,0,.08)')
+    : 'rgba(0,0,0,.08)';
+
   // Metric cards
   document.getElementById('projM').innerHTML = `
-    <div class="met"><div class="ml">Projected pot (moderate)</div><div class="mv">${fKd(fm)}</div><div class="ms">at age ${ra}</div></div>
-    <div class="met"><div class="ml">Annual income (4% SWR)</div><div class="mv">${fKd(fm * 0.04 + sp)}</div><div class="ms">incl. state pension</div></div>
-    <div class="met"><div class="ml">Monthly income</div><div class="mv">${fKd((fm * 0.04 + sp) / 12)}</div><div class="ms">today's money, pre-tax</div></div>
+    <div class="stat-card sc-blue"><div class="stat-label">Projected pot (moderate)</div><div class="stat-val val">${fmt(fm)}</div><div class="stat-sub">at age ${ra}</div></div>
+    <div class="stat-card sc-green"><div class="stat-label">Annual income (4% SWR)</div><div class="stat-val val">${fmt(fm * 0.04 + sp)}</div><div class="stat-sub">incl. state pension</div></div>
+    <div class="stat-card sc-accent"><div class="stat-label">Monthly income</div><div class="stat-val val">${fmt((fm * 0.04 + sp) / 12)}</div><div class="stat-sub">today's money, pre-tax</div></div>
   `;
 
   // Legend
   document.getElementById('legD').innerHTML = `
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#378ADD;"></span>Conservative (3%) — ${fKd(fc)}</span>
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#1D9E75;"></span>Moderate (5%) — ${fKd(fm)}</span>
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#BA7517;"></span>Optimistic (7%) — ${fKd(fo)}</span>
+    <span class="pen-legend-item"><span class="pen-legend-dot" style="background:var(--blue);"></span>Conservative (3%) — ${fmt(fc)}</span>
+    <span class="pen-legend-item"><span class="pen-legend-dot" style="background:var(--green);"></span>Moderate (5%) — ${fmt(fm)}</span>
+    <span class="pen-legend-item"><span class="pen-legend-dot" style="background:var(--amber);"></span>Optimistic (7%) — ${fmt(fo)}</span>
   `;
 
   // Income comparison cards
   document.getElementById('incC').innerHTML = `
-    <p class="sl">Retirement income by scenario</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">
-      ${[[fc,'#378ADD','Conservative'],[fm,'#1D9E75','Moderate'],[fo,'#BA7517','Optimistic']].map(([pv, col, lbl]) => `
-        <div class="rc">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">${lbl}</div>
-          <div style="width:20px;height:3px;border-radius:2px;background:${col};margin:0 auto 8px;"></div>
-          <div style="font-size:15px;font-weight:500;">${f(pv * 0.04 + sp)}/yr</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;">${f((pv * 0.04 + sp) / 12)}/mo</div>
+    <div class="section-label" style="margin-top:4px;">Retirement income by scenario</div>
+    <div class="pen-scenario-grid">
+      ${[[fc,'var(--blue)','Conservative'],[fm,'var(--green)','Moderate'],[fo,'var(--amber)','Optimistic']].map(([pv, col, lbl]) => `
+        <div class="stat-card" style="padding:16px;">
+          <div class="stat-label" style="margin-bottom:6px;">${lbl}</div>
+          <div style="width:24px;height:3px;border-radius:2px;background:${col};margin-bottom:10px;"></div>
+          <div class="stat-val val" style="font-size:18px;">${fmt(pv * 0.04 + sp)}<span style="font-size:11px;font-variation-settings:'wght' 400;color:var(--muted2);">/yr</span></div>
+          <div class="stat-sub">${fmt((pv * 0.04 + sp) / 12)}/mo</div>
         </div>`).join('')}
     </div>
-    <hr class="div">
-    <div style="font-size:11px;color:var(--muted);">4% safe withdrawal rate. State pension: ${f(sp)}/yr (${spY}/${SP_YRS} NI years). Figures in today's money, before income tax.</div>
+    ${penDivider()}
+    <p style="font-size:11px;color:var(--muted2);line-height:1.5;">4% safe withdrawal rate. State pension: ${fmt(sp)}/yr (${spY}/${SP_YRS} NI years). Figures in today's money, before income tax.</p>
   `;
 
   // Chart
@@ -242,9 +256,9 @@ function updProj() {
     data: {
       labels: lb,
       datasets: [
-        { label: 'Conservative', data: c3, borderColor: '#378ADD', backgroundColor: 'transparent',             fill: false, tension: .3, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 4] },
-        { label: 'Moderate',     data: m5, borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,.08)',    fill: true,  tension: .3, pointRadius: 0, borderWidth: 2 },
-        { label: 'Optimistic',   data: o7, borderColor: '#BA7517', backgroundColor: 'transparent',             fill: false, tension: .3, pointRadius: 0, borderWidth: 1.5, borderDash: [2, 3] }
+        { label: 'Conservative', data: c3, borderColor: '#1d6fca', backgroundColor: 'transparent',          fill: false, tension: .3, pointRadius: 0, borderWidth: 1.5, borderDash: [5, 4] },
+        { label: 'Moderate',     data: m5, borderColor: '#0a8f5c', backgroundColor: 'rgba(10,143,92,.08)',   fill: true,  tension: .3, pointRadius: 0, borderWidth: 2 },
+        { label: 'Optimistic',   data: o7, borderColor: '#df9c37', backgroundColor: 'transparent',        fill: false, tension: .3, pointRadius: 0, borderWidth: 1.5, borderDash: [2, 3] }
       ]
     },
     options: {
@@ -253,11 +267,11 @@ function updProj() {
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + f(ctx.parsed.y) } }
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.parsed.y) } }
       },
       scales: {
-        x: { ticks: { font: { size: 11 }, color: '#888', autoSkip: true, maxTicksLimit: 8 }, grid: { display: false } },
-        y: { ticks: { font: { size: 11 }, color: '#888', callback: v => fK(v) }, grid: { color: 'rgba(128,128,128,.1)' } }
+        x: { ticks: { font: { size: 11 }, color: tickCol, autoSkip: true, maxTicksLimit: 8 }, grid: { display: false } },
+        y: { ticks: { font: { size: 11 }, color: tickCol, callback: v => (v >= 1000 ? '£' + Math.round(v / 1000) + 'k' : fmt(v)) }, grid: { color: gridCol } }
       }
     }
   });
@@ -267,7 +281,7 @@ function updProj() {
 
 // ── Tax relief tab ──
 function selBand(btn) {
-  document.querySelectorAll('.bnd').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#pensionContent .pen-tax-band').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   txBand = parseInt(btn.dataset.b);
   updTax();
@@ -276,7 +290,7 @@ function selBand(btn) {
 function updTax() {
   const gr = parseInt(document.getElementById('slGr').value);
   const er = parseFloat(document.getElementById('slEr').value);
-  document.getElementById('oGr').textContent = '£' + gr.toLocaleString('en-GB');
+  document.getElementById('oGr').textContent = fmt(gr);
   document.getElementById('oEr').textContent = er.toFixed(1) + '%';
 
   const rel   = gr * (txBand / 100);
@@ -286,33 +300,38 @@ function updTax() {
   const eff   = Math.max(0, net - erAmt);
 
   document.getElementById('taxO').innerHTML = `
-    <div class="mgrid" style="margin-bottom:12px;">
-      <div class="met"><div class="ml">Gross into pension</div><div class="mv">${f(gr)}</div><div class="ms">total going in</div></div>
-      <div class="met"><div class="ml">Tax relief (${txBand}%)</div><div class="mv">${f(rel)}</div><div class="ms">HMRC tops up</div></div>
-      <div class="met"><div class="ml">Net cost to you</div><div class="mv">${f(net)}</div><div class="ms">from your pay</div></div>
+    <div class="summary-grid pen-tax-summary" style="margin-bottom:12px;">
+      <div class="stat-card sc-accent"><div class="stat-label">Gross into pension</div><div class="stat-val val">${fmt(gr)}</div><div class="stat-sub">total going in</div></div>
+      <div class="stat-card sc-green"><div class="stat-label">Tax relief (${txBand}%)</div><div class="stat-val val">${fmt(rel)}</div><div class="stat-sub">HMRC tops up</div></div>
+      <div class="stat-card sc-amber"><div class="stat-label">Net cost to you</div><div class="stat-val val">${fmt(net)}</div><div class="stat-sub">from your pay</div></div>
     </div>
     ${erAmt > 0 ? `
       <div class="card" style="margin-bottom:12px;">
-        <p class="sl">With employer match (${er.toFixed(1)}%)</p>
-        <div class="row" style="margin-bottom:8px;font-size:13px;"><span style="color:var(--muted);">Employer adds</span><span style="font-weight:500;">${f(erAmt)}</span></div>
-        <div class="row" style="margin-bottom:8px;font-size:13px;"><span style="color:var(--muted);">Total going in</span><span style="font-weight:500;">${f(tot)}</span></div>
-        <hr class="div">
-        <div class="row"><span style="font-size:13px;font-weight:500;">Your effective cost</span><span style="font-size:17px;font-weight:500;">${f(eff)}</span></div>
-        <div style="font-size:11px;color:var(--muted);margin-top:6px;">For every ${f(net)} you put in, ${f(tot)} enters your pension — a ${Math.round((tot / net - 1) * 100)}% uplift.</div>
+        <div class="card-header" style="margin-bottom:10px;">
+          <span class="card-title">With employer match (${er.toFixed(1)}%)</span>
+        </div>
+        <div class="pen-row" style="margin-bottom:8px;font-size:13px;"><span style="color:var(--muted2);">Employer adds</span><span class="val" style="font-variation-settings:'wght' 600;">${fmt(erAmt)}</span></div>
+        <div class="pen-row" style="margin-bottom:8px;font-size:13px;"><span style="color:var(--muted2);">Total going in</span><span class="val" style="font-variation-settings:'wght' 600;">${fmt(tot)}</span></div>
+        ${penDivider()}
+        <div class="pen-row"><span style="font-size:13px;font-variation-settings:'wght' 600;">Your effective cost</span><span class="val" style="font-size:17px;font-variation-settings:'wght' 700;">${fmt(eff)}</span></div>
+        <p style="font-size:11px;color:var(--muted2);margin-top:10px;line-height:1.5;">For every ${fmt(net)} you put in, ${fmt(tot)} enters your pension — a ${Math.round((tot / net - 1) * 100)}% uplift.</p>
       </div>
     ` : ''}
     <div class="card">
-      <p class="sl">All bands compared at ${f(gr)} gross</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div class="card-header" style="margin-bottom:12px;">
+        <span class="card-title">All bands compared</span>
+        <span class="card-sub">at ${fmt(gr)} gross</span>
+      </div>
+      <div class="pen-scenario-grid">
         ${[[20, 'Basic'], [40, 'Higher'], [45, 'Additional']].map(([b, lbl]) => {
           const r = gr * b / 100, n = gr - r;
-          const active = b === txBand ? 'border:1.5px solid var(--color-border-info);' : '';
+          const active = b === txBand ? 'border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-dim);' : '';
           return `
-            <div class="rc" style="${active}">
-              <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">${lbl} ${b}%</div>
-              <div style="font-size:16px;font-weight:500;">${f(n)}</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:2px;">net cost</div>
-              <div style="font-size:11px;color:var(--muted);">${f(r)} relief</div>
+            <div class="stat-card" style="padding:14px;${active}">
+              <div class="stat-label" style="margin-bottom:4px;">${lbl} ${b}%</div>
+              <div class="stat-val val" style="font-size:17px;">${fmt(n)}</div>
+              <div class="stat-sub">net cost</div>
+              <div style="font-size:11px;color:var(--muted2);margin-top:4px;">${fmt(r)} relief</div>
             </div>`;
         }).join('')}
       </div>
@@ -326,7 +345,7 @@ function rAllowances() {
   const used  = Math.min(ac, AA);
   const rem   = AA - used;
   const pct   = Math.round(used / AA * 100);
-  const gaugeCol = pct < 60 ? '#1D9E75' : pct < 85 ? '#BA7517' : '#E24B4A';
+  const gaugeCol = pct < 60 ? 'var(--green)' : pct < 85 ? 'var(--amber)' : 'var(--red)';
 
   // Last 3 years carry-forward (replace with real data)
   const cf = [
@@ -338,43 +357,51 @@ function rAllowances() {
 
   document.getElementById('allC').innerHTML = `
     <div class="card">
-      <p class="sl">Annual allowance 2025/26</p>
-      <div class="row" style="margin-bottom:8px;"><span style="font-size:13px;color:var(--muted);">Contributions this tax year</span><span style="font-size:15px;font-weight:500;">${f(used)}</span></div>
-      <div class="gt"><div class="gf" style="width:${pct}%;background:${gaugeCol};"></div></div>
-      <div class="row" style="font-size:12px;color:var(--muted);"><span>${pct}% used</span><span>${f(rem)} remaining</span></div>
-      <hr class="div">
-      <div class="row"><span style="font-size:13px;color:var(--muted);">Annual allowance limit</span><span style="font-weight:500;">${f(AA)}</span></div>
+      <div class="card-header" style="margin-bottom:12px;">
+        <span class="card-title">Annual allowance 2025/26</span>
+      </div>
+      <div class="pen-row" style="margin-bottom:8px;"><span style="font-size:13px;color:var(--muted2);">Contributions this tax year</span><span class="val" style="font-size:15px;font-variation-settings:'wght' 600;">${fmt(used)}</span></div>
+      <div class="prog-outer"><div class="prog-fill" style="width:${pct}%;background:${gaugeCol};"></div></div>
+      <div class="pen-row" style="font-size:12px;color:var(--muted2);margin-top:6px;"><span>${pct}% used</span><span>${fmt(rem)} remaining</span></div>
+      ${penDivider()}
+      <div class="pen-row"><span style="font-size:13px;color:var(--muted2);">Annual allowance limit</span><span class="val" style="font-variation-settings:'wght' 600;">${fmt(AA)}</span></div>
     </div>
 
     <div class="card">
-      <p class="sl">Carry forward — unused allowances</p>
+      <div class="card-header" style="margin-bottom:12px;">
+        <span class="card-title">Carry forward — unused allowances</span>
+      </div>
       ${cf.map(y => {
         const u = y.al - y.used;
         const p = Math.round(y.used / y.al * 100);
         return `
-          <div style="margin-bottom:12px;">
-            <div class="row" style="margin-bottom:4px;font-size:13px;"><span>${y.yr}</span><span style="font-weight:500;">${f(u)} unused</span></div>
-            <div class="gt"><div class="gf" style="width:${p}%;background:#378ADD;"></div></div>
-            <div style="font-size:11px;color:var(--muted);">${f(y.used)} of ${f(y.al)} used</div>
+          <div style="margin-bottom:14px;">
+            <div class="pen-row" style="margin-bottom:6px;font-size:13px;"><span>${y.yr}</span><span class="val" style="font-variation-settings:'wght' 600;">${fmt(u)} unused</span></div>
+            <div class="prog-outer"><div class="prog-fill" style="width:${p}%;background:var(--blue);"></div></div>
+            <div style="font-size:11px;color:var(--muted2);margin-top:4px;">${fmt(y.used)} of ${fmt(y.al)} used</div>
           </div>`;
       }).join('')}
-      <hr class="div">
-      <div class="row"><span style="font-size:13px;font-weight:500;">Total carry forward available</span><span style="font-size:17px;font-weight:500;">${f(totCF)}</span></div>
-      <div style="font-size:11px;color:var(--muted);margin-top:6px;">You can contribute up to ${f(AA + totCF)} in 2025/26 using carry forward, subject to sufficient earnings.</div>
+      ${penDivider()}
+      <div class="pen-row"><span style="font-size:13px;font-variation-settings:'wght' 600;">Total carry forward available</span><span class="val" style="font-size:17px;font-variation-settings:'wght' 700;">${fmt(totCF)}</span></div>
+      <p style="font-size:11px;color:var(--muted2);margin-top:10px;line-height:1.5;">You can contribute up to ${fmt(AA + totCF)} in 2025/26 using carry forward, subject to sufficient earnings.</p>
     </div>
 
     <div class="card" style="margin-bottom:12px;">
-      <p class="sl">Money purchase annual allowance (MPAA)</p>
-      <div style="font-size:13px;color:var(--muted);line-height:1.6;">
-        Once you start flexible drawdown, contributions are capped at <strong>£10,000/yr</strong>. This prevents recycling drawdown funds back in for repeated tax relief.
+      <div class="card-header" style="margin-bottom:8px;">
+        <span class="card-title">Money purchase annual allowance (MPAA)</span>
       </div>
+      <p style="font-size:13px;color:var(--muted2);line-height:1.6;">
+        Once you start flexible drawdown, contributions are capped at <strong>£10,000/yr</strong>. This prevents recycling drawdown funds back in for repeated tax relief.
+      </p>
     </div>
 
     <div class="card">
-      <p class="sl">Tapered annual allowance</p>
-      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
-        If threshold income exceeds <strong>£200,000</strong> and adjusted income exceeds <strong>£260,000</strong>, your allowance tapers — down to a minimum of <strong>£10,000</strong>.
+      <div class="card-header" style="margin-bottom:8px;">
+        <span class="card-title">Tapered annual allowance</span>
       </div>
+      <p style="font-size:13px;color:var(--muted2);line-height:1.6;">
+        If threshold income exceeds <strong>£200,000</strong> and adjusted income exceeds <strong>£260,000</strong>, your allowance tapers — down to a minimum of <strong>£10,000</strong>.
+      </p>
     </div>
   `;
 }
@@ -404,14 +431,14 @@ function renderPension() {
   }
 
   el.innerHTML = `
-    <div class="tab-row" style="gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-      <button class="nav-btn active" onclick="swTab('overview', this)">Overview</button>
-      <button class="nav-btn" onclick="swTab('accounts', this)">Accounts</button>
-      <button class="nav-btn" onclick="swTab('projections', this)">Projections</button>
-      <button class="nav-btn" onclick="swTab('tax', this)">Tax relief</button>
-      <button class="nav-btn" onclick="swTab('allowances', this)">Allowances</button>
+    <div class="tab-row">
+      <button type="button" class="tab-btn active" onclick="swTab('overview', this)">Overview</button>
+      <button type="button" class="tab-btn" onclick="swTab('accounts', this)">Accounts</button>
+      <button type="button" class="tab-btn" onclick="swTab('projections', this)">Projections</button>
+      <button type="button" class="tab-btn" onclick="swTab('tax', this)">Tax relief</button>
+      <button type="button" class="tab-btn" onclick="swTab('allowances', this)">Allowances</button>
     </div>
-    <div id="topM" class="summary-grid" style="grid-template-columns:repeat(4,minmax(160px,1fr));gap:14px;margin-bottom:20px;"></div>
+    <div id="topM" class="summary-grid"></div>
     <div class="ptab active" id="tab-overview">
       <div id="ovC"></div>
     </div>
@@ -421,24 +448,31 @@ function renderPension() {
     <div class="ptab" id="tab-projections" style="display:none;">
       <div class="card" style="margin-bottom:18px;">
         <div class="form-grid" style="grid-template-columns:repeat(4,minmax(140px,1fr));gap:12px;">
-          <div class="ff"><label>Current age</label><input id="slA" type="range" min="18" max="70" value="45" oninput="document.getElementById('oA').textContent=this.value;updProj()"/><div style="font-size:12px;color:var(--muted);margin-top:6px;">Selected: <span id="oA">45</span></div></div>
-          <div class="ff"><label>Retirement age</label><input id="slR" type="range" min="55" max="75" value="67" oninput="document.getElementById('oR').textContent=this.value;updProj()"/><div style="font-size:12px;color:var(--muted);margin-top:6px;">Selected: <span id="oR">67</span></div></div>
-          <div class="ff"><label>Monthly contributions</label><input id="slC" type="range" min="0" max="5000" step="50" value="600" oninput="document.getElementById('oC').textContent='£'+parseInt(this.value).toLocaleString('en-GB');updProj()"/><div style="font-size:12px;color:var(--muted);margin-top:6px;">Selected: <span id="oC">£600</span></div></div>
-          <div class="ff"><label>Current pot</label><input id="slP" type="range" min="0" max="500000" step="500" value="${totalBalance()}" oninput="document.getElementById('oP').textContent='£'+parseInt(this.value).toLocaleString('en-GB');updProj()"/><div style="font-size:12px;color:var(--muted);margin-top:6px;">Selected: <span id="oP">£${Math.round(totalBalance()).toLocaleString('en-GB')}</span></div></div>
+          <div class="ff"><label>Current age</label><input id="slA" type="range" min="18" max="70" value="45" oninput="document.getElementById('oA').textContent=this.value;updProj()"/><div style="font-size:12px;color:var(--muted2);margin-top:6px;">Selected: <span id="oA">45</span></div></div>
+          <div class="ff"><label>Retirement age</label><input id="slR" type="range" min="55" max="75" value="67" oninput="document.getElementById('oR').textContent=this.value;updProj()"/><div style="font-size:12px;color:var(--muted2);margin-top:6px;">Selected: <span id="oR">67</span></div></div>
+          <div class="ff"><label>Monthly contributions</label><input id="slC" type="range" min="0" max="5000" step="50" value="600" oninput="document.getElementById('oC').textContent=fmt(parseInt(this.value,10)||0);updProj()"/><div style="font-size:12px;color:var(--muted2);margin-top:6px;">Selected: <span id="oC">${fmt(600)}</span></div></div>
+          <div class="ff"><label>Current pot</label><input id="slP" type="range" min="0" max="500000" step="500" value="${totalBalance()}" oninput="document.getElementById('oP').textContent=fmt(parseInt(this.value,10)||0);updProj()"/><div style="font-size:12px;color:var(--muted2);margin-top:6px;">Selected: <span id="oP">${fmt(totalBalance())}</span></div></div>
           <div class="ff"><label>Growth rate</label><select id="selG" onchange="updProj()"><option value="3">3%</option><option value="5" selected>5%</option><option value="7">7%</option></select></div>
-          <div class="ff"><label>NI years</label><input id="slSP" type="range" min="0" max="35" value="15" oninput="document.getElementById('oSP').textContent=this.value;updProj()"/><div style="font-size:12px;color:var(--muted);margin-top:6px;">Selected: <span id="oSP">15</span></div></div>
+          <div class="ff"><label>NI years</label><input id="slSP" type="range" min="0" max="35" value="15" oninput="document.getElementById('oSP').textContent=this.value;updProj()"/><div style="font-size:12px;color:var(--muted2);margin-top:6px;">Selected: <span id="oSP">15</span></div></div>
         </div>
       </div>
-      <div id="projM" class="summary-grid" style="grid-template-columns:repeat(3,minmax(180px,1fr));gap:14px;margin-bottom:20px;"></div>
+      <div id="projM" class="summary-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));"></div>
       <div id="incC"></div>
-      <div style="height:320px;"><canvas id="pChart"></canvas></div>
+      <div id="legD" class="pen-legend"></div>
+      <div class="card pen-chart-card">
+        <div class="pen-chart-wrap"><canvas id="pChart"></canvas></div>
+      </div>
     </div>
     <div class="ptab" id="tab-tax" style="display:none;">
       <div class="card" style="margin-bottom:18px;">
         <div class="form-grid" style="grid-template-columns:repeat(4,minmax(140px,1fr));gap:12px;">
-          <div class="ff"><label>Gross contribution</label><input id="slGr" type="range" min="1000" max="150000" step="500" value="30000" oninput="document.getElementById('oGr').textContent='£'+parseInt(this.value).toLocaleString('en-GB');updTax()"/><div style="font-size:12px;color:var(--muted);margin-top:6px;">Selected: <span id="oGr">£30,000</span></div></div>
-          <div class="ff"><label>Employer match</label><input id="slEr" type="range" min="0" max="20" step="0.5" value="5" oninput="document.getElementById('oEr').textContent=this.value+'%';updTax()"/><div style="font-size:12px;color:var(--muted);margin-top:6px;">Selected: <span id="oEr">5%</span></div></div>
-          <div class="ff" style="grid-column:span 2;"><label>Tax band</label><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="bnd active" data-b="20" onclick="selBand(this)">20%</button><button class="bnd" data-b="40" onclick="selBand(this)">40%</button><button class="bnd" data-b="45" onclick="selBand(this)">45%</button></div></div>
+          <div class="ff"><label>Gross contribution</label><input id="slGr" type="range" min="1000" max="150000" step="500" value="30000" oninput="document.getElementById('oGr').textContent=fmt(parseInt(this.value,10)||0);updTax()"/><div style="font-size:12px;color:var(--muted2);margin-top:6px;">Selected: <span id="oGr">${fmt(30000)}</span></div></div>
+          <div class="ff"><label>Employer match</label><input id="slEr" type="range" min="0" max="20" step="0.5" value="5" oninput="document.getElementById('oEr').textContent=this.value+'%';updTax()"/><div style="font-size:12px;color:var(--muted2);margin-top:6px;">Selected: <span id="oEr">5%</span></div></div>
+          <div class="ff" style="grid-column:span 2;"><label>Tax band</label><div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="filter-btn pen-tax-band active" data-b="20" onclick="selBand(this)">20%</button>
+            <button type="button" class="filter-btn pen-tax-band" data-b="40" onclick="selBand(this)">40%</button>
+            <button type="button" class="filter-btn pen-tax-band" data-b="45" onclick="selBand(this)">45%</button>
+          </div></div>
         </div>
       </div>
       <div id="taxO"></div>

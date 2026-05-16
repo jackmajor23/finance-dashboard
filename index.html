@@ -1,1089 +1,1668 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Finance Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,100..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/main.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Financial Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,100..900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+
 <body>
-<button class="eye-fab" id="eyeBtn" onclick="toggleHide()" title="Show/hide figures">
-  <span class="material-symbols-outlined">visibility</span>
-</button>
+  <button class="eye-fab" id="eyeBtn" onclick="toggleHide()" title="Show/hide figures">
+    <span class="material-symbols-outlined">visibility</span>
+  </button>
 
-<div class="app">
+  <div class="app">
 
-<!-- ─── SIDEBAR ─── -->
-<nav class="sidebar" id="sidebar">
-  <div class="logo">
-    <div class="logo-name" id="sidebarTitle">Financial Tracker</div>
-    <div class="logo-sub">personal finance dashboard</div>
-  </div>
-
-  <div class="nav-scroll">
-    <div class="nav-group">
-      <div class="nav-label">Overview</div>
-      <button class="nav-item active" data-page="overview" onclick="nav('overview',this)"><span class="nav-icon material-symbols-outlined">Overview</span>Overview</button>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">Assets</div>
-      <button class="nav-item" data-page="investments"   onclick="nav('investments',this)"><span class="nav-icon material-symbols-outlined">Finance_Mode</span>Investments</button>
-      <button class="nav-item" data-page="accounts"      onclick="nav('accounts',this)"><span class="nav-icon material-symbols-outlined">Savings</span>Accounts &amp; ISAs</button>
-      <button class="nav-item" data-page="properties"    onclick="nav('properties',this)"><span class="nav-icon material-symbols-outlined">House</span>Properties</button>
-      <button class="nav-item" data-page="premium-bonds" onclick="nav('premium-bonds',this)"><span class="nav-icon material-symbols-outlined">Finance</span>Premium Bonds</button>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">Finances</div>
-     <button class="nav-item" data-page="salary" onclick="nav('salary',this)"><span class="nav-icon material-symbols-outlined">work</span>Salary</button>
-      <button class="nav-item" data-page="bills"  onclick="nav('bills',this)"><span class="nav-icon material-symbols-outlined">Receipt</span>Bills</button>
-      <button class="nav-item" data-page="pension"  onclick="nav('pension',this)"><span class="nav-icon material-symbols-outlined">Person</span>Pension</button>
-      <button class="nav-item" data-page="debts"   onclick="nav('debts',this)"><span class="nav-icon material-symbols-outlined">Credit_Card</span>Debts</button>
-      <button class="nav-item" data-page="goals"   onclick="nav('goals',this)"><span class="nav-icon material-symbols-outlined">Star</span>Goals</button>
-    </div>
-    <div class="nav-group">
-      <div class="nav-label">History</div>
-      <button class="nav-item" data-page="transactions" onclick="nav('transactions',this)"><span class="nav-icon material-symbols-outlined">Payments</span>Transactions</button>
-      <button class="nav-item" data-page="tax"          onclick="nav('tax',this)"><span class="nav-icon material-symbols-outlined">Corporate_Fare</span>Tax Summary</button>
-    </div>
-    <div class="nav-divider"></div>
-    <div class="nav-group">
-      <button class="nav-item" data-page="settings" onclick="nav('settings',this)"><span class="nav-icon material-symbols-outlined">Settings</span>Settings</button>
-    </div>
-  </div>
-
-  <div class="sidebar-bottom">
-    <div class="user-chip">
-      <div class="user-avatar" id="userAvatar">W</div>
-      <div class="user-info">
-        <div class="user-name" id="userName">Financial Tracker</div>
-        <div class="user-sub" id="lastUpdated">never saved</div>
+    <!-- ─── SIDEBAR ─── -->
+    <nav class="sidebar" id="sidebar">
+      <div class="logo">
+        <div class="logo-name" id="sidebarTitle">Financial Tracker</div>
+        <div class="logo-sub">personal finance dashboard</div>
       </div>
-</nav>
 
-<!-- ═══════════════════════════════════════════════════
+      <div class="nav-scroll">
+        <div class="nav-group">
+          <div class="nav-label">Overview</div>
+          <button class="nav-item active" data-page="overview" onclick="nav('overview',this)"><span
+              class="nav-icon material-symbols-outlined">Overview</span>Overview</button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-label">Assets</div>
+          <button class="nav-item" data-page="investments" onclick="nav('investments',this)"><span
+              class="nav-icon material-symbols-outlined">Finance_Mode</span>Investments</button>
+          <button class="nav-item" data-page="accounts" onclick="nav('accounts',this)"><span
+              class="nav-icon material-symbols-outlined">Savings</span>Accounts &amp; ISAs</button>
+          <button class="nav-item" data-page="properties" onclick="nav('properties',this)"><span
+              class="nav-icon material-symbols-outlined">House</span>Properties</button>
+          <button class="nav-item" data-page="premium-bonds" onclick="nav('premium-bonds',this)"><span
+              class="nav-icon material-symbols-outlined">Finance</span>Premium Bonds</button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-label">Finances</div>
+          <button class="nav-item" data-page="salary" onclick="nav('salary',this)"><span
+              class="nav-icon material-symbols-outlined">work</span>Salary</button>
+          <button class="nav-item" data-page="bills" onclick="nav('bills',this)"><span
+              class="nav-icon material-symbols-outlined">Receipt</span>Bills</button>
+          <button class="nav-item" data-page="pension" onclick="nav('pension',this)"><span
+              class="nav-icon material-symbols-outlined">Person</span>Pension</button>
+          <button class="nav-item" data-page="debts" onclick="nav('debts',this)"><span
+              class="nav-icon material-symbols-outlined">Credit_Card</span>Debts</button>
+          <button class="nav-item" data-page="goals" onclick="nav('goals',this)"><span
+              class="nav-icon material-symbols-outlined">Star</span>Goals</button>
+        </div>
+        <div class="nav-group">
+          <div class="nav-label">History</div>
+          <button class="nav-item" data-page="transactions" onclick="nav('transactions',this)"><span
+              class="nav-icon material-symbols-outlined">Payments</span>Transactions</button>
+          <button class="nav-item" data-page="tax" onclick="nav('tax',this)"><span
+              class="nav-icon material-symbols-outlined">Corporate_Fare</span>Tax Summary</button>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-group">
+          <button class="nav-item" data-page="settings" onclick="nav('settings',this)"><span
+              class="nav-icon material-symbols-outlined">Settings</span>Settings</button>
+        </div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="user-chip">
+          <div class="user-avatar" id="userAvatar">W</div>
+          <div class="user-info">
+            <div class="user-name" id="userName">Financial Tracker</div>
+            <div class="user-sub" id="lastUpdated">never saved</div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════
      6. HTML PAGES
      ═══════════════════════════════════════════════════ -->
-<main class="main">
+    <main class="main">
 
-<!-- ─── PAGE: OVERVIEW ─── -->
-<div class="page active" id="page-overview">
-  <div class="page-header">
-    <h2 id="overviewGreeting">Overview</h2>
-    <p id="overviewDate"></p>
-  </div>
-  
-  <div class="summary-grid" id="summarycards"></div>
-  <div class="charts-2col">
-    <div style="overflow-x:auto;padding:4px 0;">
-    <div id="eventsTicker" style="margin-bottom:16px; overflow-x:auto; white-space:nowrap;"></div>
-  </div>
-  <br>
-    <div class="card">
-      <div class="card-header"><span class="card-title">Allocation</span></div>
-      <div class="donut-wrap">
-        <canvas id="donutChart"></canvas>
-        <div class="donut-center"><div class="dc-big val" id="donutCenterVal">—</div><div class="dc-sm">total value</div></div>
-      </div>
-      <div class="legend-list" id="donutLegend"></div>
-    </div>
-    
-  <div class="card">
-  <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-    <span class="card-title">Net worth over time</span>
-    <select id="nwPeriod" onchange="renderOverview()" style="font-size:12.5px;padding:5px 10px;border:1px solid var(--border2);border-radius:6px;">
-      <option value="1w">1 Week</option>
-      <option value="1m">1 Month</option>
-      <option value="3m">3 Months</option>
-      <option value="6m" selected>6 Months</option>
-      <option value="1y">1 Year</option>
-      <option value="5y">5 Years</option>
-      <option value="all">All Time</option>
-    </select>
-  </div>
-   <div id="nwChangeCallout" style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted2);"></div>
-   <div id="nwCalloutWrap"></div>
-  <div class="nw-wrap"><canvas id="nwChart"></canvas></div>
-  <div id="nwSub" style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted2);"></div>
-</div>
-  </div>
-  <div class="charts-equal">
-    <div class="card">
-      <div class="card-header"><span class="card-title">P&amp;L by holding</span></div>
-      <div class="bar-wrap"><canvas id="barChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span class="card-title">Goals progress</span></div>
-      <div id="goalsRings" style="padding:4px 0;"></div>
-    </div>
-  </div>
-  <div class="card" style="margin-bottom:18px;">
-    <div class="card-header"><span class="card-title">ISA allowances 2025/26</span></div>
-    <div class="isa-mini-grid" id="isaMiniGrid"></div>
-  </div>
-  <div class="chart-section" style="margin-top:24px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <div class="section-title">Monthly Cash Flow</div>
-    <div style="font-size:11px;color:var(--muted);">Income vs Expenses · last 6 months</div>
-  </div>
-  <div class="chart-empty" style="display:none;font-size:12px;color:var(--muted);padding:20px 0;">
-    Add transactions to see your cash flow summary.
-  </div>
-  <div style="height:180px;position:relative;">
-    <canvas id="cashFlowChart"></canvas>
-  </div>
-</div>
-<div class="chart-section" style="margin-top:24px;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <div class="section-title">Debt Payoff Timeline</div>
-    <div style="font-size:11px;color:var(--muted);">Projected to zero</div>
-  </div>
-  <div class="chart-empty" style="display:none;font-size:12px;color:var(--muted);padding:20px 0;">
-    Add debts with a monthly payment to see your payoff timeline.
-  </div>
-  <div style="height:200px;position:relative;">
-    <canvas id="debtTimelineChart"></canvas>
-  </div>
-  <!-- Extra payment "what if" slider — injected by JS automatically -->
-  <div id="debtExtraWrap"></div>
-</div>
-</div>
-
-<!-- ─── PAGE: ACCOUNTS & ISA ─── -->
-<div class="page" id="page-accounts">
-  <div class="page-header">
-    <h2>Accounts &amp; ISAs</h2>
-    <p>Bank accounts, ISA wrappers and savings · 2025/26 annual ISA allowance: <strong style="color:var(--green)">£20,000</strong></p>
-  </div>
-  <div class="section-label">ISA allowance tracker</div>
-  <div class="isa-grid" id="isaTracker"></div>
-  <div class="section-label">Your accounts</div>
-  <div class="accounts-grid" id="accountsGrid"></div>
-  <div class="form-box">
-    <h3>+ Add account or ISA</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Account name</label><input type="text" id="accName" placeholder="e.g. Vanguard ISA"/></div>
-      <div class="ff"><label>Type</label>
-        <select id="accType">
-          <optgroup label="Bank Accounts">
-            <option value="current">Current account</option>
-            <option value="savings">Savings account</option>
-            <option value="joint">Joint account</option>
-          </optgroup>
-          <optgroup label="ISAs">
-            <option value="stocks-isa">Stocks &amp; Shares ISA</option>
-            <option value="cash-isa">Cash ISA</option>
-            <option value="lifetime-isa">Lifetime ISA (LISA)</option>
-            <option value="help-to-buy-isa">Help to Buy ISA</option>
-            <option value="innovative-isa">Innovative Finance ISA</option>
-            <option value="junior-isa">Junior ISA</option>
-          </optgroup>
-          <optgroup label="Other">
-            <option value="pension">Pension / SIPP</option>
-            <option value="premium-bonds-acc">Premium Bonds</option>
-            <option value="other">Other</option>
-          </optgroup>
-        </select>
-      </div>
-      <div class="ff"><label>Provider</label><input type="text" id="accProvider" placeholder="e.g. Vanguard"/></div>
-      <div class="ff money-field"><label>Balance</label><input type="text" id="accBalance" placeholder="5,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Contributed this tax year</label><input type="text" id="accContrib" placeholder="0" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-    </div>
-    <div class="form-actions"><button class="btn btn-primary" onclick="addAccount()">Add account</button></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: PREMIUM BONDS ─── -->
-<div class="page" id="page-premium-bonds">
-  <div class="page-header">
-    <h2>Premium Bonds</h2>
-    <p>NS&amp;I premium bonds · max holding £50,000 · all prizes are tax-free</p>
-  </div>
-  <div class="pb-summary" id="pbSummary"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
-    <div class="form-box" style="margin-bottom:0;">
-      <h3>Update bond holding</h3>
-      <div class="form-grid">
-        <div class="ff money-field"><label>Total bonds held</label><input type="text" id="pbAmount" placeholder="50,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-        <div class="ff"><label>Date purchased / updated</label><input type="date" id="pbDate"/></div>
-      </div>
-      <div class="form-actions"><button class="btn btn-primary" onclick="updatePB()">Update</button></div>
-    </div>
-    <div class="form-box" style="margin-bottom:0;">
-      <h3>Log a prize win</h3>
-      <div class="form-grid">
-        <div class="ff"><label>Prize tier</label>
-          <select id="pbWinTier">
-            <option value="25">£25</option><option value="50">£50</option>
-            <option value="100">£100</option><option value="500">£500</option>
-            <option value="1000">£1,000</option><option value="5000">£5,000</option>
-            <option value="25000">£25,000</option><option value="50000">£50,000</option>
-            <option value="100000">£100,000</option><option value="1000000">£1,000,000</option>
-          </select>
-        </div>
-        <div class="ff"><label>Month</label>
-          <select id="pbWinMonth">
-            <option value="1">January</option><option value="2">February</option><option value="3">March</option>
-            <option value="4">April</option><option value="5">May</option><option value="6">June</option>
-            <option value="7">July</option><option value="8">August</option><option value="9">September</option>
-            <option value="10">October</option><option value="11">November</option><option value="12">December</option>
-          </select>
-        </div>
-        <div class="ff"><label>Year</label><input type="number" id="pbWinYear" placeholder="2025" min="2000" max="2100"/></div>
-      </div>
-      <div style="margin-bottom:12px;">
-        <label class="toggle-wrap">
-          <span>Add winnings to bond holding automatically</span>
-          <label class="toggle"><input type="checkbox" id="pbAutoAdd"><span class="toggle-track"></span></label>
-        </label>
-      </div>
-      <div class="form-actions"><button class="btn btn-primary" onclick="addPBWin()">Log win 🎉</button></div>
-    </div>
-  </div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-    <div class="section-label">Winnings history</div>
-    <button class="icon-btn" title="Undo last deletion" id="pbUndoBtn" onclick="undoLastPBDelete()" style="opacity:0;pointer-events:none;transition:opacity .15s;font-size:14px;">↺</button>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Month / year</th><th>Amount</th><th>Cumulative total</th><th>Where went</th><th></th></tr></thead>
-      <tbody id="pbWinsBody"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ─── PAGE: STOCKS ─── -->
-<div class="page" id="page-investments">
-  <div class="page-header">
-    <h2>Investments</h2>
-    <p>Holdings, live prices & watchlist · Yahoo Finance (15-min delayed)</p>
-  </div>
-  <div class="alert alert-amber">⚠ Prices are 15-min delayed. Examples: <code>AAPL</code> · <code>VUSA.L</code> · <code>BTC-GBP</code> · <code>^FTSE</code> · <code>^GSPC</code></div>
-  <div class="tab-row">
-    <button class="tab-btn active" onclick="invTab('all',this)">All</button>
-    <button class="tab-btn"        onclick="invTab('stocks',this)">Stocks</button>
-    <button class="tab-btn"        onclick="invTab('crypto',this)">Crypto</button>
-    <button class="tab-btn"        onclick="invTab('watchlist',this)">Watchlist</button>
-  </div>
-  <div class="tab-pane active" id="invtab-all">
-    <div class="investment-stats" id="investmentStats"></div>
-    <div class="table-wrap">
-      <div class="table-toolbar">
-        <input class="search-box" id="investmentsSearch" placeholder="Search investments…" oninput="renderHoldings()"/>
-        <button class="btn btn-primary" onclick="document.getElementById('addHoldingModal').classList.remove('hidden')">+ Add holding</button>
-      </div>
-      <table>
-        <thead><tr><th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Invested</th><th>Value</th><th>Unreal. P&amp;L</th><th>Return</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="holdingsBody"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="tab-pane" id="invtab-stocks">
-    <div class="investment-stats" id="stocksStats"></div>
-    <div class="table-wrap">
-      <div class="table-toolbar">
-        <input class="search-box" id="holdingsSearch" placeholder="Search holdings…" oninput="renderStocksHoldings()"/>
-        <button class="btn btn-primary" onclick="document.getElementById('addHoldingModal').classList.remove('hidden')">+ Add holding</button>
-      </div>
-      <table>
-        <thead><tr><th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Invested</th><th>Value</th><th>Unreal. P&amp;L</th><th>Return</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="stocksBody"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="tab-pane" id="invtab-crypto">
-    <div class="investment-stats" id="cryptoStats"></div>
-    <div class="table-wrap">
-      <div class="table-toolbar">
-        <input class="search-box" id="cryptoSearch" placeholder="Search crypto…" oninput="renderCryptoHoldings()"/>
-      </div>
-      <table>
-        <thead><tr><th>Name</th><th>Type</th><th>Buy price</th><th>Buy date</th><th>Invested</th><th>Value</th><th>Unreal. P&amp;L</th><th>Return</th><th>Notes</th><th></th></tr></thead>
-        <tbody id="cryptoBody"></tbody>
-      </table>
-    </div>
-  </div>
-  <div class="tab-pane" id="invtab-watchlist">
-    <div class="form-box" style="margin-bottom:18px;">
-      <h3>Add to watchlist</h3>
-      <div style="display:flex;gap:10px;align-items:flex-end;">
-        <div class="ff" style="flex:1;"><label>Ticker symbol</label><input type="text" id="watchTicker" placeholder="NVDA, BTC-GBP, ^FTSE…" style="width:100%;" onkeydown="if(event.key==='Enter')addWatchTicker()"/></div>
-        <button class="btn btn-primary" onclick="addWatchTicker()">Add</button>
-      </div>
-    </div>
-    <div class="stocks-grid" id="stocksGrid"></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: PROPERTIES ─── -->
-<div class="page" id="page-properties">
-  <div class="page-header">
-    <h2>Properties</h2>
-    <p>Track your property investments and manage your portfolio</p>
-  </div>
-  <div id="propertiesContent"></div>
-</div>
-  <!-- ── Person tabs ─────────────────────────────────── -->
-  <div id="propPersonTabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
-
-  <!-- ── Dynamic content ─────────────────────────────── -->
-  <div id="propertiesContent"></div>
-
-  <!-- ═══════════════════════════════════════════════════
-       ADD PROPERTY DRAWER / PANEL
-       ═══════════════════════════════════════════════════ -->
-  <div id="addPropertyDrawer" class="card hidden" style="margin-top:16px;">
-    <div class="card-header">
-      <span class="card-title">Add property</span>
-      <button class="icon-btn" onclick="document.getElementById('addPropertyDrawer').classList.add('hidden')">✕</button>
-    </div>
-
-    <form id="addPropertyForm" onsubmit="event.preventDefault(); addProperty();">
-
-      <!-- Section: Identity -->
-      <div class="section-label">Property details</div>
-      <div class="form-grid">
-
-        <div class="ff">
-          <label>Owner</label>
-          <select id="propPerson"></select>
+      <!-- ─── PAGE: OVERVIEW ─── -->
+      <div class="page active" id="page-overview">
+        <div class="page-header">
+          <h2 id="overviewGreeting">Overview</h2>
+          <p id="overviewDate"></p>
         </div>
 
-        <div class="ff">
-          <label>Nickname <span class="opt">(e.g. "Main Home")</span></label>
-          <input type="text" id="propNickname" placeholder="e.g. Main Home"/>
+        <div class="summary-grid" id="summarycards"></div>
+        <div class="events-ticker-wrapper" id="eventsTickerWrapper">
+          <div class="events-ticker-header">Upcoming</div>
+          <div id="eventsTicker" class="events-upcoming-strip"></div>
         </div>
-
-        <div class="ff full-col">
-          <label>Full address</label>
-          <input type="text" id="propAddress" placeholder="e.g. 1 Example Street, Leeds, LS1 1AB"/>
-        </div>
-
-        <div class="ff">
-          <label>Property type</label>
-          <select id="propType" onchange="togglePropMortgageFields()">
-            <option value="residential">Residential (Main Home)</option>
-            <option value="buy-to-let">Buy-to-Let</option>
-            <option value="holiday-let">Holiday Let</option>
-            <option value="commercial">Commercial</option>
-            <option value="land">Land / Plot</option>
-          </select>
-        </div>
-
-        <div class="ff">
-          <label>Tenure</label>
-          <select id="propTenure" onchange="togglePropLeaseFields()">
-            <option value="">— select —</option>
-            <option value="freehold">Freehold</option>
-            <option value="leasehold">Leasehold</option>
-            <option value="share">Share of Freehold</option>
-          </select>
-        </div>
-
-      </div>
-
-      <!-- Leasehold fields (hidden by default) -->
-      <div id="propLeaseFields" style="display:none;">
-        <div class="form-grid">
-          <div class="ff">
-            <label>Years remaining on lease</label>
-            <input type="number" id="propLeaseYears" placeholder="e.g. 125"/>
-          </div>
-          <div class="ff money-field">
-            <label>Annual service charge</label>
-            <input type="text" id="propServiceCharge" placeholder="0" oninput="formatMoney(this)"/>
-            <span class="currency">£</span>
-          </div>
-          <div class="ff money-field">
-            <label>Annual ground rent</label>
-            <input type="text" id="propGroundRent" placeholder="0" oninput="formatMoney(this)"/>
-            <span class="currency">£</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section: Purchase -->
-      <div class="section-label">Purchase details</div>
-      <div class="form-grid">
-
-        <div class="ff money-field">
-          <label>Purchase price <span class="req">*</span></label>
-          <input type="text" id="propPurchasePrice" placeholder="0" oninput="formatMoney(this)" required/>
-          <span class="currency">£</span>
-        </div>
-
-        <div class="ff money-field">
-          <label>Deposit paid</label>
-          <input type="text" id="propDeposit" placeholder="0" oninput="formatMoney(this)"/>
-          <span class="currency">£</span>
-        </div>
-
-        <div class="ff">
-          <label>Purchase date</label>
-          <input type="date" id="propPurchaseDate"/>
-        </div>
-
-        <div class="ff money-field">
-          <label>Est. current value</label>
-          <input type="text" id="propEstValue" placeholder="Leave blank to use purchase price" oninput="formatMoney(this)"/>
-          <span class="currency">£</span>
-        </div>
-
-      </div>
-
-      <!-- Section: Mortgage -->
-      <div class="section-label">Mortgage</div>
-      <div class="form-grid">
-
-        <div class="ff">
-          <label>Mortgage type</label>
-          <select id="propMortgageType" onchange="togglePropMortgageFields()">
-            <option value="repayment">Repayment</option>
-            <option value="interest-only">Interest Only</option>
-            <option value="none">No mortgage</option>
-          </select>
-        </div>
-
-      </div>
-
-      <div id="propMortgageFields">
-        <div class="form-grid">
-
-          <div class="ff">
-            <label>Lender</label>
-            <input type="text" id="propMortgageLender" placeholder="e.g. Nationwide, Halifax…"/>
+        <div class="charts-2col">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Allocation</span></div>
+            <div class="donut-wrap">
+              <canvas id="donutChart"></canvas>
+              <div class="donut-center">
+                <div class="dc-big val" id="donutCenterVal">—</div>
+                <div class="dc-sm">total value</div>
+              </div>
+            </div>
+            <div class="legend-list" id="donutLegend"></div>
           </div>
 
-          <div class="ff">
-            <label>Account / reference no.</label>
-            <input type="text" id="propMortgageAccountNo" placeholder="Optional"/>
+          <div class="card">
+            <div class="card-header flex-row-between">
+              <span class="card-title">Net worth over time</span>
+              <select id="nwPeriod" onchange="renderOverview()"
+                style="font-size:12.5px;padding:5px 10px;border:1px solid var(--border2);border-radius:6px;">
+                <option value="1w">1 Week</option>
+                <option value="1m">1 Month</option>
+                <option value="3m">3 Months</option>
+                <option value="6m" selected>6 Months</option>
+                <option value="1y">1 Year</option>
+                <option value="5y">5 Years</option>
+                <option value="all">All Time</option>
+              </select>
+            </div>
+            <div id="nwChangeCallout" class="text-center text-muted2"
+              style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted2);">
+            </div>
+            <div id="nwCalloutWrap"></div>
+            <div class="nw-wrap"><canvas id="nwChart"></canvas></div>
+            <div id="nwSub" class="text-center text-muted2"
+              style="text-align:center;margin-top:8px;font-size:12px;color:var(--muted2);"></div>
           </div>
-
-          <div class="ff money-field">
-            <label>Outstanding balance</label>
-            <input type="text" id="propMortgageBalance" placeholder="0" oninput="formatMoney(this)"/>
-            <span class="currency">£</span>
+        </div>
+        <div class="charts-equal">
+          <div class="card">
+            <div class="card-header"><span class="card-title">P&amp;L by holding</span></div>
+            <div class="bar-wrap"><canvas id="barChart"></canvas></div>
           </div>
-
-          <div class="ff">
-            <label>Interest rate (%)</label>
-            <input type="number" id="propMortgageRate" step="0.01" placeholder="e.g. 4.49"/>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Goals progress</span></div>
+            <div id="goalsRings" style="padding:4px 0;"></div>
           </div>
-
-          <div class="ff">
-            <label>Deal / fix end date</label>
-            <input type="date" id="propMortgageEndDate"/>
+        </div>
+        <div class="card mb-16">
+          <div class="card-header"><span class="card-title">ISA allowances 2025/26</span></div>
+          <div class="isa-mini-grid" id="isaMiniGrid"></div>
+        </div>
+        <div class="chart-section">
+          <div class="chart-section-header">
+            <div class="section-title">Monthly Cash Flow</div>
+            <div class="chart-section-subtitle">Income vs Expenses · last 6 months</div>
           </div>
-
-          <div class="ff money-field">
-            <label>
-              Monthly payment
-              <button type="button" class="inline-link" onclick="calcAndFillMonthlyPayment()" title="Estimate from balance, rate & end date">↻ estimate</button>
-            </label>
-            <input type="text" id="propMortgageMonthly" placeholder="0" oninput="formatMoney(this)"/>
-            <span class="currency">£</span>
+          <div class="chart-empty">
+            Add transactions to see your cash flow summary.
           </div>
-
+          <div class="chart-container chart-container-180">
+            <canvas id="cashFlowChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-section">
+          <div class="chart-section-header">
+            <div class="section-title">Debt Payoff Timeline</div>
+            <div class="chart-section-subtitle">Projected to zero</div>
+          </div>
+          <div class="chart-empty">
+            Add debts with a monthly payment to see your payoff timeline.
+          </div>
+          <div class="chart-container chart-container-200">
+            <canvas id="debtTimelineChart"></canvas>
+          </div>
+          <!-- Extra payment "what if" slider — injected by JS automatically -->
+          <div id="debtExtraWrap"></div>
         </div>
       </div>
 
-      <!-- Section: Rental -->
-      <div class="section-label">Rental</div>
-      <div class="form-grid">
+      <!-- ─── PAGE: ACCOUNTS & ISA ─── -->
+      <div class="page" id="page-accounts">
+        <div class="page-header">
+          <div class="flex-row-between">
+            <div>
+              <h2>Accounts &amp; ISAs</h2>
+              <p>Bank accounts, ISA wrappers and savings · 2025/26 annual ISA allowance: <strong
+                  class="pos">£20,000</strong></p>
+            </div>
+            <button class="icon-btn undo-btn" title="Undo last deletion" id="accountsUndoBtn"
+              onclick="undoLastAccountDelete()">↺</button>
+          </div>
+        </div>
+        <div class="section-label">Your accounts</div>
+        <div class="accounts-grid" id="accountsGrid"></div>
+        <div class="section-label">ISA allowance tracker</div>
+        <div class="isa-grid" id="isaTracker"></div>
+        <div class="form-box">
+          <h3>+ Add account or ISA</h3>
+          <div class="form-grid">
+            <div class="ff"><label>Account name</label><input type="text" id="accName"
+                placeholder="e.g. Vanguard ISA" /></div>
+            <div class="ff"><label>Type</label>
+              <select id="accType">
+                <optgroup label="Bank Accounts">
+                  <option value="current">Current account</option>
+                  <option value="savings">Savings account</option>
+                  <option value="joint">Joint account</option>
+                  <option value="credit-card">Credit card</option>
+                </optgroup>
+                <optgroup label="ISAs">
+                  <option value="stocks-isa">Stocks &amp; Shares ISA</option>
+                  <option value="cash-isa">Cash ISA</option>
+                  <option value="lifetime-isa">Lifetime ISA (LISA)</option>
+                  <option value="help-to-buy-isa">Help to Buy ISA</option>
+                  <option value="innovative-isa">Innovative Finance ISA</option>
+                  <option value="junior-isa">Junior ISA</option>
+                </optgroup>
+                <optgroup label="Other">
+                  <option value="pension">Pension / SIPP</option>
+                  <option value="premium-bonds-acc">Premium Bonds</option>
+                  <option value="other">Other</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="ff"><label>Provider</label><input type="text" id="accProvider" placeholder="e.g. Vanguard" />
+            </div>
+            <div class="ff money-field"><label>Balance</label><input type="text" id="accBalance" placeholder="5,000"
+                oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff money-field"><label>Contributed this tax year</label><input type="text" id="accContrib"
+                placeholder="0" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addAccount()">Add account</button></div>
+        </div>
+      </div>
 
-        <div class="ff" style="display:flex;align-items:center;gap:10px;">
-          <label style="margin:0;">Rented out?</label>
-          <label class="toggle">
-            <input type="checkbox" id="propIsRented" onchange="togglePropRentalFields()"/>
-            <span></span>
-          </label>
+      <!-- ─── PAGE: PREMIUM BONDS ─── -->
+      <div class="page" id="page-premium-bonds">
+        <div class="page-header">
+          <h2>Premium Bonds</h2>
+          <p>NS&amp;I premium bonds · max holding £50,000 · all prizes are tax-free</p>
+        </div>
+ 
+        <!-- Summary stat cards -->
+        <div class="pb-summary" id="pbSummary"></div>
+ 
+        <!-- Two-column form row: holding form (JS-rendered) + prize win -->
+        <div class="grid-2col mb-16">
+ 
+          <!-- LEFT: Update bond holding — JS renders mode toggle + form into this div -->
+          <div class="form-box" style="margin-bottom:0;">
+            <h3>Update bond holding</h3>
+            <div id="pbHoldingFormWrap"></div>
+          </div>
+ 
+          <!-- RIGHT: Log a prize win -->
+          <div class="form-box" style="margin-bottom:0;">
+            <h3>Log a prize win</h3>
+            <div class="form-grid">
+              <div class="ff"><label>Prize tier</label>
+                <select id="pbWinTier">
+                  <option value="25">£25</option>
+                  <option value="50">£50</option>
+                  <option value="100">£100</option>
+                  <option value="500">£500</option>
+                  <option value="1000">£1,000</option>
+                  <option value="5000">£5,000</option>
+                  <option value="25000">£25,000</option>
+                  <option value="50000">£50,000</option>
+                  <option value="100000">£100,000</option>
+                  <option value="1000000">£1,000,000</option>
+                </select>
+              </div>
+              <div class="ff"><label>Month</label>
+                <select id="pbWinMonth">
+                  <option value="1">January</option>
+                  <option value="2">February</option>
+                  <option value="3">March</option>
+                  <option value="4">April</option>
+                  <option value="5">May</option>
+                  <option value="6">June</option>
+                  <option value="7">July</option>
+                  <option value="8">August</option>
+                  <option value="9">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
+                </select>
+              </div>
+              <div class="ff"><label>Year</label><input type="number" id="pbWinYear" placeholder="2025" min="2000"
+                  max="2100" /></div>
+            </div>
+            <div class="mb-8">
+              <label class="toggle-wrap">
+                <span>Add winnings to bond holding automatically</span>
+                <label class="toggle"><input type="checkbox" id="pbAutoAdd"><span class="toggle-track"></span></label>
+              </label>
+            </div>
+            <div class="form-actions"><button class="btn btn-primary" onclick="addPBWin()">Log win 🎉</button></div>
+          </div>
+ 
+        </div><!-- /grid-2col -->
+ 
+        <!-- Bond holding history — full width, rendered by _renderPBHistory() -->
+        <!-- Only populated when "Track history" mode is active and entries exist -->
+        <div id="pbHistorySection"></div>
+ 
+        <!-- Winnings history -->
+        <div class="flex-row-between mb-8">
+          <div class="section-label">Winnings history</div>
+          <button class="icon-btn undo-btn" title="Undo last deletion" id="pbUndoBtn"
+            onclick="undoLastPBDelete()">↺</button>
+        </div>
+ 
+        <!-- Filter bar — rendered by _renderPBWins() -->
+        <div id="pbWinsFilterBar"></div>
+ 
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Month / year</th>
+                <th>Amount</th>
+                <th>Cumulative total</th>
+                <th>Where went</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="pbWinsBody"></tbody>
+          </table>
+        </div>
+ 
+      </div><!-- /page-premium-bonds --> 
+
+      <!-- ═══════════════════════════════════════════════════════════
+     PAGE: INVESTMENTS
+     Features: live prices · ticker tape · market summary
+                portfolio snapshot · heatmap · price alerts
+                dividend tracker · CSV export · currency toggle
+                sortable columns · 52w badges · thesis notes
+                watchlist add/remove · closed positions
+     ═══════════════════════════════════════════════════════════ -->
+      <div class="page" id="page-investments">
+
+        <!-- ── Page header ── -->
+        <div class="page-header"
+          style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+          <div>
+            <h2>Investments</h2>
+            <p>Live prices, holdings &amp; portfolio analytics · Yahoo Finance (15-min delayed)</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="fx-chip" id="fxRateChip">£1 = $1.2700</span>
+            <button class="currency-toggle" id="ccyToggleBtn" onclick="toggleDisplayCurrency()">Show in USD $</button>
+            <button class="icon-btn" id="liveRefreshBtn" onclick="fetchAllLivePrices()" title="Refresh prices">↻
+              Refresh</button>
+            <button class="export-csv-btn" onclick="exportHoldingsCSV()">↓ CSV</button>
+          </div>
         </div>
 
-      </div>
+        <!-- ── Price alert banner (shown only when alert triggers) ── -->
+        <div id="alertBanner" class="alert alert-amber" style="display:none;"></div>
 
-      <div id="propRentalFields" style="display:none;">
-        <div class="form-grid">
+        <!-- ── Live status bar ── -->
+        <div class="live-status-bar">
+          <span class="live-dot"></span>
+          <span id="liveStatusBar">Loading live prices…</span>
+        </div>
 
-          <div class="ff money-field">
-            <label>Monthly rent received</label>
-            <input type="text" id="propRentalMonthly" placeholder="0" oninput="formatMoney(this)"/>
-            <span class="currency">£</span>
+        <!-- ── Ticker tape ── -->
+        <div class="ticker-tape">
+          <div class="ticker-inner" id="tickerInner">
+            <span class="ticker-item"><span class="ticker-sym">Loading…</span></span>
+          </div>
+        </div>
+
+        <!-- ── Market summary strip ── -->
+        <div id="mktSummaryStrip"></div>
+
+        <!-- ── Portfolio snapshot bar ── -->
+        <div class="portfolio-snapshot" id="portfolioSnapshot"></div>
+
+        <!-- ── Tab navigation ── -->
+        <div class="tab-row" style="flex-wrap:wrap;">
+          <button class="tab-btn active" onclick="invTab('all',this)">
+            All <span class="holdings-count-badge" id="allHoldingsBadge">0</span>
+          </button>
+          <button class="tab-btn" onclick="invTab('stocks',this)">
+            Stocks <span class="holdings-count-badge" id="stocksBadge">0</span>
+          </button>
+          <button class="tab-btn" onclick="invTab('crypto',this)">
+            Crypto <span class="holdings-count-badge" id="cryptoBadge">0</span>
+          </button>
+          <button class="tab-btn" onclick="invTab('watchlist',this)">Watchlist</button>
+          <button class="tab-btn" onclick="invTab('closed',this)">Closed</button>
+          <button class="tab-btn" onclick="invTab('heatmap',this)">Heatmap</button>
+          <button class="tab-btn" onclick="invTab('dividends',this)">Dividends</button>
+          <button class="tab-btn" onclick="invTab('alerts',this)">Alerts 🔔</button>
+          <button class="tab-btn" onclick="invTab('add',this)">+ Add</button>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+       TAB: ALL HOLDINGS
+       ══════════════════════════════════════════ -->
+        <div class="tab-pane active" id="invtab-all">
+          <div id="investmentStats"></div>
+
+          <!-- Filter chips -->
+          <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+            <button class="filter-btn active" onclick="setHFilter('all',this)">All</button>
+            <button class="filter-btn" onclick="setHFilter('stocks',this)">Stocks</button>
+            <button class="filter-btn" onclick="setHFilter('isa',this)">ISA</button>
+            <button class="filter-btn" onclick="setHFilter('crypto',this)">Crypto</button>
+            <button class="filter-btn" onclick="setHFilter('pension',this)">Pension</button>
+            <button class="filter-btn" onclick="setHFilter('cash',this)">Cash</button>
+            <button class="filter-btn" onclick="setHFilter('other',this)">Other</button>
           </div>
 
-          <div class="ff">
-            <label>Tenancy start date</label>
-            <input type="date" id="propTenancyStart"/>
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <div class="search-wrapper">
+                <input class="search-box" id="investmentsSearch" placeholder="Search by name or ticker…"
+                  oninput="renderHoldings(); toggleSearchClear('investmentsSearch')" />
+                <button class="search-clear" onclick="clearSearch('investmentsSearch')"
+                  aria-label="Clear search">×</button>
+              </div>
+              <button class="export-csv-btn btn-sm" onclick="exportHoldingsCSV()">↓ Export CSV</button>
+              <button class="btn btn-primary btn-sm"
+                onclick="invTab('add',document.querySelector('#page-investments .tab-btn:last-child'))">+ Add
+                holding</button>
+            </div>
+            <table class="inv-table">
+              <thead>
+                <tr>
+                  <th data-sort="name" onclick="setSortCol('all','name')">Name <span class="sort-arrow">↕</span></th>
+                  <th data-sort="type" onclick="setSortCol('all','type')">Type <span class="sort-arrow">↕</span></th>
+                  <th data-sort="buyDate" onclick="setSortCol('all','buyDate')">Buy date <span
+                      class="sort-arrow">↕</span></th>
+                  <th data-sort="invested" onclick="setSortCol('all','invested')">Invested <span
+                      class="sort-arrow">↕</span></th>
+                  <th data-sort="current" onclick="setSortCol('all','current')">Value <span class="sort-arrow">↕</span>
+                  </th>
+                  <th data-sort="pl" onclick="setSortCol('all','pl')">P&amp;L <span class="sort-arrow">↕</span></th>
+                  <th data-sort="ret" onclick="setSortCol('all','ret')">Return <span class="sort-arrow">↕</span></th>
+                  <th>Notes</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="holdingsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+       TAB: STOCKS
+       ══════════════════════════════════════════ -->
+        <div class="tab-pane" id="invtab-stocks">
+          <div id="stocksStats"></div>
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <div class="search-wrapper">
+                <input class="search-box" id="holdingsSearch" placeholder="Search stocks &amp; ETFs…"
+                  oninput="renderStocksHoldings(); toggleSearchClear('holdingsSearch')" />
+                <button class="search-clear" onclick="clearSearch('holdingsSearch')"
+                  aria-label="Clear search">×</button>
+              </div>
+              <button class="export-csv-btn btn-sm" onclick="exportHoldingsCSV()">↓ CSV</button>
+              <button class="btn btn-primary btn-sm"
+                onclick="invTab('add',document.querySelector('#page-investments .tab-btn:last-child'))">+ Add</button>
+            </div>
+            <table class="inv-table">
+              <thead>
+                <tr>
+                  <th data-sort="name" onclick="setSortCol('stocks','name')">Name <span class="sort-arrow">↕</span></th>
+                  <th>Wrapper</th>
+                  <th>Buy price</th>
+                  <th>Shares</th>
+                  <th data-sort="invested" onclick="setSortCol('stocks','invested')">Invested <span
+                      class="sort-arrow">↕</span></th>
+                  <th data-sort="current" onclick="setSortCol('stocks','current')">Value <span
+                      class="sort-arrow">↕</span></th>
+                  <th data-sort="pl" onclick="setSortCol('stocks','pl')">P&amp;L <span class="sort-arrow">↕</span></th>
+                  <th data-sort="ret" onclick="setSortCol('stocks','ret')">Return <span class="sort-arrow">↕</span></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="stocksBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+       TAB: CRYPTO
+       ══════════════════════════════════════════ -->
+        <div class="tab-pane" id="invtab-crypto">
+          <div id="cryptoStats"></div>
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <div class="search-wrapper">
+                <input class="search-box" id="cryptoSearch" placeholder="Search crypto…"
+                  oninput="renderCryptoHoldings(); toggleSearchClear('cryptoSearch')" />
+                <button class="search-clear" onclick="clearSearch('cryptoSearch')" aria-label="Clear search">×</button>
+              </div>
+              <button class="btn btn-primary btn-sm"
+                onclick="invTab('add',document.querySelector('#page-investments .tab-btn:last-child'))">+ Add</button>
+            </div>
+            <table class="inv-table">
+              <thead>
+                <tr>
+                  <th data-sort="name" onclick="setSortCol('crypto','name')">Name <span class="sort-arrow">↕</span></th>
+                  <th>Units</th>
+                  <th>Buy price</th>
+                  <th>Live price</th>
+                  <th data-sort="invested" onclick="setSortCol('crypto','invested')">Invested <span
+                      class="sort-arrow">↕</span></th>
+                  <th data-sort="current" onclick="setSortCol('crypto','current')">Value <span
+                      class="sort-arrow">↕</span></th>
+                  <th data-sort="pl" onclick="setSortCol('crypto','pl')">P&amp;L <span class="sort-arrow">↕</span></th>
+                  <th data-sort="ret" onclick="setSortCol('crypto','ret')">Return <span class="sort-arrow">↕</span></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="cryptoBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+       TAB: WATCHLIST (PRICE CARDS)
+       ══════════════════════════════════════════ -->
+        <div class="tab-pane" id="invtab-watchlist">
+
+          <!-- Add ticker form -->
+          <div class="form-box" style="margin-bottom:16px;">
+            <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+              <div class="ff" style="flex:1;min-width:180px;">
+                <label>Add ticker to watchlist</label>
+                <input type="text" id="watchTicker" placeholder="e.g. NVDA, BTC-GBP, ^FTSE…"
+                  onkeydown="if(event.key==='Enter')addWatchTicker()" />
+              </div>
+              <button class="btn btn-primary" onclick="addWatchTicker()">Add</button>
+            </div>
           </div>
 
-          <div class="ff">
-            <label>Tenancy end date</label>
-            <input type="date" id="propTenancyEnd"/>
+          <!-- Filter strip -->
+          <div class="watchlist-filter-strip">
+            <button class="filter-btn active"
+              onclick="renderPriceGrid('all');this.closest('.watchlist-filter-strip').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">All</button>
+            <button class="filter-btn"
+              onclick="renderPriceGrid('stocks');this.closest('.watchlist-filter-strip').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Stocks
+              &amp; ETFs</button>
+            <button class="filter-btn"
+              onclick="renderPriceGrid('crypto');this.closest('.watchlist-filter-strip').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Crypto</button>
+            <button class="filter-btn"
+              onclick="renderPriceGrid('index');this.closest('.watchlist-filter-strip').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Indices</button>
           </div>
 
-          <div class="ff">
-            <label>Letting agent fees (%)</label>
-            <input type="number" id="propAgentFees" step="0.1" placeholder="e.g. 10"/>
+          <!-- Price card grid -->
+          <div id="priceGrid"></div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+       TAB: CLOSED POSITIONS
+       ══════════════════════════════════════════ -->
+        <div class="tab-pane" id="invtab-closed">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div>
+              <div class="card-title">Closed positions</div>
+              <div class="card-sub">Realised gains &amp; losses</div>
+            </div>
+            <button class="export-csv-btn" onclick="exportClosedCSV()">↓ Export CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Buy price</th>
+                  <th>Buy date</th>
+                  <th>Sell price</th>
+                  <th>Sell date</th>
+                  <th>Cost</th>
+                  <th>Proceeds</th>
+                  <th>Realised P&amp;L</th>
+                  <th>Return</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="closedBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+       TAB: HEATMAP
+       ══════════════════════════════════════════ -->
+        <div class="tab-pane" id="invtab-heatmap">
+          <div style="margin-bottom:14px;">
+            <div class="card-title">Portfolio heatmap</div>
+            <div class="card-sub">Colour intensity = gain/loss relative to cost basis. Hover for exact figure.</div>
+          </div>
+          <!-- Legend -->
+          <div
+            style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;align-items:center;font-size:11px;color:var(--muted);">
+            <span>Loss</span>
+            <div style="width:18px;height:14px;border-radius:3px;background:#a02a2a;"></div>
+            <div style="width:18px;height:14px;border-radius:3px;background:#d45050;"></div>
+            <div style="width:18px;height:14px;border-radius:3px;background:#ec9d9d;"></div>
+            <div
+              style="width:18px;height:14px;border-radius:3px;background:var(--surface2);border:1px solid var(--border);">
+            </div>
+            <div style="width:18px;height:14px;border-radius:3px;background:#2aba61;"></div>
+            <div style="width:18px;height:14px;border-radius:3px;background:#0f6b38;"></div>
+            <div style="width:18px;height:14px;border-radius:3px;background:#0a4a28;"></div>
+            <span>Gain</span>
+          </div>
+          <div class="heatmap-grid" id="heatmapGrid"></div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+       TAB: DIVIDENDS
+       ══════════════════════════════════════════ -->
+        <div class="tab-pane" id="invtab-dividends">
+          <div class="form-box" style="margin-bottom:16px;">
+            <h3>Log dividend payment</h3>
+            <div class="div-add-row">
+              <div class="ff">
+                <label>Holding</label>
+                <select id="divHolding" class="alert-sym-select">
+                  <option value="">Select holding…</option>
+                </select>
+              </div>
+              <div class="ff">
+                <label>Date</label>
+                <input type="date" id="divDate" />
+              </div>
+              <div class="ff money-field">
+                <label>Amount (£)</label>
+                <input type="number" id="divAmount" placeholder="0.00" step="0.01" min="0" />
+                <span class="currency">£</span>
+              </div>
+              <div class="ff">
+                <label>Notes</label>
+                <input type="text" id="divNotes" placeholder="Q1 dividend…" />
+              </div>
+              <button class="btn btn-primary" style="align-self:flex-end;" onclick="addDividend()">Log</button>
+            </div>
+          </div>
+          <div id="dividendsList"></div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+       TAB: PRICE ALERTS
+       ══════════════════════════════════════════ -->
+        <div class="tab-pane" id="invtab-alerts">
+          <div class="alert alert-amber" style="margin-bottom:14px;">
+            ⚠ Alerts are checked on each price refresh (every 60s). Alerts reset when you close the page.
           </div>
 
+          <!-- Add alert form -->
+          <div class="form-box" style="margin-bottom:16px;">
+            <h3>Set price alert</h3>
+            <div
+              style="display:grid;grid-template-columns:1fr 120px 1fr auto;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+              <div class="ff">
+                <label>Symbol</label>
+                <input type="text" id="alertSym" placeholder="AAPL, BTC-USD…" style="text-transform:uppercase;" />
+              </div>
+              <div class="ff">
+                <label>Direction</label>
+                <select id="alertDir" class="alert-sym-select">
+                  <option value="above">Above ↑</option>
+                  <option value="below">Below ↓</option>
+                </select>
+              </div>
+              <div class="ff">
+                <label>Target price</label>
+                <input type="number" id="alertPrice" placeholder="e.g. 200.00" step="0.01" />
+              </div>
+              <button class="btn btn-primary" style="align-self:flex-end;" onclick="addPriceAlert()">Set alert</button>
+            </div>
+          </div>
+
+          <div class="section-label">Active alerts</div>
+          <div id="alertsList">
+            <div style="color:var(--muted);font-size:12px;padding:8px 0;">No alerts set.</div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+       TAB: ADD HOLDING
+       ══════════════════════════════════════════ -->
+        <div class="tab-pane" id="invtab-add">
+          <div class="form-box">
+            <h3>Add new holding</h3>
+            <div class="form-grid wide">
+              <div class="ff">
+                <label>Name</label>
+                <input type="text" id="hName" placeholder="Apple Inc." />
+              </div>
+              <div class="ff">
+                <label>Ticker symbol</label>
+                <input type="text" id="hTicker" placeholder="AAPL" style="text-transform:uppercase;" />
+              </div>
+              <div class="ff">
+                <label>Type</label>
+                <select id="hType">
+                  <option value="stocks">Stocks</option>
+                  <option value="isa">ISA</option>
+                  <option value="crypto">Crypto</option>
+                  <option value="pension">Pension</option>
+                  <option value="cash">Cash</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="ff">
+                <label>Wrapper</label>
+                <select id="hWrapper">
+                  <option value="">None</option>
+                  <option value="ISA">ISA</option>
+                  <option value="SIPP">SIPP</option>
+                  <option value="GIA">GIA</option>
+                  <option value="LISA">LISA</option>
+                </select>
+              </div>
+              <div class="ff money-field">
+                <label>Amount invested (£)</label>
+                <input type="text" id="hInvested" placeholder="0" oninput="formatMoney(this)" />
+                <span class="currency">£</span>
+              </div>
+              <div class="ff money-field">
+                <label>Current value (£)</label>
+                <input type="text" id="hCurrent" placeholder="0" oninput="formatMoney(this)" />
+                <span class="currency">£</span>
+              </div>
+              <div class="ff money-field">
+                <label>Buy price / unit (£)</label>
+                <input type="text" id="hBuyPrice" placeholder="0.00" oninput="formatMoney(this)" />
+                <span class="currency">£</span>
+              </div>
+              <div class="ff">
+                <label>Shares / units</label>
+                <input type="number" id="hShares" placeholder="0" step="any" />
+              </div>
+              <div class="ff">
+                <label>Buy date</label>
+                <input type="date" id="hBuyDate" />
+              </div>
+              <div class="ff full-col">
+                <label>Short notes</label>
+                <input type="text" id="hNotes" placeholder="Portfolio note…" />
+              </div>
+              <div class="ff full-col">
+                <label>Investment thesis</label>
+                <textarea id="hThesis" placeholder="Why are you buying this? Target price, catalyst, time horizon…"
+                  style="min-height:70px;"></textarea>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" onclick="addHolding()">Add holding</button>
+              <span style="font-size:11px;color:var(--muted);">Tip: enter a ticker like <code>AAPL</code> or
+                <code>BTC-USD</code> to get live prices automatically.</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /#page-investments -->
+
+
+      <!-- ═══════════════════════════════════════════════════
+     EDIT / SELL MODAL (investments)
+     ═══════════════════════════════════════════════════ -->
+      <div class="modal-overlay hidden" id="editModal">
+        <div class="modal">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>Edit holding</h3>
+            <button class="icon-btn" onclick="closeModal('editModal')">✕</button>
+          </div>
+          <div class="form-grid wide" id="editFormGrid"></div>
+
+          <!-- Sell section -->
+          <div class="modal-section">
+            <div class="modal-section-title">⚡ Sell / close position</div>
+            <div class="form-grid">
+              <div class="ff money-field">
+                <label>Sell price / unit (£)</label>
+                <input type="text" id="editSellPrice" placeholder="0.00" />
+                <span class="currency">£</span>
+              </div>
+              <div class="ff money-field">
+                <label>Total proceeds (£)</label>
+                <input type="text" id="editSellTotal" placeholder="0.00" oninput="formatMoney(this)" />
+                <span class="currency">£</span>
+              </div>
+              <div class="ff">
+                <label>Sell date</label>
+                <input type="date" id="editSellDate" />
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-danger" onclick="sellHolding()">⚡ Sell &amp; close</button>
+            <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveEditHolding()">Save changes</button>
+          </div>
         </div>
       </div>
 
-      <!-- Notes -->
-      <div class="form-grid" style="margin-top:8px;">
-        <div class="ff full-col">
-          <label>Notes</label>
-          <textarea id="propNotes" rows="2" placeholder="Anything else — insurance info, keys location, plans to sell, etc."></textarea>
+
+      <!-- ═══════════════════════════════════════════════════
+     ADD HOLDING MODAL (quick add from anywhere)
+     ═══════════════════════════════════════════════════ -->
+      <div class="modal-overlay hidden" id="addHoldingModal">
+        <div class="modal">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>Quick-add holding</h3>
+            <button class="icon-btn" onclick="closeModal('addHoldingModal')">✕</button>
+          </div>
+          <div class="form-grid wide">
+            <div class="ff"><label>Name</label><input type="text" id="qhName" placeholder="Apple Inc." /></div>
+            <div class="ff"><label>Ticker</label><input type="text" id="qhTicker" placeholder="AAPL"
+                style="text-transform:uppercase;" /></div>
+            <div class="ff">
+              <label>Type</label>
+              <select id="qhType">
+                <option value="stocks">Stocks</option>
+                <option value="isa">ISA</option>
+                <option value="crypto">Crypto</option>
+                <option value="pension">Pension</option>
+                <option value="cash">Cash</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="ff money-field">
+              <label>Invested (£)</label>
+              <input type="text" id="qhInvested" placeholder="0" oninput="formatMoney(this)" />
+              <span class="currency">£</span>
+            </div>
+            <div class="ff money-field">
+              <label>Current value (£)</label>
+              <input type="text" id="qhCurrent" placeholder="0" oninput="formatMoney(this)" />
+              <span class="currency">£</span>
+            </div>
+            <div class="ff">
+              <label>Buy date</label>
+              <input type="date" id="qhBuyDate" />
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('addHoldingModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="
+        const n=document.getElementById('qhName').value.trim();
+        const t=(document.getElementById('qhTicker').value||'').trim().toUpperCase();
+        const ty=document.getElementById('qhType').value;
+        const inv=parseMoney(document.getElementById('qhInvested').value);
+        const cur=parseMoney(document.getElementById('qhCurrent').value);
+        const bd=document.getElementById('qhBuyDate').value;
+        if(!n||isNaN(inv)||isNaN(cur)){toast('Fill name, invested and current value.');return;}
+        S.holdings.push({id:Date.now(),name:n,ticker:t,type:ty,invested:inv,current:cur,buyDate:bd,notes:'',thesis:''});
+        save();closeModal('addHoldingModal');renderHoldings();renderPortfolioSnapshot();renderHeatmap();toast('Added '+n);
+      ">Add</button>
+          </div>
         </div>
       </div>
 
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
-        <button type="button" class="btn btn-ghost" onclick="document.getElementById('addPropertyDrawer').classList.add('hidden')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save property</button>
-      </div>
 
-    </form>
-  </div><!-- /addPropertyDrawer -->
+      <!-- ─── PAGE: PROPERTIES ─── -->
+      <div class="page" id="page-properties">
+        <div class="page-header">
+          <div class="flex-row-between">
+            <div>
+              <h2>Properties</h2>
+              <p>Track your property investments and manage your portfolio</p>
+            </div>
+            <button class="icon-btn undo-btn" title="Undo last deletion" id="propertiesUndoBtn"
+              onclick="undoLastPropertyDelete()">↺</button>
+          </div>
+        </div>
+        <div id="propertiesContent"></div>
 
-<!-- ════════════════════════════════════════════════════════════════
+        <!-- ════════════════════════════════════════════════════════════════
      EDIT PROPERTY MODAL
      Add this near your other modals (e.g. beside editSalaryModal)
      ════════════════════════════════════════════════════════════════ -->
 
-<div id="editPropertyModal" class="modal-backdrop hidden">
-  <div class="modal" style="max-width:700px;">
-    <div class="modal-header">
-      <span class="modal-title">Edit property</span>
-      <button class="icon-btn" onclick="closeModal('editPropertyModal')">✕</button>
-    </div>
-    <div class="modal-body" style="max-height:75vh;overflow-y:auto;">
+        <div id="editPropertyModal" class="modal-overlay hidden">
+          <div class="modal" style="max-width:700px;">
+            <div class="modal-header">
+              <span class="modal-title">Edit property</span>
+              <button class="icon-btn" onclick="closeModal('editPropertyModal')">✕</button>
+            </div>
+            <div class="modal-body">
 
-      <!-- Identity -->
-      <div class="section-label">Property details</div>
-      <div class="form-grid">
-        <div class="ff"><label>Nickname</label><input type="text" id="ep-nickname"/></div>
-        <div class="ff full-col"><label>Address</label><input type="text" id="ep-address"/></div>
-        <div class="ff">
-          <label>Type</label>
-          <select id="ep-type">
-            <option value="residential">Residential (Main Home)</option>
-            <option value="buy-to-let">Buy-to-Let</option>
-            <option value="holiday-let">Holiday Let</option>
-            <option value="commercial">Commercial</option>
-            <option value="land">Land / Plot</option>
-          </select>
+              <!-- Identity -->
+              <div class="section-label">Property details</div>
+              <div class="form-grid">
+                <div class="ff"><label>Nickname</label><input type="text" id="ep-nickname" /></div>
+                <div class="ff full-col"><label>Address</label><input type="text" id="ep-address" /></div>
+                <div class="ff">
+                  <label>Type</label>
+                  <select id="ep-type">
+                    <option value="residential">Residential (Main Home)</option>
+                    <option value="buy-to-let">Buy-to-Let</option>
+                    <option value="holiday-let">Holiday Let</option>
+                    <option value="commercial">Commercial</option>
+                    <option value="land">Land / Plot</option>
+                  </select>
+                </div>
+                <div class="ff">
+                  <label>Tenure</label>
+                  <select id="ep-tenure" onchange="toggleEditPropLeaseFields()">
+                    <option value="">— select —</option>
+                    <option value="freehold">Freehold</option>
+                    <option value="leasehold">Leasehold</option>
+                    <option value="share">Share of Freehold</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="editPropLeaseFields" class="hidden">
+                <div class="form-grid">
+                  <div class="ff"><label>Lease years remaining</label><input type="number" id="ep-leaseyears" /></div>
+                  <div class="ff money-field"><label>Service charge/yr</label><input type="text" id="ep-servicecharge"
+                      oninput="formatMoney(this)" /><span class="currency">£</span></div>
+                  <div class="ff money-field"><label>Ground rent/yr</label><input type="text" id="ep-groundrent"
+                      oninput="formatMoney(this)" /><span class="currency">£</span></div>
+                </div>
+              </div>
+
+              <!-- Purchase -->
+              <div class="section-label">Purchase details</div>
+              <div class="form-grid">
+                <div class="ff money-field"><label>Purchase price</label><input type="text" id="ep-purchase"
+                    oninput="formatMoney(this)" /><span class="currency">£</span></div>
+                <div class="ff money-field"><label>Deposit paid</label><input type="text" id="ep-deposit"
+                    oninput="formatMoney(this)" /><span class="currency">£</span></div>
+                <div class="ff"><label>Purchase date</label><input type="date" id="ep-purchasedate" /></div>
+                <div class="ff money-field"><label>Est. current value</label><input type="text" id="ep-estvalue"
+                    oninput="formatMoney(this)" /><span class="currency">£</span></div>
+              </div>
+
+              <!-- Mortgage -->
+              <div class="section-label">Mortgage</div>
+              <div class="form-grid">
+                <div class="ff">
+                  <label>Mortgage type</label>
+                  <select id="ep-morttype" onchange="toggleEditPropMortgageFields()">
+                    <option value="repayment">Repayment</option>
+                    <option value="interest-only">Interest Only</option>
+                    <option value="none">No mortgage</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="editPropMortgageFields">
+                <div class="form-grid">
+                  <div class="ff"><label>Lender</label><input type="text" id="ep-lender" /></div>
+                  <div class="ff"><label>Account / reference no.</label><input type="text" id="ep-mortaccno" /></div>
+                  <div class="ff money-field"><label>Outstanding balance</label><input type="text" id="ep-balance"
+                      oninput="formatMoney(this)" /><span class="currency">£</span></div>
+                  <div class="ff"><label>Interest rate (%)</label><input type="number" step="0.01" id="ep-rate" /></div>
+                  <div class="ff"><label>Deal end date</label><input type="date" id="ep-mortend" /></div>
+                  <div class="ff money-field"><label>Monthly payment</label><input type="text" id="ep-monthly"
+                      oninput="formatMoney(this)" /><span class="currency">£</span></div>
+                </div>
+              </div>
+
+              <!-- Rental -->
+              <div class="section-label">Rental</div>
+              <div class="form-grid">
+                <div class="ff flex-row">
+                  <label style="margin:0;">Rented out?</label>
+                  <label class="toggle"><input type="checkbox" id="ep-rented"
+                      onchange="toggleEditPropRentalFields()" /><span></span></label>
+                </div>
+              </div>
+
+              <div id="editPropRentalFields" class="hidden">
+                <div class="form-grid">
+                  <div class="ff money-field"><label>Monthly rent received</label><input type="text" id="ep-rental"
+                      oninput="formatMoney(this)" /><span class="currency">£</span></div>
+                  <div class="ff"><label>Tenancy start</label><input type="date" id="ep-tenancystart" /></div>
+                  <div class="ff"><label>Tenancy end</label><input type="date" id="ep-tenancyend" /></div>
+                  <div class="ff"><label>Agent fees (%)</label><input type="number" step="0.1" id="ep-agentfees" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Notes -->
+              <div class="form-grid" style="margin-top:8px;">
+                <div class="ff full-col"><label>Notes</label><textarea id="ep-notes" rows="2"></textarea></div>
+              </div>
+
+            </div><!-- /modal-body -->
+            <div class="modal-footer">
+              <button class="btn btn-ghost" onclick="closeModal('editPropertyModal')">Cancel</button>
+              <button class="btn btn-primary" onclick="saveEditProperty()">Save changes</button>
+            </div>
+          </div>
+        </div><!-- /editPropertyModal -->
+
+      </div><!-- /page-properties -->
+
+      <!-- ─── PAGE: SALARY ─── -->
+      <div class="page" id="page-salary">
+        <div class="page-header">
+          <div class="flex-row-between">
+            <div>
+              <h2>Salary &amp; Income</h2>
+            </div>
+            <button class="icon-btn undo-btn" title="Undo last deletion" id="salaryUndoBtn"
+              onclick="undoLastSalaryDelete()">↺</button>
+          </div>
         </div>
-        <div class="ff">
-          <label>Tenure</label>
-          <select id="ep-tenure" onchange="toggleEditPropLeaseFields()">
-            <option value="">— select —</option>
-            <option value="freehold">Freehold</option>
-            <option value="leasehold">Leasehold</option>
-            <option value="share">Share of Freehold</option>
-          </select>
+        <div class="person-tab" id="personTabs"></div>
+        <div id="salaryContent"></div>
+        <div class="form-box" id="salaryAddForm">
+          <h3>Add salary</h3>
+          <div class="form-grid wide">
+            <div class="ff"><label>Person</label>
+              <select id="salPerson"></select>
+            </div>
+            <div class="ff"><label>Employer</label><input type="text" id="salEmployer" placeholder="e.g. Acme Ltd" />
+            </div>
+            <div class="ff money-field"><label>Gross annual salary</label><input type="text" id="salGross"
+                placeholder="45,000" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff money-field"><label>Annual bonus</label><input type="text" id="salBonus" placeholder="0"
+                oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff"><label>Your pension (%)</label><input type="number" id="salPensionPct" placeholder="5%"
+                min="0" max="100" step=".5" /></div>
+            <div class="ff"><label>Employer pension (%)</label><input type="number" id="salEmployerPension"
+                placeholder="3%" min="0" max="100" step=".5" /></div>
+            <div class="ff"><label>Start date</label><input type="date" id="salStartDate" /></div>
+            <div class="ff hidden" id="salEndDateWrap"><label>End date</label><input type="date" id="salEndDate" />
+            </div>
+            <div class="ff full-col flex-row" style="align-items:center;gap:10px;margin-top:2px;">
+              <label class="cb-row"><input type="checkbox" id="salOngoing" checked
+                  onchange="document.getElementById('salEndDateWrap').style.display=this.checked?'none':'flex'"> Ongoing
+                (no end date)</label>
+            </div>
+            <div class="ff full-col">
+              <label>Job perks (optional)</label>
+              <div id="salPerksContainer" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="renderPerksSelector()">+ Add
+                perks</button>
+            </div>
+            <div class="ff">
+              <label>Pay day</label>
+              <select id="salPayDay">
+                <option value="">Select pay day...</option>
+              </select>
+            </div>
+            <div class="ff full-col"><label>Notes</label><textarea id="salNotes"
+                placeholder="e.g. includes car allowance…"></textarea></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="addSalary()">Save salary</button>
+          </div>
         </div>
       </div>
 
-      <div id="editPropLeaseFields" style="display:none;">
-        <div class="form-grid">
-          <div class="ff"><label>Lease years remaining</label><input type="number" id="ep-leaseyears"/></div>
-          <div class="ff money-field"><label>Service charge/yr</label><input type="text" id="ep-servicecharge" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-          <div class="ff money-field"><label>Ground rent/yr</label><input type="text" id="ep-groundrent" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <!-- ─── PAGE: BILLS ─── -->
+      <div class="page" id="page-bills">
+        <div class="page-header">
+          <div class="flex-row-between">
+            <div>
+              <h2>Bills</h2>
+              <p>Recurring expenses, upcoming payments, and monthly cost at a glance</p>
+            </div>
+            <button class="icon-btn undo-btn" title="Undo last deletion" id="billsUndoBtn"
+              onclick="undoLastBillDelete()">↺</button>
+          </div>
+        </div>
+
+        <div id="billStatsPanel" class="summary-grid bills-summary"></div>
+
+        <div class="bills-ticker-wrapper" id="billsTickerWrapper">
+          <div class="bills-ticker-header">Upcoming Bills</div>
+          <div id="billsTicker" class="bills-upcoming-strip"></div>
+        </div>
+
+        <div class="tab-row bills-tab-row">
+          <button type="button" class="tab-btn active" data-tab="All" onclick="switchBillTab('All')">All</button>
+          <button type="button" class="tab-btn" data-tab="Utilities"
+            onclick="switchBillTab('Utilities')">Utilities</button>
+          <button type="button" class="tab-btn" data-tab="Subscriptions"
+            onclick="switchBillTab('Subscriptions')">Subscriptions</button>
+          <button type="button" class="tab-btn" data-tab="Insurance"
+            onclick="switchBillTab('Insurance')">Insurance</button>
+          <button type="button" class="tab-btn" data-tab="Transport"
+            onclick="switchBillTab('Transport')">Transport</button>
+          <button type="button" class="tab-btn" data-tab="Other" onclick="switchBillTab('Other')">Other</button>
+        </div>
+
+        <div id="billsGrid" class="bills-grid"></div>
+
+        <p class="section-label" id="billTemplatesHeading">Quick add</p>
+        <div id="billTemplates" class="bill-templates"></div>
+
+        <div class="form-box" style="margin-top:16px;">
+          <h3>Add bill</h3>
+          <div class="form-grid wide">
+            <div class="ff"><label>Name</label><input type="text" id="billName" placeholder="e.g. Electricity" /></div>
+            <div class="ff"><label>Icon</label>
+              <button type="button" id="billEmojiBtn" class="emoji-btn" onclick="openEmojiPicker('add')">🔖</button>
+            </div>
+            <div class="ff"><label>Category</label>
+              <select id="billCategory">
+                <option value="Utilities">Utilities</option>
+                <option value="Subscriptions">Subscriptions</option>
+                <option value="Insurance">Insurance</option>
+                <option value="Transport">Transport</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="ff"><label>Company / provider</label><input type="text" id="billCompany"
+                placeholder="e.g. Octopus Energy" /></div>
+            <div class="ff money-field"><label>Amount</label><input type="text" id="billAmount" placeholder="120.00"
+                oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff">
+              <label>How often</label>
+              <select id="billOccurrence" onchange="toggleOccurrenceFields()">
+                <option value="monthly" selected>Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="fortnightly">Fortnightly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="annually">Annually</option>
+                <option value="one-off">One-off</option>
+              </select>
+            </div>
+            <div class="ff" id="billPaymentDayField">
+              <label>Day of month (1–28)</label>
+              <input type="number" id="billPaymentDay" min="1" max="28" value="1" />
+            </div>
+            <div class="ff hidden" id="billPaymentMonthField">
+              <label>Month</label>
+              <select id="billPaymentMonth">
+                <option value="0">January</option>
+                <option value="1">February</option>
+                <option value="2">March</option>
+                <option value="3">April</option>
+                <option value="4">May</option>
+                <option value="5">June</option>
+                <option value="6">July</option>
+                <option value="7">August</option>
+                <option value="8">September</option>
+                <option value="9">October</option>
+                <option value="10">November</option>
+                <option value="11">December</option>
+              </select>
+            </div>
+            <div class="ff hidden" id="billPaymentDateField">
+              <label id="billPaymentDateLabel">Payment / start date</label>
+              <input type="date" id="billPaymentDate" />
+            </div>
+            <div class="ff hidden" id="billPaymentWeekDayField">
+              <label>Day of week</label>
+              <select id="billPaymentWeekDay">
+                <option value="0">Sunday</option>
+                <option value="1">Monday</option>
+                <option value="2">Tuesday</option>
+                <option value="3">Wednesday</option>
+                <option value="4">Thursday</option>
+                <option value="5">Friday</option>
+                <option value="6">Saturday</option>
+              </select>
+            </div>
+            <div class="ff full-col flex-row" style="align-items:center;gap:8px;padding-top:4px;">
+              <input type="checkbox" id="billDiffFirst" onchange="toggleFirstPayment(this.checked)" />
+              <label for="billDiffFirst" style="margin:0;font-size:12px;">Different first payment amount</label>
+            </div>
+            <div class="ff money-field hidden" id="billFirstPaymentField">
+              <label>First payment</label>
+              <input type="text" id="billFirstPayment" placeholder="0.00" oninput="formatMoney(this)" /><span
+                class="currency">£</span>
+            </div>
+            <div class="ff full-col"><label>Notes</label><textarea id="billNotes"
+                placeholder="e.g. includes gas and water…"></textarea></div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" onclick="addBill()">Add bill</button>
+          </div>
         </div>
       </div>
 
-      <!-- Purchase -->
-      <div class="section-label">Purchase details</div>
-      <div class="form-grid">
-        <div class="ff money-field"><label>Purchase price</label><input type="text" id="ep-purchase" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-        <div class="ff money-field"><label>Deposit paid</label><input type="text" id="ep-deposit" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-        <div class="ff"><label>Purchase date</label><input type="date" id="ep-purchasedate"/></div>
-        <div class="ff money-field"><label>Est. current value</label><input type="text" id="ep-estvalue" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <!-- ─── PAGE: PENSION ─── -->
+      <div class="page" id="page-pension">
+        <div class="page-header">
+          <h2>Pension</h2>
+          <p>Track pension pots and retirement planning</p>
+        </div>
+        <div id="pensionContent"></div>
       </div>
 
-      <!-- Mortgage -->
-      <div class="section-label">Mortgage</div>
-      <div class="form-grid">
-        <div class="ff">
-          <label>Mortgage type</label>
-          <select id="ep-morttype" onchange="toggleEditPropMortgageFields()">
-            <option value="repayment">Repayment</option>
-            <option value="interest-only">Interest Only</option>
-            <option value="none">No mortgage</option>
-          </select>
+      <!-- ─── PAGE: DEBTS ─── -->
+      <div class="page" id="page-debts">
+        <div class="page-header">
+          <div class="flex-row-between">
+            <div>
+              <h2>Debts</h2>
+              <p>Track everything you owe · monthly payments · payoff timeline</p>
+            </div>
+            <div class="flex-row gap-6">
+              <button class="icon-btn undo-btn" title="Undo last credit score deletion" id="creditScoresUndoBtn"
+                onclick="undoLastCreditScoreDelete()">↺</button>
+              <button class="icon-btn undo-btn" title="Undo last debt deletion" id="debtsUndoBtn"
+                onclick="undoLastDebtDelete()">↺</button>
+            </div>
+          </div>
+        </div>
+        <div class="person-tab" id="debtPersonTabs"></div>
+        <div class="mb-8">
+          <label class="toggle-wrap">
+            <span>Include student debts in totals</span>
+            <label class="toggle"><input type="checkbox" id="includeStudentDebts" onchange="renderDebts()" checked><span
+                class="toggle-track"></span></label>
+          </label>
+        </div>
+        <div class="summary-grid" id="debtSummaryCards" style="grid-template-columns:repeat(3,1fr);"></div>
+        <div class="section-label">Credit scores</div>
+        <div class="credit-score-grid" id="creditScoreGrid"></div>
+        <div class="form-box">
+          <h3>+ Add credit score</h3>
+          <div class="form-grid">
+            <div class="ff"><label>Provider / Bureau</label><input type="text" id="csProvider"
+                placeholder="e.g. Experian, Equifax" /></div>
+            <div class="ff"><label>Score</label><input type="number" id="csScore" placeholder="e.g. 780" min="0"
+                max="999" /></div>
+            <div class="ff"><label>Date checked</label><input type="date" id="csDate" /></div>
+            <div class="ff full-col"><label>Notes</label><textarea id="csNotes"
+                placeholder="e.g. Checked before mortgage application..."></textarea></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addCreditScore()">Add credit score</button>
+          </div>
+        </div>
+        <div class="section-label">Debts</div>
+        <div class="debt-grid" id="debtGrid"></div>
+        <div class="form-box">
+          <h3>Add debt</h3>
+          <div class="form-grid">
+            <div class="ff"><label>Name</label><input type="text" id="dName" placeholder="e.g. Car loan" /></div>
+            <div class="ff"><label>Type</label>
+              <select id="dType">
+                <option value="Loan">Personal loan</option>
+                <option value="Mortgage">Mortgage</option>
+                <option value="Credit-card">Credit card</option>
+                <option value="Student">Student loan</option>
+                <option value="Car">Car finance</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="ff" id="studentLoanPlanField"><label>Student loan plan</label>
+              <select id="dStudentLoanPlan">
+                <option value="plan1">Plan 1 (pre-2012)</option>
+                <option value="plan2">Plan 2 (2012–2023)</option>
+                <option value="plan4">Plan 4 (Scotland)</option>
+                <option value="plan5">Plan 5 (2023+)</option>
+                <option value="postgrad">Postgraduate</option>
+              </select>
+            </div>
+            <div class="ff"><label>Assigned to</label>
+              <select id="dPerson">
+                <option value="shared">Shared (household)</option>
+              </select>
+            </div>
+            <div class="ff"><label>Shared debt?</label>
+              <label class="toggle"><input type="checkbox" id="dShared"><span class="toggle-track"></span></label>
+            </div>
+            <div class="ff money-field"><label>Original total</label><input type="text" id="dTotal" placeholder="8,000"
+                oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff money-field"><label>Remaining balance</label><input type="text" id="dRemaining"
+                placeholder="6,500" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff money-field"><label>Monthly payment</label><input type="text" id="dMonthly" placeholder="250"
+                oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff"><label>Interest rate (%)</label><input type="number" id="dRate" placeholder="6.5%" step=".1"
+                min="0" /></div>
+            <div class="ff"><label>Start date</label><input type="date" id="dStart" /></div>
+            <div class="ff"><label>End / payoff date</label><input type="date" id="dEnd" /></div>
+            <div class="ff"><label>Lender</label><input type="text" id="dLender" placeholder="e.g. Halifax" /></div>
+            <div class="ff full-col"><label>Notes</label><textarea id="dNotes"
+                placeholder="e.g. 0% ends Jan 2026, then 29.9% APR…"></textarea></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addDebt()">Add debt</button></div>
         </div>
       </div>
 
-      <div id="editPropMortgageFields">
-        <div class="form-grid">
-          <div class="ff"><label>Lender</label><input type="text" id="ep-lender"/></div>
-          <div class="ff"><label>Account / reference no.</label><input type="text" id="ep-mortaccno"/></div>
-          <div class="ff money-field"><label>Outstanding balance</label><input type="text" id="ep-balance" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-          <div class="ff"><label>Interest rate (%)</label><input type="number" step="0.01" id="ep-rate"/></div>
-          <div class="ff"><label>Deal end date</label><input type="date" id="ep-mortend"/></div>
-          <div class="ff money-field"><label>Monthly payment</label><input type="text" id="ep-monthly" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+      <!-- ─── PAGE: GOALS ─── -->
+      <div class="page" id="page-goals">
+        <div class="page-header">
+          <div class="flex-row-between">
+            <div>
+              <h2>Goals</h2>
+              <p>Financial targets with progress tracking</p>
+            </div>
+            <button class="icon-btn undo-btn" title="Undo last deletion" id="goalsUndoBtn"
+              onclick="undoLastGoalDelete()">↺</button>
+          </div>
+        </div>
+        <div class="goals-grid" id="goalsGrid"></div>
+        <div class="form-box">
+          <h3>Add goal</h3>
+          <div class="form-grid">
+            <div class="ff"><label>Goal name</label><input type="text" id="gName" placeholder="e.g. House deposit" />
+            </div>
+            <div class="ff money-field"><label>Target</label><input type="text" id="gTarget" placeholder="40,000"
+                oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff money-field"><label>Currently saved</label><input type="text" id="gSaved"
+                placeholder="12,000" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff"><label>Target date</label><input type="date" id="gDate" /></div>
+            <div class="ff money-field"><label>Monthly contribution</label><input type="text" id="gMonthly"
+                placeholder="500" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff"><label>Icon / emoji</label><select id="gEmoji">
+                <option value="🎯" selected>🎯 Goal</option>
+                <option value="🏠">🏠 House</option>
+                <option value="🚗">🚗 Car</option>
+                <option value="✈️">✈️ Vacation</option>
+                <option value="🎓">🎓 Education</option>
+                <option value="🏖️">🏖️ Retirement</option>
+                <option value="💰">💰 Savings</option>
+                <option value="🏦">🏦 Bank</option>
+                <option value="📈">📈 Investment</option>
+                <option value="🏆">🏆 Achievement</option>
+                <option value="💍">💍 Wedding</option>
+                <option value="🏥">🏥 Health</option>
+                <option value="📚">📚 Books</option>
+                <option value="🎮">🎮 Gaming</option>
+                <option value="🍔">🍔 Food</option>
+                <option value="🚨">🚨 Emergency</option>
+                <option value="🎁">🎁 Gift</option>
+                <option value="🏃">🏃 Fitness</option>
+                <option value="🎨">🎨 Hobby</option>
+                <option value="✨">✨ Other</option>
+              </select></div>
+          </div>
+          <div class="form-actions"><button class="btn btn-primary" onclick="addGoal()">Add goal</button></div>
         </div>
       </div>
 
-      <!-- Rental -->
-      <div class="section-label">Rental</div>
-      <div class="form-grid">
-        <div class="ff" style="display:flex;align-items:center;gap:10px;">
-          <label style="margin:0;">Rented out?</label>
-          <label class="toggle"><input type="checkbox" id="ep-rented" onchange="toggleEditPropRentalFields()"/><span></span></label>
+      <!-- ─── PAGE: TRANSACTIONS ─── -->
+      <div class="page" id="page-transactions">
+
+        <div class="page-header">
+          <div class="tx-header-row">
+            <div class="tx-header-titles">
+              <h2>Transaction history</h2>
+              <p>All buys, sells, wins, income and payments</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Undo button — above table on right -->
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+          <button class="icon-btn undo-btn" title="Undo last deletion" id="txUndoBtn" onclick="undoLastTxDelete()">
+            ↺
+          </button>
+        </div>
+
+        <!-- Search + type filters -->
+        <div class="table-toolbar">
+          <div class="search-wrapper">
+            <input class="search-box" id="txSearch" placeholder="Search…"
+              oninput="renderTransactions(); toggleSearchClear('txSearch')" />
+            <button class="search-clear" onclick="clearSearch('txSearch')" aria-label="Clear search">×</button>
+          </div>
+          <button class="filter-btn active" id="toggleGeneratedTxs" onclick="toggleGeneratedTxs()">🔄 All
+            payments</button>
+          <button class="filter-btn active" data-filter="all" onclick="setTxFilter('all',this)">All</button>
+          <button class="filter-btn" data-filter="buy" onclick="setTxFilter('buy',this)">Buys</button>
+          <button class="filter-btn" data-filter="sell" onclick="setTxFilter('sell',this)">Sells</button>
+          <button class="filter-btn" data-filter="win" onclick="setTxFilter('win',this)">Wins</button>
+          <button class="filter-btn" data-filter="income" onclick="setTxFilter('income',this)">Income</button>
+          <button class="filter-btn" data-filter="payment" onclick="setTxFilter('payment',this)">Payments</button>
+        </div>
+
+        <!-- Date preset buttons -->
+        <div class="tx-date-presets">
+          <button class="date-preset-btn filter-btn active" data-preset="all" onclick="setTxDatePreset('all')">All
+            time</button>
+          <button class="date-preset-btn filter-btn" data-preset="7d" onclick="setTxDatePreset('7d')">7 days</button>
+          <button class="date-preset-btn filter-btn" data-preset="30d" onclick="setTxDatePreset('30d')">30 days</button>
+          <button class="date-preset-btn filter-btn" data-preset="month" onclick="setTxDatePreset('month')">This
+            month</button>
+          <button class="date-preset-btn filter-btn" data-preset="custom"
+            onclick="setTxDatePreset('custom')">Custom…</button>
+        </div>
+
+        <!-- Custom date range (hidden until "Custom…" is clicked) -->
+        <div id="txCustomDateRow" class="tx-custom-date-row">
+          <span class="tx-custom-date-label">From</span>
+          <input type="date" id="txDateFrom" class="tx-date-input" onchange="setTxCustomDate('from', this.value)">
+          <span class="tx-custom-date-sep">→</span>
+          <input type="date" id="txDateTo" class="tx-date-input" onchange="setTxCustomDate('to', this.value)">
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th data-sort="date" onclick="setTxSort('date')">Date <span class="sort-arrow">↕</span></th>
+                <th data-sort="txtype" onclick="setTxSort('txtype')">Type <span class="sort-arrow">↕</span></th>
+                <th data-sort="desc" onclick="setTxSort('desc')">Description <span class="sort-arrow">↕</span></th>
+                <th data-sort="amount" onclick="setTxSort('amount')">Amount <span class="sort-arrow">↕</span></th>
+                <th data-sort="pnl" onclick="setTxSort('pnl')">P&amp;L <span class="sort-arrow">↕</span></th>
+                <th>Notes</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="txBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Result count -->
+        <span id="txResultCount" class="tx-result-count"></span>
+
+        <!-- Export buttons — bottom right -->
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+          <button class="export-csv-btn btn-sm" onclick="exportTxCSV()">↓ Export CSV</button>
+          <button class="export-csv-btn btn-sm" onclick="exportTxExcel()">↓ Export Excel</button>
+        </div>
+
+      </div>
+
+      <!-- ─── PAGE: TAX ─── -->
+      <div class="page" id="page-tax">
+        <div class="page-header">
+          <h2>Tax summary</h2>
+          <p>2025/26 tax year · guidance only — please consult a qualified professional</p>
+        </div>
+        <div class="alert alert-amber">ℹ This is an estimate. Actual tax may differ. For advice, speak to an accountant.
+        </div>
+        <div class="tax-grid" id="taxGrid"></div>
+        <div class="card" style="margin-top:14px;">
+          <div class="card-header"><span class="card-title">ISA allowances across all wrappers</span></div>
+          <div id="taxIsaDetail" style="display:flex;flex-direction:column;gap:8px;"></div>
         </div>
       </div>
 
-      <div id="editPropRentalFields" style="display:none;">
-        <div class="form-grid">
-          <div class="ff money-field"><label>Monthly rent received</label><input type="text" id="ep-rental" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-          <div class="ff"><label>Tenancy start</label><input type="date" id="ep-tenancystart"/></div>
-          <div class="ff"><label>Tenancy end</label><input type="date" id="ep-tenancyend"/></div>
-          <div class="ff"><label>Agent fees (%)</label><input type="number" step="0.1" id="ep-agentfees"/></div>
+      <!-- ─── PAGE: SETTINGS ─── -->
+      <div class="page" id="page-settings">
+        <div class="page-header">
+          <h2>Settings</h2>
+          <p>Personalise your dashboard</p>
+        </div>
+        <div class="form-box">
+          <h3>Personal details</h3>
+          <div class="form-grid">
+            <div class="ff"><label>Your name</label><input type="text" id="setName" placeholder="e.g. Alex" /></div>
+            <div class="ff"><label>Dashboard title</label><input type="text" id="setTitle"
+                placeholder="Alex's Wealth" /></div>
+            <div class="ff"><label>Currency symbol</label><input type="text" id="setCurrency" placeholder="£"
+                maxlength="3" /></div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
+            <button class="btn btn-ghost" onclick="loadSample()">Load sample data</button>
+            <button class="btn btn-ghost" onclick="loadSampleYoungProfessional()">Young professional sample</button>
+            <button class="btn btn-ghost" onclick="loadSampleRetiredCouple()">Retired couple sample</button>
+            <button class="btn btn-danger" onclick="clearAll()">Clear all data</button>
+          </div>
+        </div>
+        <div class="form-box">
+          <h3>Manage people</h3>
+          <div id="personManagement"
+            style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;">
+          </div>
+          <div class="form-actions person-add-row">
+            <input type="text" id="newPersonName" placeholder="Person name"
+              onkeydown="if(event.key==='Enter') addNewPerson()" />
+            <button class="btn btn-secondary" onclick="addNewPerson()">+ Add person</button>
+          </div>
         </div>
       </div>
 
-      <!-- Notes -->
-      <div class="form-grid" style="margin-top:8px;">
-        <div class="ff full-col"><label>Notes</label><textarea id="ep-notes" rows="2"></textarea></div>
-      </div>
+    </main>
+  </div><!-- /.app -->
 
-    </div><!-- /modal-body -->
-    <div class="modal-footer" style="display:flex;gap:10px;justify-content:flex-end;">
-      <button class="btn btn-ghost" onclick="closeModal('editPropertyModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveEditProperty()">Save changes</button>
-    </div>
-  </div>
-</div><!-- /editPropertyModal -->
-
-<!-- ─── PAGE: SALARY ─── -->
-<div class="page" id="page-salary">
-  <div class="page-header">
-  <h2>Salary &amp; Income</h2>
-</div>
-  <div class="person-tab" id="personTabs"></div>
-  <div id="salaryContent"></div>
-  <div class="form-box" id="salaryAddForm">
-    <h3>Manage people</h3>
-    <div id="personManagement" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;"></div>
-    <div class="form-actions" style="margin-bottom:20px;">
-      <button class="btn btn-secondary" onclick="addNewPerson()">+ Add person</button>
-    </div>
-    <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);">
-    <h3 style="margin-top:20px;">Add salary</h3>
-    <div class="form-grid wide">
-      <div class="ff"><label>Person</label>
-        <select id="salPerson"></select>
-      </div>
-      <div class="ff"><label>Employer</label><input type="text" id="salEmployer" placeholder="e.g. Acme Ltd"/></div>
-      <div class="ff money-field"><label>Gross annual salary</label><input type="text" id="salGross" placeholder="45,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Annual bonus</label><input type="text" id="salBonus" placeholder="0" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Your pension (%)</label><input type="number" id="salPensionPct" placeholder="5%" min="0" max="100" step=".5"/></div>
-      <div class="ff"><label>Employer pension (%)</label><input type="number" id="salEmployerPension" placeholder="3%" min="0" max="100" step=".5"/></div>
-      <div class="ff"><label>Student loan plan</label>
-        <select id="salStudentLoan">
-          <option value="none">None</option>
-          <option value="plan1">Plan 1 (pre-2012)</option>
-          <option value="plan2">Plan 2 (2012–2023)</option>
-          <option value="plan4">Plan 4 (Scotland)</option>
-          <option value="plan5">Plan 5 (2023+)</option>
-          <option value="postgrad">Postgraduate</option>
-        </select>
-      </div>
-      <div class="ff"><label>Start date</label><input type="date" id="salStartDate"/></div>
-      <div class="ff" id="salEndDateWrap" style="display:none;"><label>End date</label><input type="date" id="salEndDate"/></div>
-      <div class="ff full-col" style="display:flex;flex-direction:row;align-items:center;gap:10px;margin-top:2px;">
-        <label class="cb-row"><input type="checkbox" id="salOngoing" checked onchange="document.getElementById('salEndDateWrap').style.display=this.checked?'none':'flex'"> Ongoing (no end date)</label>
-      </div>
-      <div class="ff full-col"><label>Notes</label><textarea id="salNotes" placeholder="e.g. includes car allowance…"></textarea></div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-primary" onclick="addSalary()">Save salary</button>
-    </div>
-  </div>
-</div>
-
-<!-- ─── PAGE: BILLS ─── -->
-<div class="page" id="page-bills">
-  <div class="page-header">
-    <h2>Bills</h2>
-    <p>Track utility bills and recurring expenses</p>
-  </div>
-  <div class="bill-grid" id="billsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;"></div>
-  <div class="form-box" style="margin-top:16px;">
-    <h3>Add bill</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Name</label><input type="text" id="billName" placeholder="e.g. Electricity"/></div>
-      <div class="ff"><label>Category</label>
-        <select id="billCategory">
-          <option value="utilities">Utilities</option>
-          <option value="housing">Housing</option>
-          <option value="transport">Transport</option>
-          <option value="insurance">Insurance</option>
-          <option value="subscription">Subscription</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-      <div class="ff money-field"><label>Amount</label><input type="text" id="billAmount" placeholder="120.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Frequency</label>
-        <select id="billFrequency">
-          <option value="Weekly">Weekly</option>
-          <option value="Fortnightly">Fortnightly</option>
-          <option value="Monthly" selected>Monthly</option>
-          <option value="Quarterly">Quarterly</option>
-          <option value="Yearly">Yearly</option>
-        </select>
-      </div>
-      <div class="ff"><label>Recurring</label>
-        <select id="billRecurring" onchange="document.getElementById('billEndDateWrap').style.display=this.value==='never'?'':'none'">
-          <option value="weekly">Weekly</option>
-          <option value="monthly" selected>Monthly</option>
-          <option value="yearly">Yearly</option>
-          <option value="never">Never (one-off)</option>
-        </select>
-      </div>
-      <div class="ff"><label>Next payment date</label><input type="date" id="billNextPayment"/></div>
-      <div class="ff" id="billEndDateWrap" style="display:none;"><label>End date</label><input type="date" id="billEndDate"/></div>
-      <div class="ff full-col"><label>Notes</label><textarea id="billNotes" placeholder="e.g. includes gas and water…"></textarea></div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-primary" onclick="addBill()">Add bill</button>
-    </div>
-  </div>
-</div>
-
-<!-- ─── PAGE: PENSION ─── -->
-<div class="page" id="page-pension">
-  <div class="page-header">
-    <h2>Pension</h2>
-    <p>Track pension pots and retirement planning</p>
-  </div>
-  <div id="pensionContent"></div>
-</div>
-
-<!-- ─── PAGE: DEBTS ─── -->
-<div class="page" id="page-debts">
-  <div class="page-header">
-    <h2>Debts</h2>
-    <p>Track everything you owe · monthly payments · payoff timeline</p>
-  </div>
-  <div class="person-tab" id="debtPersonTabs"></div>
-  <div style="margin-bottom:12px;">
-    <label class="toggle-wrap">
-      <span>Include student debts in totals</span>
-      <label class="toggle"><input type="checkbox" id="includeStudentDebts" onchange="renderDebts()" checked><span class="toggle-track"></span></label>
-    </label>
-  </div>
-  <div class="summary-grid" id="debtSummaryCards" style="grid-template-columns:repeat(3,1fr);"></div>
-  <div class="debt-grid" id="debtGrid" style="margin-top:16px;"></div>
-  <div class="form-box">
-    <h3>Add debt</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Name</label><input type="text" id="dName" placeholder="e.g. Car loan"/></div>
-      <div class="ff"><label>Type</label>
-        <select id="dType">
-          <option value="Loan">Personal loan</option><option value="Mortgage">Mortgage</option>
-          <option value="Credit-card">Credit card</option><option value="Student">Student loan</option>
-          <option value="Car">Car finance</option><option value="Other">Other</option>
-        </select>
-      </div>
-      <div class="ff"><label>Assigned to</label>
-        <select id="dPerson">
-          <option value="shared">Shared (household)</option>
-        </select>
-      </div>
-      <div class="ff"><label>Shared debt?</label>
-        <label class="toggle"><input type="checkbox" id="dShared"><span class="toggle-track"></span></label>
-      </div>
-      <div class="ff money-field"><label>Original total</label><input type="text" id="dTotal" placeholder="8,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Remaining balance</label><input type="text" id="dRemaining" placeholder="6,500" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Monthly payment</label><input type="text" id="dMonthly" placeholder="250" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Interest rate (%)</label><input type="number" id="dRate" placeholder="6.5%" step=".1" min="0"/></div>
-      <div class="ff"><label>Start date</label><input type="date" id="dStart"/></div>
-      <div class="ff"><label>End / payoff date</label><input type="date" id="dEnd"/></div>
-      <div class="ff"><label>Lender</label><input type="text" id="dLender" placeholder="e.g. Halifax"/></div>
-      <div class="ff full-col"><label>Notes</label><textarea id="dNotes" placeholder="e.g. 0% ends Jan 2026, then 29.9% APR…"></textarea></div>
-    </div>
-    <div class="form-actions"><button class="btn btn-primary" onclick="addDebt()">Add debt</button></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: GOALS ─── -->
-<div class="page" id="page-goals">
-  <div class="page-header">
-    <h2>Goals</h2>
-    <p>Financial targets with progress tracking</p>
-  </div>
-  <div class="goals-grid" id="goalsGrid"></div>
-  <div class="form-box">
-    <h3>Add goal</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Goal name</label><input type="text" id="gName" placeholder="e.g. House deposit"/></div>
-      <div class="ff money-field"><label>Target</label><input type="text" id="gTarget" placeholder="40,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Currently saved</label><input type="text" id="gSaved" placeholder="12,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Target date</label><input type="date" id="gDate"/></div>
-      <div class="ff money-field"><label>Monthly contribution</label><input type="text" id="gMonthly" placeholder="500" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Icon / emoji</label><select id="gEmoji">
-        <option value="🎯"selected>🎯 Goal</option>
-        <option value="🏠">🏠 House</option>
-        <option value="🚗">🚗 Car</option>
-        <option value="✈️">✈️ Vacation</option>
-        <option value="🎓">🎓 Education</option>
-        <option value="🏖️">🏖️ Retirement</option>
-        <option value="💰">💰 Savings</option>
-        <option value="🏦">🏦 Bank</option>
-        <option value="📈">📈 Investment</option>
-        <option value="🏆">🏆 Achievement</option>
-        <option value="💍">💍 Wedding</option>
-        <option value="🏥">🏥 Health</option>
-        <option value="📚">📚 Books</option>
-        <option value="🎮">🎮 Gaming</option>
-        <option value="🍔">🍔 Food</option>
-        <option value="🚨">🚨 Emergency</option>
-        <option value="🎁">🎁 Gift</option>
-        <option value="🏃">🏃 Fitness</option>
-        <option value="🎨">🎨 Hobby</option>
-        <option value="✨">✨ Other</option>
-      </select></div>
-    </div>
-    <div class="form-actions"><button class="btn btn-primary" onclick="addGoal()">Add goal</button></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: TRANSACTIONS ─── -->
-<div class="page" id="page-transactions">
-  <div class="page-header">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div><h2>Transaction history</h2><p>All buys, sells, wins, income and payments</p></div>
-      <button class="icon-btn" title="Undo last deletion" id="txUndoBtn" onclick="undoLastTxDelete()" style="opacity:0;pointer-events:none;transition:opacity .15s;font-size:14px;">↺</button>
-    </div>
-  </div>
-  <div class="table-toolbar" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:14px;padding:10px 12px;">
-    <input class="search-box" id="txSearch" placeholder="Search…" oninput="renderTransactions()"/>
-    <button class="filter-btn active" onclick="setTxFilter('all',this)">All</button>
-    <button class="filter-btn" onclick="setTxFilter('buy',this)">Buys</button>
-    <button class="filter-btn" onclick="setTxFilter('sell',this)">Sells</button>
-    <button class="filter-btn" onclick="setTxFilter('win',this)">Wins</button>
-    <button class="filter-btn" onclick="setTxFilter('income',this)">Income</button>
-    <button class="filter-btn" onclick="setTxFilter('payment',this)">Payments</button>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th><th>P&amp;L</th><th>Notes</th><th></th></tr></thead>
-      <tbody id="txBody"></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- ─── PAGE: TAX ─── -->
-<div class="page" id="page-tax">
-  <div class="page-header">
-    <h2>Tax summary</h2>
-    <p>2025/26 tax year · guidance only — please consult a qualified professional</p>
-  </div>
-  <div class="alert alert-amber">ℹ This is an estimate. Actual tax may differ. For advice, speak to an accountant.</div>
-  <div class="tax-grid" id="taxGrid"></div>
-  <div class="card" style="margin-top:14px;">
-    <div class="card-header"><span class="card-title">ISA allowances across all wrappers</span></div>
-    <div id="taxIsaDetail" style="display:flex;flex-direction:column;gap:8px;"></div>
-  </div>
-</div>
-
-<!-- ─── PAGE: SETTINGS ─── -->
-<div class="page" id="page-settings">
-  <div class="page-header"><h2>Settings</h2><p>Personalise your dashboard</p></div>
-  <div class="form-box">
-    <h3>Personal details</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Your name</label><input type="text" id="setName" placeholder="e.g. Alex"/></div>
-      <div class="ff"><label>Dashboard title</label><input type="text" id="setTitle" placeholder="Alex's Wealth"/></div>
-      <div class="ff"><label>Currency symbol</label><input type="text" id="setCurrency" placeholder="£" maxlength="3"/></div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
-      <button class="btn btn-secondary" onclick="loadSample()">Load sample data</button>
-      <button class="btn btn-danger" style="margin-left:auto;" onclick="clearAll()">Clear all data</button>
-    </div>
-  </div>
-</div>
-
-</main>
-</div><!-- /.app -->
-
-<!-- ═══════════════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════════════
      7. HTML MODALS
      ═══════════════════════════════════════════════════ -->
 
-<!-- Edit holding modal -->
-<div class="modal-overlay hidden" id="editModal">
-  <div class="modal">
-    <h3>Edit holding</h3>
-    <div class="form-grid" id="editFormGrid"></div>
-    <div class="modal-section">
-      <div class="modal-section-title">Mark as sold</div>
+  <!-- Edit holding modal -->
+  <div class="modal-overlay hidden" id="editModal">
+    <div class="modal">
+      <h3>Edit holding</h3>
+      <div class="form-grid" id="editFormGrid"></div>
+      <div class="modal-section">
+        <div class="modal-section-title">Mark as sold</div>
+        <div class="form-grid">
+          <div class="ff money-field"><label>Sell price / unit</label><input type="text" id="editSellPrice"
+              placeholder="200.00" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+          <div class="ff"><label>Sell date</label><input type="date" id="editSellDate" /></div>
+          <div class="ff money-field"><label>Total sold for</label><input type="text" id="editSellTotal"
+              placeholder="2,000" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="sellHolding()">Mark sold</button>
+        <button class="btn btn-primary" onclick="saveEditHolding()">Save changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add holding modal -->
+  <div class="modal-overlay hidden" id="addHoldingModal">
+    <div class="modal">
+      <h3>Add holding</h3>
       <div class="form-grid">
-        <div class="ff money-field"><label>Sell price / unit</label><input type="text" id="editSellPrice" placeholder="200.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-        <div class="ff"><label>Sell date</label><input type="date" id="editSellDate"/></div>
-        <div class="ff money-field"><label>Total sold for</label><input type="text" id="editSellTotal" placeholder="2,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+        <div class="ff"><label>Name</label><input type="text" id="hName" placeholder="e.g. Apple Inc." /></div>
+        <div class="ff"><label>Ticker (optional)</label><input type="text" id="hTicker" placeholder="AAPL" /></div>
+        <div class="ff"><label>Asset type</label>
+          <select id="hType">
+            <option value="stocks">Stock</option>
+            <option value="isa">ISA holding</option>
+            <option value="crypto">Crypto</option>
+            <option value="cash">Cash</option>
+            <option value="pension">Pension</option>
+            <option value="property">Property</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="ff money-field"><label>Amount invested</label><input type="text" id="hInvested" placeholder="1,000"
+            oninput="formatMoney(this)" /><span class="currency">£</span></div>
+        <div class="ff money-field"><label>Current value</label><input type="text" id="hCurrent" placeholder="1,200"
+            oninput="formatMoney(this)" /><span class="currency">£</span></div>
+        <div class="ff money-field"><label>Buy price / unit</label><input type="text" id="hBuyPrice"
+            placeholder="150.00" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+        <div class="ff"><label>Shares / units</label><input type="number" id="hShares" placeholder="10" step="any" />
+        </div>
+        <div class="ff"><label>Buy date</label><input type="date" id="hBuyDate" /></div>
+        <div class="ff"><label>Wrapper</label>
+          <select id="hWrapper">
+            <option value="">— none —</option>
+            <option value="stocks-isa">S&amp;S ISA</option>
+            <option value="cash-isa">Cash ISA</option>
+            <option value="lifetime-isa">Lifetime ISA</option>
+            <option value="pension">Pension/SIPP</option>
+            <option value="gia">GIA</option>
+          </select>
+        </div>
+        <div class="ff full-col"><label>Notes</label><textarea id="hNotes"
+            placeholder="e.g. Long-term hold, bought the dip…"></textarea></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('addHoldingModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="addHolding()">Save holding</button>
       </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('editModal')">Cancel</button>
-      <button class="btn btn-danger"    onclick="sellHolding()">Mark sold</button>
-      <button class="btn btn-primary"   onclick="saveEditHolding()">Save changes</button>
-    </div>
   </div>
-</div>
 
-<!-- Add holding modal -->
-<div class="modal-overlay hidden" id="addHoldingModal">
-  <div class="modal">
-    <h3>Add holding</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Name</label><input type="text" id="hName" placeholder="e.g. Apple Inc."/></div>
-      <div class="ff"><label>Ticker (optional)</label><input type="text" id="hTicker" placeholder="AAPL"/></div>
-      <div class="ff"><label>Asset type</label>
-        <select id="hType">
-          <option value="stocks">Stock</option><option value="isa">ISA holding</option>
-          <option value="crypto">Crypto</option><option value="cash">Cash</option>
-          <option value="pension">Pension</option><option value="property">Property</option><option value="other">Other</option>
-        </select>
+  <!-- Edit bill modal -->
+  <div class="modal-overlay hidden" id="editBillModal">
+    <div class="modal">
+      <h3>Edit bill</h3>
+      <div id="editBillGrid" class="form-grid"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('editBillModal')">Cancel</button>
+        <button type="button" class="btn btn-danger"
+          onclick="deleteBill(editingBillIdx); closeModal('editBillModal');">Delete</button>
+        <button type="button" class="btn btn-primary" onclick="saveEditBill()">Save changes</button>
       </div>
-      <div class="ff money-field"><label>Amount invested</label><input type="text" id="hInvested" placeholder="1,000" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Current value</label><input type="text" id="hCurrent" placeholder="1,200" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff money-field"><label>Buy price / unit</label><input type="text" id="hBuyPrice" placeholder="150.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Shares / units</label><input type="number" id="hShares" placeholder="10" step="any"/></div>
-      <div class="ff"><label>Buy date</label><input type="date" id="hBuyDate"/></div>
-      <div class="ff"><label>Wrapper</label>
-        <select id="hWrapper">
-          <option value="">— none —</option><option value="stocks-isa">S&amp;S ISA</option>
-          <option value="cash-isa">Cash ISA</option><option value="lifetime-isa">Lifetime ISA</option>
-          <option value="pension">Pension/SIPP</option><option value="gia">GIA</option>
-        </select>
+    </div>
+  </div>
+
+  <!-- Emoji picker (bills) -->
+  <div class="modal-overlay hidden" id="emojiPickerModal">
+    <div class="modal" style="max-width:440px;">
+      <h3>Choose icon</h3>
+      <div class="ff mb-8">
+        <label>Search</label>
+        <div class="search-wrapper">
+          <input type="text" class="search-box" id="emojiSearch" placeholder="Type to focus the grid…"
+            style="width:100%;" oninput="renderEmojiGrid(this.value); toggleSearchClear('emojiSearch')" />
+          <button class="search-clear" onclick="clearSearch('emojiSearch')" aria-label="Clear search">×</button>
+        </div>
       </div>
-      <div class="ff full-col"><label>Notes</label><textarea id="hNotes" placeholder="e.g. Long-term hold, bought the dip…"></textarea></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('addHoldingModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="addHolding()">Save holding</button>
-    </div>
-  </div>
-</div>
-
-<!-- Edit bill modal -->
-<div class="modal-overlay hidden" id="editBillModal">
-  <div class="modal">
-    <h3>Edit bill</h3>
-    <div class="form-grid">
-      <div class="ff"><label>Name</label><input type="text" id="eb-name"/></div>
-      <div class="ff"><label>Category</label>
-        <select id="eb-category">
-          <option value="utilities">Utilities</option>
-          <option value="housing">Housing</option>
-          <option value="transport">Transport</option>
-          <option value="insurance">Insurance</option>
-          <option value="subscription">Subscription</option>
-          <option value="other">Other</option>
-        </select>
+      <div id="emojiGrid" class="emoji-picker-grid"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('emojiPickerModal')">Close</button>
       </div>
-      <div class="ff money-field"><label>Amount</label><input type="text" id="eb-amount" oninput="formatMoney(this)"/><span class="currency">£</span></div>
-      <div class="ff"><label>Frequency</label>
-        <select id="eb-frequency">
-          <option value="Weekly">Weekly</option>
-          <option value="Fortnightly">Fortnightly</option>
-          <option value="Monthly">Monthly</option>
-          <option value="Quarterly">Quarterly</option>
-          <option value="Yearly">Yearly</option>
-        </select>
+    </div>
+  </div>
+
+  <!-- Chart modal -->
+  <div class="modal-overlay hidden" id="chartModal">
+    <div class="modal" style="max-width:600px;">
+      <h3 id="chartTitle">Chart</h3>
+      <div class="mb-8">
+        <button class="filter-btn active" onclick="setChartRange('1y',this)">1 Year</button>
+        <button class="filter-btn" onclick="setChartRange('6mo',this)">6 Months</button>
+        <button class="filter-btn" onclick="setChartRange('3mo',this)">3 Months</button>
+        <button class="filter-btn" onclick="setChartRange('1mo',this)">1 Month</button>
       </div>
-      <div class="ff"><label>Recurring</label>
-        <select id="eb-recurring" onchange="toggleBillEndDate()">
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="yearly">Yearly</option>
-          <option value="never">Never (one-off)</option>
-        </select>
+      <div id="chartContainer" style="text-align:center;"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('chartModal')">Close</button>
       </div>
-      <div class="ff"><label>Next payment date</label><input type="date" id="eb-nextPayment"/></div>
-      <div class="ff" id="eb-endDateWrap" style="display:none;"><label>End date</label><input type="date" id="eb-endDate"/></div>
-      <div class="ff full-col"><label>Notes</label><textarea id="eb-notes"></textarea></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('editBillModal')">Cancel</button>
-      <button class="btn btn-danger" onclick="deleteBill(editingBillIdx); closeModal('editBillModal');">Delete</button>
-      <button class="btn btn-primary" onclick="saveEditBill()">Save changes</button>
     </div>
   </div>
-</div>
 
-<!-- Chart modal -->
-<div class="modal-overlay hidden" id="chartModal">
-  <div class="modal" style="max-width:600px;">
-    <h3 id="chartTitle">Chart</h3>
-    <div style="margin-bottom:12px;">
-      <button class="filter-btn active" onclick="setChartRange('1y',this)">1 Year</button>
-      <button class="filter-btn" onclick="setChartRange('6mo',this)">6 Months</button>
-      <button class="filter-btn" onclick="setChartRange('3mo',this)">3 Months</button>
-      <button class="filter-btn" onclick="setChartRange('1mo',this)">1 Month</button>
-    </div>
-    <div id="chartContainer" style="text-align:center;"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('chartModal')">Close</button>
+  <!-- Edit debt modal -->
+  <div class="modal-overlay hidden" id="editDebtModal">
+    <div class="modal">
+      <h3>Edit debt</h3>
+      <div class="form-grid" id="editDebtGrid"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('editDebtModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditDebt()">Save changes</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Edit debt modal -->
-<div class="modal-overlay hidden" id="editDebtModal">
-  <div class="modal">
-    <h3>Edit debt</h3>
-    <div class="form-grid" id="editDebtGrid"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('editDebtModal')">Cancel</button>
-      <button class="btn btn-primary"   onclick="saveEditDebt()">Save changes</button>
+  <!-- Edit credit score modal -->
+  <div class="modal-overlay hidden" id="editCreditScoreModal">
+    <div class="modal">
+      <h3>Edit credit score</h3>
+      <div class="form-grid" id="editCreditScoreGrid"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('editCreditScoreModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditCreditScore()">Save changes</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Edit salary modal -->
-<div class="modal-overlay hidden" id="editSalaryModal">
-  <div class="modal">
-    <h3>Edit salary</h3>
-    <div class="form-grid" id="editSalaryGrid"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal('editSalaryModal')">Cancel</button>
-      <button class="btn btn-primary"   onclick="saveEditSalary()">Save changes</button>
+  <!-- Edit salary modal -->
+  <div class="modal-overlay hidden" id="editSalaryModal">
+    <div class="modal">
+      <h3>Edit salary</h3>
+      <div class="form-grid" id="editSalaryGrid"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('editSalaryModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditSalary()">Save changes</button>
+      </div>
     </div>
   </div>
-</div>
 
-<div class="toast" id="toast"></div>
+  <div class="toast" id="toast"></div>
 
-class="stat-card sc-red clickable-card"
-onclick="openDebtBreakdownModal('total-owed')"
-<div class="card-expand-hint">↗ breakdown</div>
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
-<!-- Chart.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-
-<!-- App modules (load order matters - globals must exist before use) -->
-<script src="js/state.js"></script>
-<script src="js/overview.js"></script>
-<script src="js/investments.js"></script>
-<script src="js/accounts.js"></script>
-<script src="js/properties.js"></script>
-<script src="js/premium-bonds.js"></script>
-<script src="js/salary.js"></script>
-<script src="js/bills.js"></script>
-<script src="js/pension.js"></script>
-<script src="js/debts.js"></script>
-<script src="js/goals.js"></script>
-<script src="js/transactions.js"></script>
-<script src="js/stocks.js"></script>
-<script src="js/tax.js"></script>
-<script src="js/settings.js"></script>
-<script src="js/nav.js"></script>
-<script src="js/init.js"></script>
+  <!-- App modules (load order matters - globals must exist before use) -->
+  <script src="js/constants.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/overview.js"></script>
+  <script src="js/investments.js"></script>
+  <script src="js/accounts.js"></script>
+  <script src="js/properties.js"></script>
+  <script src="js/premium-bonds.js"></script>
+  <script src="js/salary.js"></script>
+  <script src="js/bills.js"></script>
+  <script src="js/pension.js"></script>
+  <script src="js/debts.js"></script>
+  <script src="js/goals.js"></script>
+  <script src="js/transactions.js"></script>
+  <script src="js/stocks.js"></script>
+  <script src="js/tax.js"></script>
+  <script src="js/settings.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/init.js"></script>
 </body>
+
 </html>
