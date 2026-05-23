@@ -35,6 +35,7 @@ const TENURE_TYPES = [
 ];
 
 const MOVING_STEPS = [
+  { key: 'bid_placed', label: 'Bid placed' },
   { key: 'offer_accepted', label: 'Offer accepted' },
   { key: 'mortgage_applied', label: 'Mortgage applied' },
   { key: 'mortgage_offered', label: 'Mortgage offer received' },
@@ -115,7 +116,7 @@ function calcPropertyMetrics(prop) {
   const rentalYield = estValue > 0 && rentalAnnual > 0 ? (rentalAnnual / estValue) * 100 : 0;
   const netRentalMonthly = rentalMonthly - mortgageMonthly;
   const isAdditional = ['buy-to-let', 'holiday-let', 'commercial'].includes(prop.type);
-  const sdlt = calcSDLT(purchasePrice, isAdditional);
+  const sdlt = prop.sdltOverrideEnabled ? Number(prop.sdltOverride || 0) : calcSDLT(purchasePrice, isAdditional);
 
   let remainingYears = null;
   if (prop.mortgageEndDate) {
@@ -127,7 +128,7 @@ function calcPropertyMetrics(prop) {
     purchasePrice, depositAmount, depositPct, estValue,
     mortgageBalance, equity, equityPct, capitalGain, capitalGainPct,
     ltv, rentalMonthly, rentalAnnual, mortgageMonthly, rentalYield,
-    netRentalMonthly, sdlt, remainingYears,
+    netRentalMonthly, sdlt, sdltIsOverridden: !!prop.sdltOverrideEnabled, remainingYears,
   };
 }
 
@@ -427,7 +428,7 @@ function renderPropertyCard(prop, globalIdx) {
           <table class="tax-band-table">
             <tr><td>Deposit paid</td><td class="val">${fmt(m.depositAmount)}</td></tr>
             <tr><td>Deposit %</td><td>${m.depositPct.toFixed(1)}%</td></tr>
-            <tr><td>SDLT (est.)<span class="info-tooltip info-icon" data-tooltip="Stamp Duty Land Tax - tax paid on property purchases over £250,000">i</span></td><td class="neg val">${fmt(m.sdlt)}</td></tr>
+            <tr><td>SDLT ${m.sdltIsOverridden ? '(manual)' : '(est.)'}<span class="info-tooltip info-icon" data-tooltip="Stamp Duty Land Tax - tax paid on property purchases over £250,000. Manual overrides can reflect regional holidays, first-time-buyer relief or special fiscal periods.">i</span></td><td class="neg val">${fmt(m.sdlt)}</td></tr>
             ${prop.tenure ? `<tr><td>Tenure<span class="info-tooltip info-icon" data-tooltip="Freehold: you own the property and land outright. Leasehold: you own the property for a fixed period, then it returns to the freeholder.">i</span></td><td>${tenureLabel}</td></tr>` : ''}
             ${prop.leaseYears ? `<tr><td>Lease remaining</td><td>${prop.leaseYears} yrs</td></tr>` : ''}
             ${prop.serviceCharge ? `<tr><td>Service charge</td><td class="neg val">${fmt(prop.serviceCharge)}/yr</td></tr>` : ''}
@@ -448,6 +449,7 @@ function renderPropertyCard(prop, globalIdx) {
             ${m.remainingYears !== null ? `<tr><td>Years remaining</td><td>${m.remainingYears.toFixed(1)} yrs</td></tr>` : ''}
             ${prop.mortgageAccountNo ? `<tr><td>Account no.</td><td style="font-size:11px;">${prop.mortgageAccountNo}</td></tr>` : ''}
           </table>` : `<div style="font-size:12px;color:var(--muted);padding:8px 0;">No mortgage — owned outright.</div>`}
+          ${renderMortgageLedger(prop)}
         </div>
         <div>
           ${prop.isRented ? `
@@ -471,9 +473,47 @@ function renderPropertyCard(prop, globalIdx) {
 
       ${prop.notes ? `<div style="padding:10px 14px;background:var(--surface2);border-radius:var(--radius-sm);font-size:12px;color:var(--muted2);margin-top:14px;">📝 ${prop.notes}</div>` : ''}
 
+      ${renderTenantTimeline(prop)}
       ${prop.movingProcess ? renderMovingProcessTracker(prop, globalIdx) : ''}
     </div>
   `;
+}
+
+function renderMortgageLedger(prop) {
+  const ledger = Array.isArray(prop.mortgageLedger) ? prop.mortgageLedger : [];
+  if (!ledger.length) return '';
+  return `<details class="prop-ledger" style="margin-top:10px;">
+    <summary>Mortgage history</summary>
+    <div class="prop-ledger-list">
+      ${ledger.slice().reverse().map(entry => `
+        <div class="prop-ledger-row">
+          <span>${fmtDate(entry.date)}</span>
+          <span>${entry.lender || '—'}</span>
+          <span class="val">${fmt(entry.balance || 0)}</span>
+          <span>${Number(entry.rate || 0).toFixed(2)}%</span>
+        </div>`).join('')}
+    </div>
+  </details>`;
+}
+
+function renderTenantTimeline(prop) {
+  const timeline = Array.isArray(prop.tenantTimeline) ? prop.tenantTimeline : [];
+  const derived = prop.isRented && (prop.tenantNames || prop.tenancyStart || prop.rentalMonthly)
+    ? [{ tenantNames: prop.tenantNames || 'Current tenant', rent: prop.rentalMonthly, start: prop.tenancyStart || prop.tenantSince, end: prop.hasTenancyEnd ? prop.tenancyEnd : '' }]
+    : [];
+  const rows = timeline.length ? timeline : derived;
+  if (!rows.length) return '';
+  return `<div class="tenant-timeline">
+    <div class="section-label" style="margin-top:0;margin-bottom:10px;">Tenant timeline</div>
+    ${rows.map(row => `
+      <div class="tenant-timeline-row">
+        <span class="tenant-dot"></span>
+        <div>
+          <div style="font-variation-settings:'wght' 650;">${row.tenantNames || 'Tenant'}</div>
+          <div style="color:var(--muted);font-size:11px;">${row.start ? fmtDate(row.start) : 'Start unknown'}${row.end ? ` to ${fmtDate(row.end)}` : ' to present'} · ${fmt(row.rent || 0)}/mo</div>
+        </div>
+      </div>`).join('')}
+  </div>`;
 }
 
 function renderMovingProcessTracker(prop, globalIdx) {
@@ -486,6 +526,9 @@ function renderMovingProcessTracker(prop, globalIdx) {
   return `
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <div class="section-label" style="margin-top:0;margin-bottom:12px;">House moving process</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;text-transform:capitalize;">
+        Perspective: ${prop.movingProcess.perspective || 'buying'}
+      </div>
       <div style="margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;color:var(--muted);">
           <span>Progress</span>
@@ -821,6 +864,13 @@ function openEditProperty(globalIdx) {
           <input class="form-input" id="ep-purchasedate" type="date" value="${p.purchaseDate || ''}">
           <label class="form-label" style="margin-top:10px;">Current est. value (£)</label>
           <input class="form-input" id="ep-estvalue" value="${mon(p.estValue)}" placeholder="£ e.g. 420,000">
+          <label class="form-label" style="margin-top:10px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="ep-sdlt-override-enabled" ${p.sdltOverrideEnabled ? 'checked' : ''} onchange="toggleEditSdltOverride(${globalIdx})">
+            Manual stamp duty
+          </label>
+          <div id="ep-sdlt-override-wrap-${globalIdx}" style="display:${p.sdltOverrideEnabled ? '' : 'none'};">
+            <input class="form-input" id="ep-sdlt-override" value="${mon(p.sdltOverride)}" placeholder="e.g. 0">
+          </div>
         </div>
       </div>
 
@@ -903,6 +953,11 @@ function openEditProperty(globalIdx) {
 
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
           <div class="section-label" style="margin-top:0;margin-bottom:8px;">Moving process</div>
+          <label class="form-label">Perspective</label>
+          <select class="form-input" id="ep-moving-perspective" style="margin-bottom:8px;">
+            <option value="buying" ${p.movingProcess?.perspective === 'buying' ? 'selected' : ''}>Buying</option>
+            <option value="selling" ${p.movingProcess?.perspective === 'selling' ? 'selected' : ''}>Selling</option>
+          </select>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:8px;">
             <input type="checkbox" id="ep-moving-enabled" ${(p.movingProcess && p.movingProcess.enabled) ? 'checked' : ''}
               onchange="toggleEditMovingEnabled(${globalIdx})">
@@ -977,6 +1032,12 @@ function toggleEditAgentFeesType(globalIdx) {
   }
 }
 
+function toggleEditSdltOverride(globalIdx) {
+  const enabled = document.getElementById('ep-sdlt-override-enabled')?.checked;
+  const wrapper = document.getElementById(`ep-sdlt-override-wrap-${globalIdx}`);
+  if (wrapper) wrapper.style.display = enabled ? '' : 'none';
+}
+
 function toggleEditPropEstValue(i) {
   const display = document.querySelector(`#propEstValueInput${i}`).style.display;
   if (display === 'none') {
@@ -1040,6 +1101,14 @@ function cancelEditProperty(globalIdx) {
 function saveEditProperty(globalIdx) {
   if (globalIdx === null || globalIdx === undefined) return;
   const p = S.properties[globalIdx];
+  const previousMortgage = {
+    lender: p.mortgageLender || '',
+    type: p.mortgageType || '',
+    balance: Number(p.mortgageBalance || 0),
+    rate: Number(p.mortgageRate || 0),
+    monthly: Number(p.mortgageMonthly || 0),
+    endDate: p.mortgageEndDate || '',
+  };
   const gV = id => (document.getElementById(id)?.value || '').trim();
   const gM = id => parseMoney(document.getElementById(id)?.value) || 0;
   const gF = id => parseFloat(document.getElementById(id)?.value) || 0;
@@ -1053,6 +1122,8 @@ function saveEditProperty(globalIdx) {
   p.depositAmount = gM('ep-deposit');
   p.purchaseDate = gV('ep-purchasedate');
   p.estValue = gM('ep-estvalue') || p.estValue;
+  p.sdltOverrideEnabled = gC('ep-sdlt-override-enabled');
+  p.sdltOverride = p.sdltOverrideEnabled ? gM('ep-sdlt-override') : null;
   p.mortgageType = gV('ep-morttype');
   p.mortgageLender = gV('ep-lender');
   p.mortgageBalance = gM('ep-balance');
@@ -1073,12 +1144,14 @@ function saveEditProperty(globalIdx) {
   p.tenantNames = gV('ep-tenantnames');
   p.tenantSince = gV('ep-tenantsince');
   p.notes = gV('ep-notes');
+  syncPropertyLedgers(p, previousMortgage);
 
   // Moving process
   const movingEnabled = document.getElementById(`ep-moving-enabled`)?.checked || false;
   if (movingEnabled) {
     if (!p.movingProcess) p.movingProcess = { enabled: true };
     p.movingProcess.enabled = true;
+    p.movingProcess.perspective = gV('ep-moving-perspective') || 'buying';
     MOVING_STEPS.forEach(step => {
       p.movingProcess[step.key] = document.getElementById(`ep-moving-${step.key}`)?.checked || false;
     });
@@ -1097,6 +1170,37 @@ function saveEditProperty(globalIdx) {
   }
   renderProperties();
   toast('Property updated ✓');
+}
+
+function syncPropertyLedgers(prop, previousMortgage) {
+  if (!Array.isArray(prop.mortgageLedger)) prop.mortgageLedger = [];
+  const currentMortgage = {
+    lender: prop.mortgageLender || '',
+    type: prop.mortgageType || '',
+    balance: Number(prop.mortgageBalance || 0),
+    rate: Number(prop.mortgageRate || 0),
+    monthly: Number(prop.mortgageMonthly || 0),
+    endDate: prop.mortgageEndDate || '',
+  };
+  const changed = Object.keys(currentMortgage).some(key => String(currentMortgage[key]) !== String(previousMortgage[key]));
+  if (changed && currentMortgage.type !== 'none') {
+    prop.mortgageLedger.push({ date: new Date().toISOString().split('T')[0], ...currentMortgage });
+    prop.mortgageLedger = prop.mortgageLedger.slice(-24);
+  }
+
+  if (!Array.isArray(prop.tenantTimeline)) prop.tenantTimeline = [];
+  if (prop.isRented && (prop.tenantNames || prop.tenancyStart || prop.rentalMonthly)) {
+    const latest = prop.tenantTimeline[prop.tenantTimeline.length - 1];
+    const entry = {
+      tenantNames: prop.tenantNames || 'Current tenant',
+      rent: Number(prop.rentalMonthly || 0),
+      start: prop.tenancyStart || prop.tenantSince || '',
+      end: prop.hasTenancyEnd ? prop.tenancyEnd : '',
+    };
+    const same = latest && latest.tenantNames === entry.tenantNames && latest.rent === entry.rent && latest.start === entry.start && latest.end === entry.end;
+    if (!same) prop.tenantTimeline.push(entry);
+    prop.tenantTimeline = prop.tenantTimeline.slice(-20);
+  }
 }
 
 // ─── Add property form (collapsible card) ─────────────────────────

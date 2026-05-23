@@ -20,6 +20,7 @@ let sortStates = {
   all: { col: 'name', dir: 'asc' },
   stocks: { col: 'name', dir: 'asc' },
   crypto: { col: 'name', dir: 'asc' },
+  other: { col: 'name', dir: 'asc' },
 };
 
 // allFilter — filter chips in "All" tab
@@ -338,6 +339,8 @@ function addDividend() {
   const notes = (document.getElementById('divNotes') || {}).value || '';
   if (!holdingId || isNaN(amount) || amount <= 0) { toast('Select holding and enter amount.'); return; }
   S.dividends.push({ id: Date.now(), holdingId, date, amount, notes });
+  const holding = S.holdings.find(h => h.id === holdingId);
+  if (holding) holding.dividendsReceived = Number(holding.dividendsReceived || 0) + amount;
   save();
   renderDividends();
   renderPortfolioSnapshot();
@@ -345,6 +348,11 @@ function addDividend() {
 }
 
 function deleteDividend(id) {
+  const deleted = (S.dividends || []).find(d => d.id === id);
+  if (deleted) {
+    const holding = S.holdings.find(h => h.id === deleted.holdingId);
+    if (holding) holding.dividendsReceived = Math.max(0, Number(holding.dividendsReceived || 0) - Number(deleted.amount || 0));
+  }
   S.dividends = (S.dividends || []).filter(d => d.id !== id);
   save();
   renderDividends();
@@ -485,6 +493,7 @@ function setSortCol(tab, col) {
 
 // ─── Holdings rendering — All tab ────────────────────────────────
 function renderInvestments() {
+  document.getElementById('page-investments')?.setAttribute('data-inv-tab', 'all');
   const q = (document.getElementById('investmentsSearch') || {}).value || '';
   let H = S.holdings;
   if (allFilter !== 'all') H = H.filter(h => h.type === allFilter);
@@ -530,6 +539,7 @@ function renderInvestments() {
 
 // ─── Holdings rendering — Stocks tab ─────────────────────────────
 function renderStocksHoldings() {
+  document.getElementById('page-investments')?.setAttribute('data-inv-tab', 'stocks');
   const q = (document.getElementById('holdingsSearch') || {}).value || '';
   let H = S.holdings.filter(h => h.type === 'stocks' || h.type === 'isa' || h.type === 'etf');
   if (q) H = H.filter(h => h.name.toLowerCase().includes(q.toLowerCase()) || (h.ticker || '').toLowerCase().includes(q.toLowerCase()));
@@ -569,6 +579,7 @@ function renderStocksHoldings() {
 
 // ─── Holdings rendering — Crypto tab ─────────────────────────────
 function renderCryptoHoldings() {
+  document.getElementById('page-investments')?.setAttribute('data-inv-tab', 'crypto');
   const q = (document.getElementById('cryptoSearch') || {}).value || '';
   let H = S.holdings.filter(h => h.type === 'crypto');
   if (q) H = H.filter(h => h.name.toLowerCase().includes(q.toLowerCase()) || (h.ticker || '').toLowerCase().includes(q.toLowerCase()));
@@ -606,8 +617,46 @@ function renderCryptoHoldings() {
   if (badge) badge.textContent = H.length;
 }
 
-function renderHoldings() { renderInvestments(); }
-function renderHoldingsWithLive() { renderInvestments(); renderStocksHoldings(); renderCryptoHoldings(); renderHeatmap(); }
+function renderOtherHoldings() {
+  document.getElementById('page-investments')?.setAttribute('data-inv-tab', 'other');
+  let H = S.holdings.filter(h => h.type === 'other');
+  H = sortHoldingsByCols(H, 'other');
+  const tb = document.getElementById('otherBody');
+  if (!tb) return;
+  if (!H.length) { tb.innerHTML = emptyRow(8, 'No cars, art, collectibles or alternative assets yet.'); return; }
+  tb.innerHTML = H.map(h => {
+    const idx = S.holdings.findIndex(x => x.id === h.id);
+    const pl = Number(h.current || 0) - Number(h.invested || 0);
+    const ret = pct(h.current, h.invested);
+    const category = h.category || h.altCategory || inferAlternativeCategory(h);
+    return `<tr>
+      <td><span class="fw6">${h.name}</span>${h.ticker ? tickerBadge(h.ticker) : ''}</td>
+      <td><span class="alt-asset-chip">${category}</span></td>
+      <td>${fmtDate(h.buyDate)}</td>
+      <td class="val">${fmt(h.invested)}</td>
+      <td class="val">${fmt(h.current)}</td>
+      <td class="val ${cls(pl)}">${pl >= 0 ? '+' : ''}${fmt(Math.abs(pl))} <span style="font-size:11px;">${fmtP(ret)}</span></td>
+      <td class="notes-cell">${h.notes || '—'}</td>
+      <td style="white-space:nowrap;">
+        <button class="icon-btn edit" onclick="openEditHolding(${h.id})">✎</button>
+        <button class="icon-btn del" onclick="deleteHolding(${h.id})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+  const badge = document.getElementById('otherBadge');
+  if (badge) badge.textContent = H.length;
+}
+
+function inferAlternativeCategory(h) {
+  const text = `${h.name || ''} ${h.notes || ''}`.toLowerCase();
+  if (/(car|vehicle|motor|bmw|tesla|porsche|audi|mercedes)/.test(text)) return 'Car';
+  if (/(art|painting|print|sculpture|artist)/.test(text)) return 'Art';
+  if (/(watch|collectible|coin|wine|whisky|card|memorabilia)/.test(text)) return 'Collectible';
+  return 'Alternative';
+}
+
+function renderHoldings() { renderInvestments(); renderOtherHoldings(); }
+function renderHoldingsWithLive() { renderInvestments(); renderStocksHoldings(); renderCryptoHoldings(); renderOtherHoldings(); renderHeatmap(); }
 
 // ─── Closed positions ─────────────────────────────────────────────
 function renderClosed() {
@@ -814,26 +863,19 @@ function getLivePrice(ticker) {
 }
 
 function renderInvestmentStats() {
-  const { invested, current } = computeWithLive(S.holdings);
-  const pl = current - invested;
-  const ret = invested ? ((current / invested - 1) * 100) : 0;
   const el = document.getElementById('investmentStats');
   if (!el) return;
-  const sym = displayCcySymbol();
-  el.innerHTML = `
-    <div class="stat-card sc-accent"><div class="stat-label">Total invested</div><div class="stat-val val">${sym}${fmt2(toDisplayCcy(invested))}</div></div>
-    <div class="stat-card sc-green"><div class="stat-label">Portfolio value</div><div class="stat-val ${cls(pl)} val">${sym}${fmt2(toDisplayCcy(current))}</div></div>
-    <div class="stat-card sc-amber"><div class="stat-label">Unrealised P&amp;L</div><div class="stat-val ${cls(pl)} val">${pl >= 0 ? '+' : ''}${sym}${fmt2(toDisplayCcy(Math.abs(pl)))}</div><div class="stat-sub">${fmtP(ret)}</div></div>
-  `;
+  el.innerHTML = '';
 }
 
 function renderStocksStats() {
-  const { invested, current } = computeWithLive(S.holdings.filter(h => h.type === 'stocks' || h.type === 'isa' || h.type === 'etf'));
+  const { invested, current } = computeWithLive(S.holdings.filter(h => h.type === 'stocks' || h.type === 'etf'));
   const pl = current - invested;
   const ret = pct(current, invested);
   const el = document.getElementById('stocksStats');
   if (!el) return;
   const sym = displayCcySymbol();
+  el.className = 'investment-stat-row';
   el.innerHTML = `
     <div class="stat-card sc-accent"><div class="stat-label">Stocks invested</div><div class="stat-val val">${sym}${fmt2(toDisplayCcy(invested))}</div></div>
     <div class="stat-card sc-green"><div class="stat-label">Current value</div><div class="stat-val ${cls(pl)} val">${sym}${fmt2(toDisplayCcy(current))}</div></div>
@@ -848,6 +890,7 @@ function renderCryptoStats() {
   const el = document.getElementById('cryptoStats');
   if (!el) return;
   const sym = displayCcySymbol();
+  el.className = 'investment-stat-row';
   el.innerHTML = `
     <div class="stat-card sc-accent"><div class="stat-label">Crypto invested</div><div class="stat-val val">${sym}${fmt2(toDisplayCcy(invested))}</div></div>
     <div class="stat-card sc-green"><div class="stat-label">Current value</div><div class="stat-val ${cls(pl)} val">${sym}${fmt2(toDisplayCcy(current))}</div></div>
@@ -883,10 +926,39 @@ function addHolding() {
   if (!name || isNaN(invested) || isNaN(current)) { toast('Please fill: name, invested, and current value.'); return; }
   S.holdings.push({ id: Date.now(), name, ticker, type, invested, current, buyPrice, shares, buyDate, wrapper, notes, thesis });
   _addTx({ txtype: 'buy', date: buyDate || new Date().toISOString().split('T')[0], desc: `Bought ${name}${ticker ? ' (' + ticker + ')' : ''}`, amount: invested, pnl: 0, notes });
-  save(); closeModal('addHoldingModal'); renderHoldings(); renderOverview(); renderOverviewCharts(); renderPortfolioSnapshot(); toast(`Added ${name}`);
+  save(); closeModal('addHoldingModal'); renderHoldings(); renderStocksHoldings(); renderCryptoHoldings(); renderOtherHoldings(); renderOverview(); renderOverviewCharts(); renderPortfolioSnapshot(); toast(`Added ${name}`);
   ['hName', 'hTicker', 'hInvested', 'hCurrent', 'hBuyPrice', 'hShares', 'hBuyDate', 'hNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('hType').value = 'stocks';
   document.getElementById('hWrapper').value = '';
+}
+
+function addInlineHolding(kind) {
+  const prefix = kind === 'crypto' ? 'cryptoInline' : 'stockInline';
+  const name = (document.getElementById(prefix + 'Name')?.value || '').trim();
+  const ticker = (document.getElementById(prefix + 'Ticker')?.value || '').trim().toUpperCase();
+  const invested = parseMoney(document.getElementById(prefix + 'Invested')?.value);
+  const current = parseMoney(document.getElementById(prefix + 'Current')?.value);
+  const shares = document.getElementById(prefix + 'Shares')?.value || '';
+  if (!name || isNaN(invested) || isNaN(current)) {
+    toast(`Add ${kind === 'crypto' ? 'token' : 'stock'} name, invested amount and current value.`);
+    return;
+  }
+  const buyDate = new Date().toISOString().split('T')[0];
+  S.holdings.push({ id: Date.now(), name, ticker, type: kind, invested, current, shares, buyDate, wrapper: kind === 'stocks' ? 'GIA' : '', notes: '', thesis: '' });
+  _addTx({ txtype: 'buy', date: buyDate, desc: `Bought ${name}${ticker ? ' (' + ticker + ')' : ''}`, amount: invested, pnl: 0, notes: 'Inline entry' });
+  ['Name', 'Ticker', 'Invested', 'Current', 'Shares'].forEach(id => {
+    const el = document.getElementById(prefix + id);
+    if (el) el.value = '';
+  });
+  save();
+  renderHoldings();
+  renderStocksHoldings();
+  renderCryptoHoldings();
+  renderStocksStats();
+  renderCryptoStats();
+  renderPortfolioSnapshot();
+  renderHeatmap();
+  toast(`Added ${name}`);
 }
 
 function deleteHolding(id) {
@@ -923,7 +995,7 @@ function openEditHolding(id) {
     <div class="ff"><label>Name</label><input type="text" id="em-name" value="${h.name}"/></div>
     <div class="ff"><label>Ticker</label><input type="text" id="em-ticker" value="${h.ticker || ''}"/></div>
     <div class="ff"><label>Type</label>
-      <select id="em-type">${['stocks', 'isa', 'crypto', 'cash', 'pension', 'other'].map(t => `<option value="${t}"${h.type === t ? ' selected' : ''}>${t}</option>`).join('')}</select>
+      <select id="em-type">${['stocks', 'crypto', 'other'].map(t => `<option value="${t}"${h.type === t ? ' selected' : ''}>${t}</option>`).join('')}</select>
     </div>
     <div class="ff money-field"><label>Invested</label><input type="text" id="em-invested" value="${h.invested.toLocaleString('en-GB')}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
     <div class="ff money-field"><label>Current value</label><input type="text" id="em-current" value="${h.current.toLocaleString('en-GB')}" oninput="formatMoney(this)"/><span class="currency">£</span></div>
@@ -1040,6 +1112,7 @@ function renderOverviewCharts() {
 
 // ─── Tab switching ────────────────────────────────────────────────
 function invTab(tab, el) {
+  document.getElementById('page-investments')?.setAttribute('data-inv-tab', tab);
   document.querySelectorAll('#page-investments .tab-btn').forEach(b => b.classList.remove('active'));
   if (el) el.classList.add('active');
   document.querySelectorAll('#page-investments .tab-pane').forEach(t => t.classList.remove('active'));
@@ -1048,6 +1121,7 @@ function invTab(tab, el) {
   if (tab === 'all') { renderInvestments(); renderInvestmentStats(); }
   if (tab === 'stocks') { renderStocksHoldings(); renderStocksStats(); }
   if (tab === 'crypto') { renderCryptoHoldings(); renderCryptoStats(); }
+  if (tab === 'other') { renderOtherHoldings(); }
   if (tab === 'watchlist') { renderPriceGrid(); }
   if (tab === 'closed') { renderClosed(); }
   if (tab === 'heatmap') { renderHeatmap(); }

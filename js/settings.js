@@ -5,6 +5,7 @@ function saveSettings() {
   S.settings.name = (document.getElementById('setName').value || '').trim();
   S.settings.title = (document.getElementById('setTitle').value || '').trim() || 'My Wealth';
   S.settings.currency = (document.getElementById('setCurrency').value || '£').trim();
+  S.settings.country = document.getElementById('setCountry')?.value || 'england';
   normalizePeopleAndLinks();
   save();
   renderSettings();
@@ -19,8 +20,10 @@ function renderSettings() {
   if (sn) sn.value = S.settings.name || '';
   if (st) st.value = S.settings.title || '';
   if (sc) sc.value = S.settings.currency || '£';
+  if (country) country.value = S.settings.country || 'england';
   normalizePeopleAndLinks();
   renderPersonManagement();
+  renderFeatureRequests();
 }
 
 function hasRealPeople() {
@@ -117,15 +120,23 @@ function renderPersonManagement() {
     const propCount = (S.properties || []).filter(prop => (prop.person || 0) === i).length;
     const isActive = typeof currentPersonIdx !== 'undefined' && currentPersonIdx === i;
     return `
-    <div class="card-hover ${isActive ? 'active' : ''}" onclick="selectManagedPerson(${i})">
-      <div class="flex-row-between mb-8">
-        <span class="font-semibold text-sm">${escapeHtml(p || 'Unnamed')}</span>
-        <div class="flex-row gap-6">
-          <button class="icon-btn edit icon-btn-sm" onclick="editPersonName(${i}); event.stopPropagation();">✎</button>
-          ${S.settings.personNames.length > 1 ? `<button class="icon-btn del icon-btn-sm" onclick="removePerson(${i}); event.stopPropagation();">✕</button>` : ''}
+    <div class="acc-card person-mgmt-card ${isActive ? 'active' : ''}" onclick="selectManagedPerson(${i})">
+      <div class="acc-top">
+        <div class="person-name-slot" onclick="toggleEditPersonName(${i}); event.stopPropagation();">
+          <div class="person-name-edit" id="personNameDisplay${i}">
+            <span class="person-name-label">${escapeHtml(p || 'Unnamed')}</span>
+            <span class="text-sm text-muted2">✎</span>
+          </div>
+          <div class="person-name-input" id="personNameInput${i}" style="display:none;" onclick="event.stopPropagation();">
+            <input type="text" id="personNameValue${i}" value="${escapeHtml(p || '')}" placeholder="Name"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();savePersonName(${i});}if(event.key==='Escape'){event.preventDefault();toggleEditPersonName(${i});}"/>
+            <button type="button" class="icon-btn" onclick="savePersonName(${i}); event.stopPropagation();" style="color:var(--green);">✓</button>
+            <button type="button" class="icon-btn" onclick="toggleEditPersonName(${i}); event.stopPropagation();" style="color:var(--muted2);">✕</button>
+          </div>
         </div>
+        ${S.settings.personNames.length > 1 ? `<button type="button" class="icon-btn del" id="personDeleteBtn${i}" onclick="removePerson(${i}); event.stopPropagation();">✕</button>` : ''}
       </div>
-      <div class="text-sm text-muted">
+      <div class="text-sm text-muted" style="margin-top:2px;">
         ${salaryCount} salary · ${debtCount} debt · ${propCount} propert${propCount === 1 ? 'y' : 'ies'}
       </div>
     </div>
@@ -135,6 +146,52 @@ function renderPersonManagement() {
 
 function selectManagedPerson(i) {
   setPersonViewIndex(i);
+  renderPersonManagement();
+}
+
+function toggleEditPersonName(i) {
+  const display = document.getElementById(`personNameDisplay${i}`);
+  const inputWrap = document.getElementById(`personNameInput${i}`);
+  const input = document.getElementById(`personNameValue${i}`);
+  if (!display || !inputWrap) return;
+
+  const deleteBtn = document.getElementById(`personDeleteBtn${i}`);
+  const opening = inputWrap.style.display === 'none';
+  if (opening) {
+    inputWrap.style.display = 'flex';
+    display.style.display = 'none';
+    if (deleteBtn) deleteBtn.style.display = 'none';
+    if (input) {
+      input.value = S.settings.personNames[i] || '';
+      input.focus();
+      input.select();
+    }
+  } else {
+    inputWrap.style.display = 'none';
+    display.style.display = 'flex';
+    if (deleteBtn) deleteBtn.style.display = '';
+  }
+}
+
+function savePersonName(i) {
+  const input = document.getElementById(`personNameValue${i}`);
+  const name = (input.value || '').trim();
+  const current = S.settings.personNames[i] || '';
+
+  if (!name) { toast('Please enter a name.'); return; }
+
+  const exists = S.settings.personNames
+    .some((person, idx) => idx !== i && person.toLowerCase() === name.toLowerCase());
+  if (exists) { toast('That person already exists.'); return; }
+
+  if (name !== current) {
+    S.settings.personNames[i] = name;
+    normalizePeopleAndLinks();
+    save();
+    refreshPeopleDependentViews();
+    toast('Person updated');
+  }
+  toggleEditPersonName(i);
   renderPersonManagement();
 }
 
@@ -176,24 +233,67 @@ function addNewPerson() {
 }
 
 function removePerson(i) {
-  if (!confirm('Remove this person?')) return;
   if ((S.settings.personNames || []).length <= 1) return;
 
   const removedName = S.settings.personNames[i] || 'Person';
-  S.settings.personNames.splice(i, 1);
-  removePersonLinkedData(i);
-  shiftPersonViewIndexesAfterRemoval(i);
-  normalizePeopleAndLinks();
+  showConfirm({
+    title: 'Remove person?',
+    message: `Remove ${removedName}? Their linked salaries, debts, and properties will be removed from your dashboard.`,
+    confirmText: 'Remove person',
+    danger: true,
+    onConfirm: () => {
+      S.settings.personNames.splice(i, 1);
+      removePersonLinkedData(i);
+      shiftPersonViewIndexesAfterRemoval(i);
+      normalizePeopleAndLinks();
+      save();
+      refreshPeopleDependentViews();
+      toast(`${removedName} removed`);
+    }
+  });
+}
+function addFeatureRequest() {
+  if (!S.featureRequests) S.featureRequests = [];
+  const title = (document.getElementById('featureTitle')?.value || '').trim();
+  const priority = document.getElementById('featurePriority')?.value || 'Nice to have';
+  const details = (document.getElementById('featureDetails')?.value || '').trim();
+  if (!validateRequiredFields(['featureTitle'], 'Please add a feature title.')) return;
+  S.featureRequests.unshift({
+    id: Date.now(),
+    title,
+    priority,
+    details,
+    createdAt: new Date().toISOString(),
+  });
   save();
-  refreshPeopleDependentViews();
-  toast(`${removedName} removed`);
+  ['featureTitle', 'featureDetails'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  renderFeatureRequests();
+  toast('Feature request saved');
 }
 
+function renderFeatureRequests() {
+  const el = document.getElementById('featureRequestsList');
+  if (!el) return;
+  const requests = S.featureRequests || [];
+  if (!requests.length) {
+    el.innerHTML = '<div class="text-sm text-muted">No feature requests yet.</div>';
+    return;
+  }
+  el.innerHTML = requests.map(req => `
+    <div class="card-hover" style="cursor:default;margin-bottom:8px;">
+      <div class="flex-row-between mb-8">
+        <span class="font-semibold text-sm">${escapeHtml(req.title)}</span>
+        <span class="pill p-other">${escapeHtml(req.priority)}</span>
+      </div>
+      ${req.details ? `<div class="text-sm text-muted2">${escapeHtml(req.details)}</div>` : ''}
+    </div>
+  `).join('');
+}
 // ═══════════════════════════════════════════════════
 // JS: SAMPLE DATA & INIT
 // ═══════════════════════════════════════════════════
 function loadSample() {
-  S.settings = { name: 'Jordan', title: "Jordan's Financial Dashboard", currency: '£', household: true, personNames: ['Jordan', 'Alex'] };
+  S.settings = { name: 'Jordan & Alex', title: "Jordan & Alex's Household Dashboard", currency: '£', household: true, personNames: ['Jordan', 'Alex'] };
   S.holdings = [
     { id: 1, name: 'Apple Inc.', ticker: 'AAPL', type: 'stocks', invested: 3000, current: 4200, buyPrice: '180.50', shares: '16.5', buyDate: '2024-01-15', wrapper: 'gia', notes: 'Tech growth stock' },
     { id: 2, name: 'Vanguard FTSE All-World', ticker: 'VWRL.L', type: 'isa', invested: 8000, current: 9500, buyPrice: '95.20', shares: '84', buyDate: '2023-06-01', wrapper: 'stocks-isa', notes: 'Global index fund' },
@@ -237,7 +337,14 @@ function loadSample() {
     { person: 0, employer: 'TechCorp Ltd', gross: 65000, bonus: 5000, pensionPct: 5, employerPension: 3, studentLoan: 'none', startDate: '2023-04-01', ongoing: true, endDate: null, notes: 'Senior developer role' },
     { person: 1, employer: 'NHS Trust', gross: 42000, bonus: 0, pensionPct: 7, employerPension: 14, studentLoan: 'plan2', startDate: '2022-09-01', ongoing: true, endDate: null, notes: 'Healthcare professional' },
   ];
-  S.watchlist = ['AAPL', 'NVDA', 'BTC-GBP', 'ETH-GBP', 'GOOGL', 'MSFT'];
+  S.watchlist = [
+    { sym: 'AAPL', name: 'Apple Inc.', type: 'stock', currency: '$' },
+    { sym: 'NVDA', name: 'NVIDIA', type: 'stock', currency: '$' },
+    { sym: 'BTC-GBP', name: 'Bitcoin', type: 'crypto', currency: '£' },
+    { sym: 'ETH-GBP', name: 'Ethereum', type: 'crypto', currency: '£' },
+    { sym: 'GOOGL', name: 'Alphabet', type: 'stock', currency: '$' },
+    { sym: 'MSFT', name: 'Microsoft', type: 'stock', currency: '$' },
+  ];
   S.transactions = [
     { id: 1, txtype: 'buy', date: '2024-01-15', desc: 'Bought Apple Inc. (AAPL)', amount: 3000, pnl: 0, notes: '' },
     { id: 2, txtype: 'buy', date: '2023-06-01', desc: 'Bought Vanguard FTSE All-World (VWRL.L)', amount: 8000, pnl: 0, notes: '' },
@@ -250,12 +357,12 @@ function loadSample() {
     { id: 9, txtype: 'sell', date: '2025-12-01', desc: 'Sold Solana (SOL-GBP)', amount: 600, pnl: -200, notes: 'Loss: £200' },
   ];
   S.bills = [
-    { id: 1, name: 'Electricity & Gas', category: 'utilities', amount: 180, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: 'Octopus Energy', createdDate: '2025-01-01' },
-    { id: 2, name: 'Council Tax', category: 'taxes', amount: 220, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: 'Band D property', createdDate: '2025-01-01' },
-    { id: 3, name: 'Water Bill', category: 'utilities', amount: 45, frequency: 'quarterly', nextPaymentDate: '2026-07-01', recurring: 'quarterly', endDate: '', notes: 'Thames Water', createdDate: '2025-01-01' },
-    { id: 4, name: 'Car Insurance', category: 'insurance', amount: 950, frequency: 'yearly', nextPaymentDate: '2026-09-15', recurring: 'yearly', endDate: '', notes: 'Fully comp, £500 excess', createdDate: '2025-01-01' },
-    { id: 5, name: 'Home Insurance', category: 'insurance', amount: 120, frequency: 'yearly', nextPaymentDate: '2026-11-01', recurring: 'yearly', endDate: '', notes: 'Buildings & contents', createdDate: '2025-01-01' },
-    { id: 6, name: 'Broadband', category: 'utilities', amount: 35, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: 'Virgin Media 100Mbps', createdDate: '2025-01-01' },
+    { id: 1, name: 'Electricity & Gas', category: 'Utilities', amount: 180, occurrence: 'monthly', paymentDay: 1, company: 'Octopus Energy', notes: 'Includes gas and electricity', emoji: '⚡' },
+    { id: 2, name: 'Council Tax', category: 'Other', amount: 220, occurrence: 'monthly', paymentDay: 1, company: 'Local Council', notes: 'Band D property', emoji: '🏛️' },
+    { id: 3, name: 'Water Bill', category: 'Utilities', amount: 45, occurrence: 'quarterly', paymentDay: 1, company: 'Thames Water', notes: 'Quarterly water bill', emoji: '💧' },
+    { id: 4, name: 'Car Insurance', category: 'Insurance', amount: 950, occurrence: 'annually', paymentDay: 15, paymentMonth: 8, company: 'Admiral', notes: 'Fully comp, £500 excess', emoji: '🚗' },
+    { id: 5, name: 'Home Insurance', category: 'Insurance', amount: 120, occurrence: 'annually', paymentDay: 1, paymentMonth: 10, company: 'Aviva', notes: 'Buildings & contents', emoji: '🏠' },
+    { id: 6, name: 'Broadband', category: 'Subscriptions', amount: 35, occurrence: 'monthly', paymentDay: 1, company: 'Virgin Media', notes: '100Mbps fibre', emoji: '📡' },
   ];
   S.properties = [
     {
@@ -318,140 +425,5 @@ function loadSample() {
     const dt = new Date(); dt.setDate(dt.getDate() - i);
     S.netWorthHistory.push({ date: dt.toISOString().split('T')[0], value: Math.round(65000 + Math.random() * 5000 - 1000 + (60 - i) * 300) });
   }
-  save(); toast('Sample data loaded! 🎉'); renderOverview();
-}
-
-function loadSampleYoungProfessional() {
-  S.settings = { name: 'Taylor', title: "Taylor's Financial Dashboard", currency: '£', household: false, personNames: ['Taylor'] };
-  S.holdings = [
-    { id: 1, name: 'Vanguard FTSE All-World', ticker: 'VWRL.L', type: 'isa', invested: 2000, current: 2200, buyPrice: '95.20', shares: '21', buyDate: '2024-06-01', wrapper: 'stocks-isa', notes: 'First investment - global index fund' },
-    { id: 2, name: 'iShares Core FTSE 100', ticker: 'ISF.L', type: 'isa', invested: 1500, current: 1550, buyPrice: '780', shares: '1.92', buyDate: '2025-01-15', wrapper: 'stocks-isa', notes: 'UK market exposure' },
-  ];
-  S.closedHoldings = [];
-  S.accounts = [
-    { name: 'Monzo Current', type: 'current', provider: 'Monzo', balance: 2500, contrib: 0 },
-    { name: 'Marcus Savings', type: 'savings', provider: 'Marcus by Goldman Sachs', balance: 8000, contrib: 0 },
-    { name: 'Vanguard ISA', type: 'stocks-isa', provider: 'Vanguard', balance: 3750, contrib: 3500 },
-    { name: 'Lifetime ISA', type: 'lifetime-isa', provider: 'Moneybox', balance: 4200, contrib: 3360 },
-  ];
-  S.premiumBonds = { amount: 0, date: '', wins: [] };
-  S.debts = [
-    { name: 'Student Loan', type: 'student', total: 45000, remaining: 42000, monthly: 0, rate: 0, start: '2019-09-01', end: '2042-04-01', lender: 'UK Government', notes: 'Plan 2 - repayments through salary' },
-  ];
-  S.goals = [
-    { name: 'Emergency Fund', target: 10000, saved: 8000, date: '2026-06-01', monthly: 500, emoji: '🛡️' },
-    { name: 'First Home Deposit', target: 50000, saved: 12000, date: '2029-01-01', monthly: 800, emoji: '🏠' },
-    { name: 'Travel Fund', target: 3000, saved: 1500, date: '2026-09-01', monthly: 200, emoji: '✈️' },
-  ];
-  S.salaries = [
-    { person: 0, employer: 'StartupXYZ', gross: 38000, bonus: 2000, pensionPct: 4, employerPension: 3, studentLoan: 'plan2', startDate: '2023-09-01', ongoing: true, endDate: null, notes: 'Junior developer role' },
-  ];
-  S.watchlist = ['AAPL', 'MSFT', 'TSLA', 'NVDA'];
-  S.transactions = [
-    { id: 1, txtype: 'buy', date: '2024-06-01', desc: 'Bought Vanguard FTSE All-World (VWRL.L)', amount: 2000, pnl: 0, notes: '' },
-    { id: 2, txtype: 'buy', date: '2025-01-15', desc: 'Bought iShares Core FTSE 100 (ISF.L)', amount: 1500, pnl: 0, notes: '' },
-    { id: 3, txtype: 'income', date: '2025-04-01', desc: 'Salary: StartupXYZ', amount: 38000, pnl: 0, notes: 'Taylor' },
-  ];
-  S.bills = [
-    { id: 1, name: 'Rent', category: 'housing', amount: 1200, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: '1 bedroom flat', createdDate: '2025-01-01' },
-    { id: 2, name: 'Council Tax', category: 'taxes', amount: 140, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: 'Band B property', createdDate: '2025-01-01' },
-    { id: 3, name: 'Broadband', category: 'utilities', amount: 30, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: 'BT Fibre', createdDate: '2025-01-01' },
-    { id: 4, name: 'Mobile Phone', category: 'utilities', amount: 25, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: 'Three network', createdDate: '2025-01-01' },
-    { id: 5, name: 'Netflix', category: 'subscriptions', amount: 10, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: 'Standard plan', createdDate: '2025-01-01' },
-  ];
-  S.properties = [];
-  S.netWorthHistory = [];
-  for (let i = 24; i >= 0; i--) {
-    const dt = new Date(); dt.setDate(dt.getDate() - i);
-    S.netWorthHistory.push({ date: dt.toISOString().split('T')[0], value: Math.round(15000 + Math.random() * 2000 - 500 + (24 - i) * 150) });
-  }
-  save(); toast('Young professional sample loaded! 🎓'); renderOverview();
-}
-
-function loadSampleRetiredCouple() {
-  S.settings = { name: 'Margaret & Robert', title: "Margaret & Robert's Retirement Dashboard", currency: '£', household: true, personNames: ['Margaret', 'Robert'] };
-  S.holdings = [
-    { id: 1, name: 'Vanguard LifeStrategy 60', ticker: 'VGLS.L', type: 'isa', invested: 150000, current: 175000, buyPrice: '95.20', shares: '1575', buyDate: '2015-06-01', wrapper: 'stocks-isa', notes: 'Balanced fund for retirement income' },
-    { id: 2, name: 'FTSE 100 Income Fund', ticker: 'UKIN.L', type: 'isa', invested: 80000, current: 92000, buyPrice: '120', shares: '667', buyDate: '2018-03-01', wrapper: 'stocks-isa', notes: 'Dividend income focus' },
-    { id: 3, name: 'Corporate Bond Fund', ticker: 'CORP.L', type: 'isa', invested: 50000, current: 52000, buyPrice: '100', shares: '500', buyDate: '2020-01-15', wrapper: 'stocks-isa', notes: 'Lower risk fixed income' },
-  ];
-  S.closedHoldings = [
-    { id: 99, name: 'BP', ticker: 'BP.', type: 'stocks', invested: 15000, soldFor: 18000, buyPrice: '450', buyDate: '2010-05-01', sellPrice: '540', sellDate: '2023-11-15', notes: 'Dividend stock sold for profit' },
-  ];
-  S.accounts = [
-    { name: 'Joint Current', type: 'joint', provider: 'Nationwide', balance: 35000, contrib: 0 },
-    { name: 'Margaret Savings', type: 'savings', provider: 'Santander', balance: 45000, contrib: 0 },
-    { name: 'Robert Savings', type: 'savings', provider: 'Barclays', balance: 38000, contrib: 0 },
-    { name: 'Margaret ISA', type: 'stocks-isa', provider: 'Hargreaves Lansdown', balance: 175000, contrib: 150000 },
-    { name: 'Robert ISA', type: 'stocks-isa', provider: 'AJ Bell', balance: 144000, contrib: 130000 },
-    { name: 'Margaret Pension', type: 'pension', provider: 'Aviva', balance: 285000, contrib: 0 },
-    { name: 'Robert Pension', type: 'pension', provider: 'Scottish Widows', balance: 320000, contrib: 0 },
-  ];
-  S.premiumBonds = {
-    amount: 50000, date: '2010-02-01', wins: [
-      { amount: 25, date: '2025-01-01', month: 1, year: 2025, autoAdded: false },
-      { amount: 50, date: '2025-06-01', month: 6, year: 2025, autoAdded: true },
-      { amount: 100, date: '2025-12-01', month: 12, year: 2025, autoAdded: false },
-    ]
-  };
-  S.debts = [];
-  S.goals = [
-    { name: 'Holiday Fund', target: 15000, saved: 12000, date: '2026-09-01', monthly: 0, emoji: '✈️' },
-    { name: 'Gifts for Grandchildren', target: 10000, saved: 7500, date: '2026-12-01', monthly: 200, emoji: '🎁' },
-    { name: 'Home Maintenance', target: 20000, saved: 15000, date: '2027-06-01', monthly: 300, emoji: '🏠' },
-  ];
-  S.salaries = [
-    { person: 0, employer: 'Retired', gross: 0, bonus: 0, pensionPct: 0, employerPension: 0, studentLoan: 'none', startDate: '2020-05-01', ongoing: false, endDate: '2020-05-01', notes: 'State pension + private pension' },
-    { person: 1, employer: 'Retired', gross: 0, bonus: 0, pensionPct: 0, employerPension: 0, studentLoan: 'none', startDate: '2018-09-01', ongoing: false, endDate: '2018-09-01', notes: 'State pension + private pension' },
-  ];
-  S.watchlist = ['VGLS.L', 'UKIN.L', 'CORP.L'];
-  S.transactions = [
-    { id: 1, txtype: 'buy', date: '2015-06-01', desc: 'Bought Vanguard LifeStrategy 60 (VGLS.L)', amount: 150000, pnl: 0, notes: '' },
-    { id: 2, txtype: 'buy', date: '2018-03-01', desc: 'Bought FTSE 100 Income Fund (UKIN.L)', amount: 80000, pnl: 0, notes: '' },
-    { id: 3, txtype: 'sell', date: '2023-11-15', desc: 'Sold BP (BP.)', amount: 18000, pnl: 3000, notes: 'Profit: £3,000' },
-    { id: 4, txtype: 'win', date: '2025-12-01', desc: 'Premium Bond prize', amount: 100, pnl: 100, notes: '£100 prize' },
-  ];
-  S.bills = [
-    { id: 1, name: 'Council Tax', category: 'taxes', amount: 180, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: 'Band C property (discounted)', createdDate: '2025-01-01' },
-    { id: 2, name: 'Electricity & Gas', category: 'utilities', amount: 140, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: 'Octopus Energy - retired tariff', createdDate: '2025-01-01' },
-    { id: 3, name: 'Water', category: 'utilities', amount: 35, frequency: 'quarterly', nextPaymentDate: '2026-07-01', recurring: 'quarterly', endDate: '', notes: 'Thames Water', createdDate: '2025-01-01' },
-    { id: 4, name: 'Home Insurance', category: 'insurance', amount: 450, frequency: 'yearly', nextPaymentDate: '2026-10-01', recurring: 'yearly', endDate: '', notes: 'Buildings & contents - over 60s discount', createdDate: '2025-01-01' },
-    { id: 5, name: 'TV Licence', category: 'taxes', amount: 169, frequency: 'yearly', nextPaymentDate: '2026-09-01', recurring: 'yearly', endDate: '', notes: 'Free for over 75s (Robert only)', createdDate: '2025-01-01' },
-    { id: 6, name: 'Broadband', category: 'utilities', amount: 28, frequency: 'monthly', nextPaymentDate: '2026-06-01', recurring: 'monthly', endDate: '', notes: 'Virgin Media - senior discount', createdDate: '2025-01-01' },
-  ];
-  S.properties = [
-    {
-      person: 0,
-      nickname: 'Family Home',
-      address: '7 Willow Lane, Cambridge, CB2 3CD',
-      type: 'residential',
-      tenure: 'freehold',
-      purchasePrice: 180000,
-      depositAmount: 54000,
-      purchaseDate: '1992-05-15',
-      estValue: 450000,
-      mortgageType: 'none',
-      mortgageLender: '',
-      mortgageBalance: 0,
-      mortgageRate: 0,
-      mortgageMonthly: 0,
-      mortgageEndDate: '',
-      mortgageAccountNo: '',
-      leaseYears: null,
-      serviceCharge: null,
-      groundRent: null,
-      isRented: false,
-      rentalMonthly: 0,
-      tenancyStart: '',
-      tenancyEnd: '',
-      agentFeesPct: null,
-      notes: '3 bedroom semi-detached, mortgage paid off 2015'
-    },
-  ];
-  S.netWorthHistory = [];
-  for (let i = 120; i >= 0; i--) {
-    const dt = new Date(); dt.setDate(dt.getDate() - i);
-    S.netWorthHistory.push({ date: dt.toISOString().split('T')[0], value: Math.round(950000 + Math.random() * 10000 - 2000 + (120 - i) * 200) });
-  }
-  save(); toast('Retired couple sample loaded! 👴👵'); renderOverview();
+  save(); toast('Sample 1: Household loaded! 🎉'); renderOverview();
 }

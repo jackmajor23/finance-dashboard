@@ -9,14 +9,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,100..900&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/main.css?v=mobile-nav-2">
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 </head>
 
 <body>
+  <button class="mobile-menu-btn" id="mobileMenuBtn" type="button" aria-label="Open navigation"
+    aria-controls="sidebar" aria-expanded="false">
+    <span class="material-symbols-outlined">menu</span>
+  </button>
+  <button class="mobile-nav-backdrop" id="mobileNavBackdrop" type="button" aria-label="Close navigation"></button>
+
   <button class="eye-fab" id="eyeBtn" onclick="toggleHide()" title="Show/hide figures">
     <span class="material-symbols-outlined">visibility</span>
   </button>
@@ -69,7 +76,7 @@
         </div>
         <div class="nav-divider"></div>
         <div class="nav-group">
-          <button class="nav-item" data-page="settings" onclick="nav('settings',this)"><span
+          <button class="nav-item nav-item-settings" data-page="settings" onclick="nav('settings',this)"><span
               class="nav-icon material-symbols-outlined">Settings</span>Settings</button>
         </div>
       </div>
@@ -164,20 +171,6 @@
             <canvas id="cashFlowChart"></canvas>
           </div>
         </div>
-        <div class="chart-section">
-          <div class="chart-section-header">
-            <div class="section-title">Debt Payoff Timeline</div>
-            <div class="chart-section-subtitle">Projected to zero</div>
-          </div>
-          <div class="chart-empty">
-            Add debts with a monthly payment to see your payoff timeline.
-          </div>
-          <div class="chart-container chart-container-200">
-            <canvas id="debtTimelineChart"></canvas>
-          </div>
-          <!-- Extra payment "what if" slider — injected by JS automatically -->
-          <div id="debtExtraWrap"></div>
-        </div>
       </div>
 
       <!-- ─── PAGE: ACCOUNTS & ISA ─── -->
@@ -189,21 +182,22 @@
               <p>Bank accounts, ISA wrappers and savings · 2025/26 annual ISA allowance: <strong
                   class="pos">£20,000</strong></p>
             </div>
-            <button class="icon-btn undo-btn" title="Undo last deletion" id="accountsUndoBtn"
-              onclick="undoLastAccountDelete()">↺</button>
+            <div class="flex-row gap-8 flex-wrap">
+              <button class="btn btn-secondary account-add-btn" id="accountsAddToggle" onclick="toggleAccountsForm()">+
+                Add account</button>
+              <button class="icon-btn undo-btn" title="Undo last deletion" id="accountsUndoBtn"
+                onclick="undoLastAccountDelete()">↺</button>
+            </div>
           </div>
         </div>
-        <div class="section-label">Your accounts</div>
-        <div class="accounts-grid" id="accountsGrid"></div>
-        <div class="section-label">ISA allowance tracker</div>
-        <div class="isa-grid" id="isaTracker"></div>
-        <div class="form-box">
+        <div class="person-tab" id="accountsPersonTabs"></div>
+        <div class="form-box hidden" id="accountsFormBox">
           <h3>+ Add account or ISA</h3>
           <div class="form-grid">
             <div class="ff"><label>Account name</label><input type="text" id="accName"
                 placeholder="e.g. Vanguard ISA" /></div>
             <div class="ff"><label>Type</label>
-              <select id="accType">
+              <select id="accType" onchange="updateAccountContribVisibility()">
                 <optgroup label="Bank Accounts">
                   <option value="current">Current account</option>
                   <option value="savings">Savings account</option>
@@ -218,22 +212,45 @@
                   <option value="innovative-isa">Innovative Finance ISA</option>
                   <option value="junior-isa">Junior ISA</option>
                 </optgroup>
+                <optgroup label="Cash">
+                  <option value="cash">Cash</option>
+                </optgroup>
                 <optgroup label="Other">
-                  <option value="pension">Pension / SIPP</option>
-                  <option value="premium-bonds-acc">Premium Bonds</option>
                   <option value="other">Other</option>
                 </optgroup>
               </select>
             </div>
             <div class="ff"><label>Provider</label><input type="text" id="accProvider" placeholder="e.g. Vanguard" />
             </div>
+            <div class="ff"><label>Owner</label>
+              <select id="accOwner" onchange="switchAccountsPerson(this.value)">
+                <option value="0">Person 1</option>
+                <option value="1">Person 2</option>
+              </select>
+            </div>
             <div class="ff money-field"><label>Balance</label><input type="text" id="accBalance" placeholder="5,000"
                 oninput="formatMoney(this)" /><span class="currency">£</span></div>
-            <div class="ff money-field"><label>Contributed this tax year</label><input type="text" id="accContrib"
-                placeholder="0" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff money-field" id="accContribField"><label>Contributed this tax year</label><input type="text"
+                id="accContrib" placeholder="0" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff money-field" id="accOverdraftField" style="display:none;"><label>Overdraft
+                limit</label><input type="text" id="accOverdraft" placeholder="0" oninput="formatMoney(this)" /><span
+                class="currency">£</span></div>
+            <div class="ff money-field" id="accCreditLimitField" style="display:none;"><label>Max credit
+                limit</label><input type="text" id="accCreditLimit" placeholder="0" oninput="formatMoney(this)" /><span
+                class="currency">£</span></div>
+            <div class="ff"><label>Interest rate</label><input type="number" id="accInterestRate" placeholder="0"
+                step="0.01" min="0" /><span class="field-suffix">%</span></div>
           </div>
           <div class="form-actions"><button class="btn btn-primary" onclick="addAccount()">Add account</button></div>
         </div>
+        <div class="section-label">Your accounts</div>
+        <div class="accounts-grid" id="accountsGrid"></div>
+        <details class="mobile-section-dropdown accounts-isa-dropdown" open>
+          <summary>ISA allowance tracker</summary>
+          <div class="mobile-section-dropdown-body">
+            <div class="isa-grid" id="isaTracker"></div>
+          </div>
+        </details>
       </div>
 
       <!-- ─── PAGE: PREMIUM BONDS ─── -->
@@ -242,19 +259,19 @@
           <h2>Premium Bonds</h2>
           <p>NS&amp;I premium bonds · max holding £50,000 · all prizes are tax-free</p>
         </div>
- 
+
         <!-- Summary stat cards -->
         <div class="pb-summary" id="pbSummary"></div>
- 
+
         <!-- Two-column form row: holding form (JS-rendered) + prize win -->
         <div class="grid-2col mb-16">
- 
+
           <!-- LEFT: Update bond holding — JS renders mode toggle + form into this div -->
           <div class="form-box" style="margin-bottom:0;">
             <h3>Update bond holding</h3>
             <div id="pbHoldingFormWrap"></div>
           </div>
- 
+
           <!-- RIGHT: Log a prize win -->
           <div class="form-box" style="margin-bottom:0;">
             <h3>Log a prize win</h3>
@@ -300,39 +317,44 @@
             </div>
             <div class="form-actions"><button class="btn btn-primary" onclick="addPBWin()">Log win 🎉</button></div>
           </div>
- 
+
         </div><!-- /grid-2col -->
- 
+
         <!-- Bond holding history — full width, rendered by _renderPBHistory() -->
         <!-- Only populated when "Track history" mode is active and entries exist -->
         <div id="pbHistorySection"></div>
- 
+
         <!-- Winnings history -->
-        <div class="flex-row-between mb-8">
-          <div class="section-label">Winnings history</div>
-          <button class="icon-btn undo-btn" title="Undo last deletion" id="pbUndoBtn"
-            onclick="undoLastPBDelete()">↺</button>
-        </div>
- 
-        <!-- Filter bar — rendered by _renderPBWins() -->
-        <div id="pbWinsFilterBar"></div>
- 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Month / year</th>
-                <th>Amount</th>
-                <th>Cumulative total</th>
-                <th>Where went</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="pbWinsBody"></tbody>
-          </table>
-        </div>
- 
-      </div><!-- /page-premium-bonds --> 
+        <details class="mobile-section-dropdown" open>
+          <summary>Winnings history</summary>
+          <div class="mobile-section-dropdown-body">
+            <div class="flex-row-between mb-8">
+              <div class="section-label">Winnings history</div>
+              <button class="icon-btn undo-btn" title="Undo last deletion" id="pbUndoBtn"
+                onclick="undoLastPBDelete()">↺</button>
+            </div>
+
+            <!-- Filter bar — rendered by _renderPBWins() -->
+            <div id="pbWinsFilterBar"></div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Month / year</th>
+                    <th>Amount</th>
+                    <th>Cumulative total</th>
+                    <th>Where went</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="pbWinsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </details>
+
+      </div><!-- /page-premium-bonds -->
 
       <!-- ═══════════════════════════════════════════════════════════
      PAGE: INVESTMENTS
@@ -392,6 +414,9 @@
           </button>
           <button class="tab-btn" onclick="invTab('crypto',this)">
             Crypto <span class="holdings-count-badge" id="cryptoBadge">0</span>
+          </button>
+          <button class="tab-btn" onclick="invTab('other',this)">
+            Other <span class="holdings-count-badge" id="otherBadge">0</span>
           </button>
           <button class="tab-btn" onclick="invTab('watchlist',this)">Watchlist</button>
           <button class="tab-btn" onclick="invTab('closed',this)">Closed</button>
@@ -458,6 +483,14 @@
        ══════════════════════════════════════════ -->
         <div class="tab-pane" id="invtab-stocks">
           <div id="stocksStats"></div>
+          <div class="inline-ingest-row" aria-label="Add stock holding inline">
+            <input id="stockInlineName" type="text" placeholder="Name" />
+            <input id="stockInlineTicker" type="text" placeholder="Ticker" style="text-transform:uppercase;" />
+            <input id="stockInlineInvested" type="text" placeholder="Invested" oninput="formatMoney(this)" />
+            <input id="stockInlineCurrent" type="text" placeholder="Current value" oninput="formatMoney(this)" />
+            <input id="stockInlineShares" type="number" placeholder="Shares" step="any" />
+            <button class="btn btn-primary btn-sm" onclick="addInlineHolding('stocks')">Add stock</button>
+          </div>
           <div class="table-wrap">
             <div class="table-toolbar">
               <div class="search-wrapper">
@@ -496,6 +529,14 @@
        ══════════════════════════════════════════ -->
         <div class="tab-pane" id="invtab-crypto">
           <div id="cryptoStats"></div>
+          <div class="inline-ingest-row" aria-label="Add crypto holding inline">
+            <input id="cryptoInlineName" type="text" placeholder="Token" />
+            <input id="cryptoInlineTicker" type="text" placeholder="Symbol" style="text-transform:uppercase;" />
+            <input id="cryptoInlineInvested" type="text" placeholder="Invested" oninput="formatMoney(this)" />
+            <input id="cryptoInlineCurrent" type="text" placeholder="Current value" oninput="formatMoney(this)" />
+            <input id="cryptoInlineShares" type="number" placeholder="Units" step="any" />
+            <button class="btn btn-primary btn-sm" onclick="addInlineHolding('crypto')">Add crypto</button>
+          </div>
           <div class="table-wrap">
             <div class="table-toolbar">
               <div class="search-wrapper">
@@ -523,6 +564,37 @@
                 </tr>
               </thead>
               <tbody id="cryptoBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+       TAB: OTHER INVESTMENTS
+       ══════════════════════════════════════════ -->
+        <div class="tab-pane" id="invtab-other">
+          <div class="table-wrap">
+            <div class="table-toolbar">
+              <div>
+                <div class="card-title">Other investments</div>
+                <div class="card-sub">Cars, art, collectibles and non-market assets</div>
+              </div>
+              <button class="btn btn-primary btn-sm"
+                onclick="invTab('add',document.querySelector('#page-investments .tab-btn:last-child'))">+ Add</button>
+            </div>
+            <table class="inv-table">
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th>Category</th>
+                  <th>Acquired</th>
+                  <th>Cost basis</th>
+                  <th>Current value</th>
+                  <th>Gain / loss</th>
+                  <th>Notes</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="otherBody"></tbody>
             </table>
           </div>
         </div>
@@ -709,10 +781,7 @@
                 <label>Type</label>
                 <select id="hType">
                   <option value="stocks">Stocks</option>
-                  <option value="isa">ISA</option>
                   <option value="crypto">Crypto</option>
-                  <option value="pension">Pension</option>
-                  <option value="cash">Cash</option>
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -1028,19 +1097,22 @@
             </div>
             <div class="ff money-field"><label>Gross annual salary</label><input type="text" id="salGross"
                 placeholder="45,000" oninput="formatMoney(this)" /><span class="currency">£</span></div>
-            <div class="ff money-field"><label>Annual bonus</label><input type="text" id="salBonus" placeholder="0"
-                oninput="formatMoney(this)" /><span class="currency">£</span></div>
             <div class="ff"><label>Your pension (%)</label><input type="number" id="salPensionPct" placeholder="5%"
                 min="0" max="100" step=".5" /></div>
             <div class="ff"><label>Employer pension (%)</label><input type="number" id="salEmployerPension"
                 placeholder="3%" min="0" max="100" step=".5" /></div>
             <div class="ff"><label>Start date</label><input type="date" id="salStartDate" /></div>
-            <div class="ff hidden" id="salEndDateWrap"><label>End date</label><input type="date" id="salEndDate" />
-            </div>
             <div class="ff full-col flex-row" style="align-items:center;gap:10px;margin-top:2px;">
               <label class="cb-row"><input type="checkbox" id="salOngoing" checked
-                  onchange="document.getElementById('salEndDateWrap').style.display=this.checked?'none':'flex'"> Ongoing
-                (no end date)</label>
+                  onchange="toggleSalaryOngoing('add')"> Ongoing (no end date)</label>
+            </div>
+            <div class="ff hidden" id="salEndDateWrap"><label>End date</label><input type="date" id="salEndDate" />
+            </div>
+            <div class="ff full-col">
+              <label>Bonuses (optional)</label>
+              <div id="salBonusesList" class="sal-bonus-list"></div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="addSalaryBonusRow('add')">+ Add
+                bonus</button>
             </div>
             <div class="ff full-col">
               <label>Job perks (optional)</label>
@@ -1048,11 +1120,17 @@
               <button type="button" class="btn btn-secondary btn-sm" onclick="renderPerksSelector()">+ Add
                 perks</button>
             </div>
+            <div class="ff full-col"><label>Perks notes</label><input type="text" id="salPerksNotes"
+                placeholder="e.g. benefit renews in April" /></div>
             <div class="ff">
               <label>Pay day</label>
-              <select id="salPayDay">
+              <select id="salPayDay" onchange="toggleSalaryPayDayCustom('add')">
                 <option value="">Select pay day...</option>
               </select>
+            </div>
+            <div class="ff hidden" id="salPayDayCustomWrap">
+              <label>Day of month (1–31)</label>
+              <input type="number" id="salPayDayCustom" min="1" max="31" placeholder="e.g. 28" />
             </div>
             <div class="ff full-col"><label>Notes</label><textarea id="salNotes"
                 placeholder="e.g. includes car allowance…"></textarea></div>
@@ -1073,116 +1151,6 @@
             </div>
             <button class="icon-btn undo-btn" title="Undo last deletion" id="billsUndoBtn"
               onclick="undoLastBillDelete()">↺</button>
-          </div>
-        </div>
-
-        <div id="billStatsPanel" class="summary-grid bills-summary"></div>
-
-        <div class="bills-ticker-wrapper" id="billsTickerWrapper">
-          <div class="bills-ticker-header">Upcoming Bills</div>
-          <div id="billsTicker" class="bills-upcoming-strip"></div>
-        </div>
-
-        <div class="tab-row bills-tab-row">
-          <button type="button" class="tab-btn active" data-tab="All" onclick="switchBillTab('All')">All</button>
-          <button type="button" class="tab-btn" data-tab="Utilities"
-            onclick="switchBillTab('Utilities')">Utilities</button>
-          <button type="button" class="tab-btn" data-tab="Subscriptions"
-            onclick="switchBillTab('Subscriptions')">Subscriptions</button>
-          <button type="button" class="tab-btn" data-tab="Insurance"
-            onclick="switchBillTab('Insurance')">Insurance</button>
-          <button type="button" class="tab-btn" data-tab="Transport"
-            onclick="switchBillTab('Transport')">Transport</button>
-          <button type="button" class="tab-btn" data-tab="Other" onclick="switchBillTab('Other')">Other</button>
-        </div>
-
-        <div id="billsGrid" class="bills-grid"></div>
-
-        <p class="section-label" id="billTemplatesHeading">Quick add</p>
-        <div id="billTemplates" class="bill-templates"></div>
-
-        <div class="form-box" style="margin-top:16px;">
-          <h3>Add bill</h3>
-          <div class="form-grid wide">
-            <div class="ff"><label>Name</label><input type="text" id="billName" placeholder="e.g. Electricity" /></div>
-            <div class="ff"><label>Icon</label>
-              <button type="button" id="billEmojiBtn" class="emoji-btn" onclick="openEmojiPicker('add')">🔖</button>
-            </div>
-            <div class="ff"><label>Category</label>
-              <select id="billCategory">
-                <option value="Utilities">Utilities</option>
-                <option value="Subscriptions">Subscriptions</option>
-                <option value="Insurance">Insurance</option>
-                <option value="Transport">Transport</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div class="ff"><label>Company / provider</label><input type="text" id="billCompany"
-                placeholder="e.g. Octopus Energy" /></div>
-            <div class="ff money-field"><label>Amount</label><input type="text" id="billAmount" placeholder="120.00"
-                oninput="formatMoney(this)" /><span class="currency">£</span></div>
-            <div class="ff">
-              <label>How often</label>
-              <select id="billOccurrence" onchange="toggleOccurrenceFields()">
-                <option value="monthly" selected>Monthly</option>
-                <option value="weekly">Weekly</option>
-                <option value="fortnightly">Fortnightly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="annually">Annually</option>
-                <option value="one-off">One-off</option>
-              </select>
-            </div>
-            <div class="ff" id="billPaymentDayField">
-              <label>Day of month (1–28)</label>
-              <input type="number" id="billPaymentDay" min="1" max="28" value="1" />
-            </div>
-            <div class="ff hidden" id="billPaymentMonthField">
-              <label>Month</label>
-              <select id="billPaymentMonth">
-                <option value="0">January</option>
-                <option value="1">February</option>
-                <option value="2">March</option>
-                <option value="3">April</option>
-                <option value="4">May</option>
-                <option value="5">June</option>
-                <option value="6">July</option>
-                <option value="7">August</option>
-                <option value="8">September</option>
-                <option value="9">October</option>
-                <option value="10">November</option>
-                <option value="11">December</option>
-              </select>
-            </div>
-            <div class="ff hidden" id="billPaymentDateField">
-              <label id="billPaymentDateLabel">Payment / start date</label>
-              <input type="date" id="billPaymentDate" />
-            </div>
-            <div class="ff hidden" id="billPaymentWeekDayField">
-              <label>Day of week</label>
-              <select id="billPaymentWeekDay">
-                <option value="0">Sunday</option>
-                <option value="1">Monday</option>
-                <option value="2">Tuesday</option>
-                <option value="3">Wednesday</option>
-                <option value="4">Thursday</option>
-                <option value="5">Friday</option>
-                <option value="6">Saturday</option>
-              </select>
-            </div>
-            <div class="ff full-col flex-row" style="align-items:center;gap:8px;padding-top:4px;">
-              <input type="checkbox" id="billDiffFirst" onchange="toggleFirstPayment(this.checked)" />
-              <label for="billDiffFirst" style="margin:0;font-size:12px;">Different first payment amount</label>
-            </div>
-            <div class="ff money-field hidden" id="billFirstPaymentField">
-              <label>First payment</label>
-              <input type="text" id="billFirstPayment" placeholder="0.00" oninput="formatMoney(this)" /><span
-                class="currency">£</span>
-            </div>
-            <div class="ff full-col"><label>Notes</label><textarea id="billNotes"
-                placeholder="e.g. includes gas and water…"></textarea></div>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-primary" onclick="addBill()">Add bill</button>
           </div>
         </div>
       </div>
@@ -1209,42 +1177,18 @@
                 onclick="undoLastCreditScoreDelete()">↺</button>
               <button class="icon-btn undo-btn" title="Undo last debt deletion" id="debtsUndoBtn"
                 onclick="undoLastDebtDelete()">↺</button>
+              <button class="icon-btn" id="addDebtBtn" onclick="toggleAddDebtForm()"
+                style="font-size:12px;padding:8px 16px;border-radius:var(--radius-sm);">＋ Add debt</button>
             </div>
           </div>
         </div>
         <div class="person-tab" id="debtPersonTabs"></div>
-        <div class="mb-8">
-          <label class="toggle-wrap">
-            <span>Include student debts in totals</span>
-            <label class="toggle"><input type="checkbox" id="includeStudentDebts" onchange="renderDebts()" checked><span
-                class="toggle-track"></span></label>
-          </label>
-        </div>
-        <div class="summary-grid" id="debtSummaryCards" style="grid-template-columns:repeat(3,1fr);"></div>
-        <div class="section-label">Credit scores</div>
-        <div class="credit-score-grid" id="creditScoreGrid"></div>
-        <div class="form-box">
-          <h3>+ Add credit score</h3>
-          <div class="form-grid">
-            <div class="ff"><label>Provider / Bureau</label><input type="text" id="csProvider"
-                placeholder="e.g. Experian, Equifax" /></div>
-            <div class="ff"><label>Score</label><input type="number" id="csScore" placeholder="e.g. 780" min="0"
-                max="999" /></div>
-            <div class="ff"><label>Date checked</label><input type="date" id="csDate" /></div>
-            <div class="ff full-col"><label>Notes</label><textarea id="csNotes"
-                placeholder="e.g. Checked before mortgage application..."></textarea></div>
-          </div>
-          <div class="form-actions"><button class="btn btn-primary" onclick="addCreditScore()">Add credit score</button>
-          </div>
-        </div>
-        <div class="section-label">Debts</div>
-        <div class="debt-grid" id="debtGrid"></div>
-        <div class="form-box">
+        <div class="form-box hidden" id="addDebtFormBox">
           <h3>Add debt</h3>
           <div class="form-grid">
             <div class="ff"><label>Name</label><input type="text" id="dName" placeholder="e.g. Car loan" /></div>
             <div class="ff"><label>Type</label>
-              <select id="dType">
+              <select id="dType" onchange="toggleStudentLoanPlanField()">
                 <option value="Loan">Personal loan</option>
                 <option value="Mortgage">Mortgage</option>
                 <option value="Credit-card">Credit card</option>
@@ -1253,7 +1197,7 @@
                 <option value="Other">Other</option>
               </select>
             </div>
-            <div class="ff" id="studentLoanPlanField"><label>Student loan plan</label>
+            <div class="ff hidden" id="studentLoanPlanField"><label>Student loan plan</label>
               <select id="dStudentLoanPlan">
                 <option value="plan1">Plan 1 (pre-2012)</option>
                 <option value="plan2">Plan 2 (2012–2023)</option>
@@ -1262,13 +1206,15 @@
                 <option value="postgrad">Postgraduate</option>
               </select>
             </div>
-            <div class="ff"><label>Assigned to</label>
-              <select id="dPerson">
-                <option value="shared">Shared (household)</option>
-              </select>
+            <div id="addDebtPersonWrap" class="ff">
+              <!-- Dynamically populated select or checkboxes -->
             </div>
-            <div class="ff"><label>Shared debt?</label>
-              <label class="toggle"><input type="checkbox" id="dShared"><span class="toggle-track"></span></label>
+            <div class="ff">
+              <label>Payment method</label>
+              <select id="dPaymentType">
+                <option value="automatic" selected>Automatic (Direct Debit/etc.)</option>
+                <option value="manual">Manual payment</option>
+              </select>
             </div>
             <div class="ff money-field"><label>Original total</label><input type="text" id="dTotal" placeholder="8,000"
                 oninput="formatMoney(this)" /><span class="currency">£</span></div>
@@ -1286,6 +1232,17 @@
           </div>
           <div class="form-actions"><button class="btn btn-primary" onclick="addDebt()">Add debt</button></div>
         </div>
+        <div class="mb-8" id="studentDebtsToggleContainer">
+          <label class="toggle-wrap">
+            <span>Include student debts in totals</span>
+            <label class="toggle"><input type="checkbox" id="includeStudentDebts" onchange="renderDebts()" checked><span
+                class="toggle-track"></span></label>
+          </label>
+        </div>
+        <div class="summary-grid" id="debtSummaryCards" style="grid-template-columns:repeat(3,1fr);"></div>
+        <div class="card" id="creditScoreCard" style="margin-bottom: 24px;"></div>
+        <div class="section-label">Debts</div>
+        <div class="debt-grid" id="debtGrid"></div>
       </div>
 
       <!-- ─── PAGE: GOALS ─── -->
@@ -1300,7 +1257,16 @@
               onclick="undoLastGoalDelete()">↺</button>
           </div>
         </div>
+
         <div class="goals-grid" id="goalsGrid"></div>
+
+        <!-- Quick add templates -->
+        <details class="mobile-section-dropdown form-box" style="margin-bottom:16px;" open>
+          <summary>Quick add</summary>
+          <div class="mobile-section-dropdown-body">
+            <div id="goalTemplates" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          </div>
+        </details>
         <div class="form-box">
           <h3>Add goal</h3>
           <div class="form-grid">
@@ -1310,9 +1276,12 @@
                 oninput="formatMoney(this)" /><span class="currency">£</span></div>
             <div class="ff money-field"><label>Currently saved</label><input type="text" id="gSaved"
                 placeholder="12,000" oninput="formatMoney(this)" /><span class="currency">£</span></div>
-            <div class="ff"><label>Target date</label><input type="date" id="gDate" /></div>
+            <div class="ff"><label>Target date (optional)</label><input type="date" id="gDate" /></div>
             <div class="ff money-field"><label>Monthly contribution</label><input type="text" id="gMonthly"
                 placeholder="500" oninput="formatMoney(this)" /><span class="currency">£</span></div>
+            <div class="ff"><label>Linked account (optional)</label><select id="gLinkedAccount">
+                <option value="">No account linked</option>
+              </select></div>
             <div class="ff"><label>Icon / emoji</label><select id="gEmoji">
                 <option value="🎯" selected>🎯 Goal</option>
                 <option value="🏠">🏠 House</option>
@@ -1366,8 +1335,7 @@
               oninput="renderTransactions(); toggleSearchClear('txSearch')" />
             <button class="search-clear" onclick="clearSearch('txSearch')" aria-label="Clear search">×</button>
           </div>
-          <button class="filter-btn active" id="toggleGeneratedTxs" onclick="toggleGeneratedTxs()">🔄 All
-            payments</button>
+          <button class="filter-btn active" id="toggleGeneratedTxs" onclick="toggleGeneratedTxs()">💳 All payments</button>
           <button class="filter-btn active" data-filter="all" onclick="setTxFilter('all',this)">All</button>
           <button class="filter-btn" data-filter="buy" onclick="setTxFilter('buy',this)">Buys</button>
           <button class="filter-btn" data-filter="sell" onclick="setTxFilter('sell',this)">Sells</button>
@@ -1382,6 +1350,8 @@
             time</button>
           <button class="date-preset-btn filter-btn" data-preset="7d" onclick="setTxDatePreset('7d')">7 days</button>
           <button class="date-preset-btn filter-btn" data-preset="30d" onclick="setTxDatePreset('30d')">30 days</button>
+          <button class="date-preset-btn filter-btn" data-preset="3m" onclick="setTxDatePreset('3m')">3 months</button>
+          <button class="date-preset-btn filter-btn" data-preset="1y" onclick="setTxDatePreset('1y')">1 year</button>
           <button class="date-preset-btn filter-btn" data-preset="month" onclick="setTxDatePreset('month')">This
             month</button>
           <button class="date-preset-btn filter-btn" data-preset="custom"
@@ -1394,6 +1364,33 @@
           <input type="date" id="txDateFrom" class="tx-date-input" onchange="setTxCustomDate('from', this.value)">
           <span class="tx-custom-date-sep">→</span>
           <input type="date" id="txDateTo" class="tx-date-input" onchange="setTxCustomDate('to', this.value)">
+        </div>
+
+        <!-- Advanced filter dropdown -->
+        <div class="tx-advanced-filter">
+          <details>
+            <summary class="tx-advanced-filter-toggle">Filter by amount</summary>
+            <div class="tx-advanced-filter-content">
+              <div class="tx-amount-filter">
+                <label>Amount range (£)</label>
+                <div class="tx-amount-inputs">
+                  <div class="ff money-field">
+                    <label>Min</label>
+                    <input type="number" id="txAmountMin" placeholder="0" step="0.01" min="0"
+                      oninput="setTxAmountRange()">
+                    <span class="currency">£</span>
+                  </div>
+                  <div class="ff money-field">
+                    <label>Max</label>
+                    <input type="number" id="txAmountMax" placeholder="Any" step="0.01" min="0"
+                      oninput="setTxAmountRange()">
+                    <span class="currency">£</span>
+                  </div>
+                  <button class="btn btn-ghost btn-sm" onclick="clearTxAmountRange()">Clear</button>
+                </div>
+              </div>
+            </div>
+          </details>
         </div>
 
         <!-- Table -->
@@ -1429,7 +1426,9 @@
       <div class="page" id="page-tax">
         <div class="page-header">
           <h2>Tax summary</h2>
-          <p>2025/26 tax year · guidance only — please consult a qualified professional</p>
+          <p><span id="taxYearDisplay">2025/26</span> tax year · <span id="taxYearCountdown"
+              style="font-variation-settings:'wght' 600;color:var(--accent);"></span> · guidance only — please consult a
+            qualified professional</p>
         </div>
         <div class="alert alert-amber">ℹ This is an estimate. Actual tax may differ. For advice, speak to an accountant.
         </div>
@@ -1452,30 +1451,54 @@
             <div class="ff"><label>Your name</label><input type="text" id="setName" placeholder="e.g. Alex" /></div>
             <div class="ff"><label>Dashboard title</label><input type="text" id="setTitle"
                 placeholder="Alex's Wealth" /></div>
-            <div class="ff"><label>Currency symbol</label><input type="text" id="setCurrency" placeholder="£"
-                maxlength="3" /></div>
+            <div class="ff"><label>Currency</label>
+              <select id="setCurrency">
+                <option value="£">GBP £</option>
+                <option value="$">USD $</option>
+                <option value="€">EUR €</option>
+              </select>
+            </div>
+            <div class="ff"><label>Country / tax region</label>
+              <select id="setCountry">
+                <option value="england">England</option>
+                <option value="scotland">Scotland</option>
+                <option value="wales">Wales</option>
+                <option value="northern-ireland">Northern Ireland</option>
+              </select>
+            </div>
           </div>
           <div class="form-actions">
             <button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
-            <button class="btn btn-ghost" onclick="loadSample()">Load sample data</button>
-            <button class="btn btn-ghost" onclick="loadSampleYoungProfessional()">Young professional sample</button>
-            <button class="btn btn-ghost" onclick="loadSampleRetiredCouple()">Retired couple sample</button>
+            <button class="btn btn-ghost" onclick="loadSample()">Sample Data</button>
             <button class="btn btn-danger" onclick="clearAll()">Clear all data</button>
           </div>
         </div>
         <div class="form-box">
           <h3>Manage people</h3>
-          <div id="personManagement"
-            style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px;">
-          </div>
+          <div id="personManagement" class="accounts-grid" style="margin-bottom:16px;"></div>
           <div class="form-actions person-add-row">
-            <input type="text" id="newPersonName" placeholder="Person name"
-              onkeydown="if(event.key==='Enter') addNewPerson()" />
             <button class="btn btn-secondary" onclick="addNewPerson()">+ Add person</button>
           </div>
         </div>
-      </div>
-
+		<div class="form-box">
+      		  <h3>Request a feature</h3>
+      		  	<div class="form-grid wide">
+      		  	  <div class="ff"><label>Feature title</label><input type="text" id="featureTitle" placeholder="e.g. Bank sync for goals" /></div>
+      		  	  <div class="ff"><label>Priority</label>
+      		  	    <select id="featurePriority">
+      		  	      <option value="Nice to have">Nice to have</option>
+      		  	      <option value="Important">Important</option>
+      		  	      <option value="Blocking">Blocking</option>
+      		  	    </select>
+      		  	  </div>
+      		  	  <div class="ff full-col"><label>Details</label><textarea id="featureDetails" placeholder="What should it do?"></textarea></div>
+      		  	</div>
+      		  	<div class="form-actions">
+      		  	  <button class="btn btn-primary" onclick="addFeatureRequest()">Submit request</button>
+      		  	</div>
+      		  	<div id="featureRequestsList" class="mt-12"></div>
+      		</div>
+      	</div>
     </main>
   </div><!-- /.app -->
 
@@ -1639,6 +1662,20 @@
     </div>
   </div>
 
+  <!-- Confirm dialog -->
+  <div class="modal-overlay hidden" id="confirmModal" onclick="if(event.target===this) closeConfirmModal()">
+    <div class="modal confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+      <h3 id="confirmModalTitle">Confirm</h3>
+      <p id="confirmModalMessage" class="confirm-modal-message"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="confirmModalCancel"
+          onclick="closeConfirmModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmModalConfirm"
+          onclick="confirmModalAction()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <!-- Chart.js -->
@@ -1646,22 +1683,22 @@
 
   <!-- App modules (load order matters - globals must exist before use) -->
   <script src="js/constants.js"></script>
-  <script src="js/state.js"></script>
-  <script src="js/overview.js"></script>
-  <script src="js/investments.js"></script>
-  <script src="js/accounts.js"></script>
+  <script src="js/state.js?v=ui-refine-2"></script>
+  <script src="js/overview.js?v=ui-refine-2"></script>
+  <script src="js/investments.js?v=ui-refine-2"></script>
+  <script src="js/accounts.js?v=ui-refine-2"></script>
   <script src="js/properties.js"></script>
   <script src="js/premium-bonds.js"></script>
-  <script src="js/salary.js"></script>
+  <script src="js/salary.js?v=salary-refine-2"></script>
   <script src="js/bills.js"></script>
   <script src="js/pension.js"></script>
   <script src="js/debts.js"></script>
   <script src="js/goals.js"></script>
   <script src="js/transactions.js"></script>
   <script src="js/stocks.js"></script>
-  <script src="js/tax.js"></script>
+  <script src="js/tax.js?v=ui-refine-2"></script>
   <script src="js/settings.js"></script>
-  <script src="js/nav.js"></script>
+  <script src="js/nav.js?v=mobile-nav-2"></script>
   <script src="js/init.js"></script>
 </body>
 

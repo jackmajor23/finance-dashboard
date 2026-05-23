@@ -12,15 +12,11 @@ function renderOverview() {
   document.getElementById('sidebarTitle').textContent = S.settings.title || 'Financial Tracker';
 
   const H = S.holdings, A = S.accounts;
-  const totInv = H.reduce((s, h) => s + h.invested, 0);
-  const totCur = H.reduce((s, h) => s + h.current, 0);
-  const bankBal = A.filter(a => ['current', 'savings', 'joint'].includes(a.type)).reduce((s, a) => s + a.balance, 0);
-  const creditCardBal = A.filter(a => a.type === 'credit-card').reduce((s, a) => s + a.balance, 0);
-  const pbBal = S.premiumBonds.amount || 0;
-  const debtTot = S.debts.reduce((s, d) => s + (d.remaining || d.total || 0), 0);
-  const netWorth = totCur + bankBal - creditCardBal + pbBal - debtTot;
+  const totals = computeOverviewFinancials();
+  const { totInv, totCur, bankBal, creditCardBal, pbBal, propertyEquity, debtTot, netWorth } = totals;
   const pl = totCur - totInv;
   const isaTot = A.filter(a => a.type.includes('isa')).reduce((s, a) => s + a.balance, 0);
+  const forecast = computeFinancialForecast(totals);
 
   // Snapshot net worth history (once per day)
   const today = now.toISOString().split('T')[0];
@@ -63,7 +59,7 @@ function renderOverview() {
     <div class="stat-card sc-accent clickable-card" data-modal="networth" style="cursor:pointer;">
       <div class="stat-label">Net worth</div>
       <div class="stat-val val">${fmt(netWorth)}</div>
-      <div class="stat-sub val">${H.length + A.length} assets tracked</div>
+      <div class="stat-sub val">${H.length + A.length + (S.properties || []).length} assets tracked</div>
       <div class="card-expand-hint">↗ breakdown</div>
     </div>
     <div class="stat-card ${pl >= 0 ? 'sc-green' : 'sc-red'} clickable-card" data-modal="pl" style="cursor:pointer;">
@@ -78,16 +74,16 @@ function renderOverview() {
       <div class="stat-sub">tax-free wrapper</div>
       <div class="card-expand-hint">↗ details</div>
     </div>
-    <div class="stat-card ${debtTot > 0 ? 'sc-red' : 'sc-amber'} clickable-card" data-modal="debts" style="cursor:pointer;">
-      <div class="stat-label">Total debts</div>
-      <div class="stat-val ${debtTot > 0 ? 'neg' : 'neu'} val">${debtTot > 0 ? '-' + fmt(debtTot) : fmt(0)}</div>
-      <div class="stat-sub">${S.debts.length} obligation${S.debts.length !== 1 ? 's' : ''}</div>
-      <div class="card-expand-hint">↗ breakdown</div>
+    <div class="stat-card sc-blue clickable-card" data-modal="forecast" style="cursor:pointer;">
+      <div class="stat-label">Projected EOY net worth</div>
+      <div class="stat-val val">${fmt(forecast.projectedNetWorth)}</div>
+      <div class="stat-sub val">${fmt(forecast.predictedCashAssets)} predicted cash/assets</div>
+      <div class="card-expand-hint">↗ forecast inputs</div>
     </div>`;
 
   // Attach click handlers for modals
   document.querySelectorAll('.clickable-card').forEach(card => {
-    card.addEventListener('click', () => _openStatModal(card.dataset.modal, { netWorth, totCur, totInv, bankBal, pbBal, debtTot, isaTot, pl }));
+    card.addEventListener('click', () => _openStatModal(card.dataset.modal, { ...totals, isaTot, pl, forecast }));
   });
 
   _renderDonut();
@@ -96,8 +92,58 @@ function renderOverview() {
   _renderGoalRings();
   _renderISAMini();
   _renderAllocationChart();
-  _renderDebtTimeline();
   _renderMonthlyCashFlow();
+}
+
+function computeOverviewFinancials() {
+  const holdings = S.holdings || [];
+  const accounts = S.accounts || [];
+  const totInv = holdings.reduce((s, h) => s + Number(h.invested || 0), 0);
+  const totCur = holdings.reduce((s, h) => s + Number(h.current || 0), 0);
+  const liquidTypes = ['current', 'savings', 'joint', 'cash', 'premium-bonds-acc'];
+  const bankBal = accounts.filter(a => liquidTypes.includes(a.type)).reduce((s, a) => s + Number(a.balance || 0), 0);
+  const creditCardBal = accounts.filter(a => a.type === 'credit-card').reduce((s, a) => s + Math.abs(Number(a.balance || 0)), 0);
+  const pbAccountBal = accounts.filter(a => a.type === 'premium-bonds-acc').reduce((s, a) => s + Number(a.balance || 0), 0);
+  const pbBal = Math.max(0, Number(S.premiumBonds?.amount || 0) - pbAccountBal);
+  const propertyEquity = (S.properties || []).reduce((sum, p) => {
+    if (p.isRented) return sum;
+    const value = Number(p.estValue || p.currentValue || p.purchasePrice || 0);
+    const mortgage = Number(p.mortgageBalance || p.mortgage || p.outstandingMortgage || 0);
+    return sum + Math.max(0, value - mortgage);
+  }, 0);
+  const debtTot = (S.debts || []).reduce((s, d) => s + Number(d.remaining || d.total || 0), 0);
+  return { totInv, totCur, bankBal, creditCardBal, pbBal, propertyEquity, debtTot, netWorth: totCur + bankBal + pbBal + propertyEquity - creditCardBal - debtTot };
+}
+
+function computeFinancialForecast(totals) {
+  const now = new Date();
+  const remainingMonths = Math.max(0, 12 - now.getMonth() - 1);
+  const annualIncome = (S.salaries || []).reduce((sum, sal) => sum + Number(sal.gross || 0) + Number(sal.bonus || 0), 0);
+  const monthlyBills = (S.bills || []).reduce((sum, bill) => {
+    const amount = Number(bill.amount || 0);
+    if (bill.occurrence === 'weekly') return sum + amount * 52 / 12;
+    if (bill.occurrence === 'yearly') return sum + amount / 12;
+    if (bill.occurrence === 'one-off') return sum;
+    return sum + amount;
+  }, 0);
+  const monthlyIncome = annualIncome / 12;
+  const txSavings = (S.transactions || []).reduce((sum, tx) => {
+    const type = String(tx.txtype || '').toLowerCase();
+    const amount = Number(tx.amount || 0);
+    if (type === 'income') return sum + amount;
+    if (type === 'payment' || type === 'withdrawal') return sum - amount;
+    return sum;
+  }, 0);
+  const inferredMonthlySavings = Math.max(0, monthlyIncome - monthlyBills);
+  const avgSavings = txSavings > 0 ? Math.max(txSavings / Math.max(1, Math.min(12, S.transactions.length)), inferredMonthlySavings) : inferredMonthlySavings;
+  const predictedCashAssets = totals.bankBal + totals.pbBal + Math.round(avgSavings * remainingMonths);
+  return {
+    avgSavings,
+    monthlyIncome,
+    monthlyBills,
+    predictedCashAssets,
+    projectedNetWorth: Math.round(totals.netWorth + avgSavings * remainingMonths),
+  };
 }
 
 // ══════════════════════════════════════════════════
@@ -133,6 +179,12 @@ function _openStatModal(type, totals) {
     if (S.premiumBonds.amount) {
       rows.push({ label: 'Premium Bonds', value: S.premiumBonds.amount, color: 'neu' });
     }
+    // Property equity
+    (S.properties || []).filter(p => !p.isRented).forEach(p => {
+      const value = Number(p.estValue || p.currentValue || p.purchasePrice || 0);
+      const mortgage = Number(p.mortgageBalance || p.mortgage || p.outstandingMortgage || 0);
+      if (value) rows.push({ label: `${p.name || p.address || 'Property'} <span style="opacity:.5;font-size:11px;">property equity</span>`, value: Math.max(0, value - mortgage), sub: `value ${fmt(value)}${mortgage ? ` · mortgage ${fmt(mortgage)}` : ''}`, color: 'pos' });
+    });
     // Debts (negative)
     S.debts.forEach(d => {
       const amt = d.remaining || d.total || 0;
@@ -180,6 +232,17 @@ function _openStatModal(type, totals) {
     });
     rows.push({ divider: true });
     rows.push({ label: '<strong>Total Debt</strong>', value: -totals.debtTot, color: 'neg', bold: true, absDisplay: true });
+  }
+
+  else if (type === 'forecast') {
+    title = 'Forecast Inputs';
+    const f = totals.forecast;
+    rows.push({ label: 'Predicted cash/assets value', value: f.predictedCashAssets, color: 'pos' });
+    rows.push({ label: 'Projected end-of-year net worth', value: f.projectedNetWorth, color: f.projectedNetWorth >= 0 ? 'pos' : 'neg' });
+    rows.push({ divider: true });
+    rows.push({ label: 'Average monthly savings run-rate', value: f.avgSavings, color: 'pos' });
+    rows.push({ label: 'Estimated monthly income', value: f.monthlyIncome, color: 'neu' });
+    rows.push({ label: 'Estimated monthly bills', value: -f.monthlyBills, color: 'neg', absDisplay: true });
   }
 
   // Build HTML
@@ -306,12 +369,12 @@ function _renderEventsTicker(now = new Date()) {
     return `<div style="
       display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
       padding:5px 12px;border-radius:20px;
-      background:${urgent ? 'rgba(223,156,55,.08)' : 'rgba(80,70,229,.06)'};
-      border:1px solid ${urgent ? 'rgba(223,156,55,.2)' : 'rgba(80,70,229,.15)'};
+      background:${urgent ? 'rgba(223,156,55,.08)' : 'rgba(3,70,148,.06)'};
+      border:1px solid ${urgent ? 'rgba(223,156,55,.2)' : 'rgba(3,70,148,.15)'},
       font-size:12px;color:var(--text);">
       <span>${ev.emoji}</span>
       <span style="color:var(--muted2);">${ev.label}</span>
-      <span style="font-variation-settings:'wght' 700;color:${urgent ? 'var(--amber)' : '#5046e5'};">
+      <span style="font-variation-settings:'wght' 700;color:${urgent ? 'var(--amber)' : '#034694'};">
         ${ev.days === 0 ? 'today' : ev.days === 1 ? 'tomorrow' : `in ${ev.days}d`}
       </span>
     </div>`;
@@ -412,7 +475,7 @@ function _renderAllocationChart() {
     data: {
       labels: types.map(t => t.charAt(0).toUpperCase() + t.slice(1)),
       datasets: [
-        { label: 'Actual %', data: actual.map(v => +v.toFixed(1)), backgroundColor: 'rgba(80,70,229,.18)', borderColor: '#5046e5', borderWidth: 1.5, borderRadius: 4 },
+        { label: 'Actual %', data: actual.map(v => +v.toFixed(1)), backgroundColor: 'rgba(80,70,229,.18)', borderColor: '#034694', borderWidth: 1.5, borderRadius: 4 },
         ...(hasTargets ? [{ label: 'Target %', data: target, backgroundColor: 'rgba(10,143,92,.1)', borderColor: '#0a8f5c', borderWidth: 1.5, borderRadius: 4, borderDash: [4, 4] }] : [])
       ]
     },
@@ -463,7 +526,7 @@ function _renderDebtTimeline() {
   // Project each debt month-by-month
   const MONTHS = 120; // 10 year cap
   const now = new Date();
-  const COLORS = ['#cc3333', '#b87309', '#5046e5', '#0a8f5c', '#1d6fca'];
+  const COLORS = ['#cc3333', '#b87309', '#034694', '#0a8f5c', '#1d6fca'];
 
   const datasets = debts.map((d, i) => {
     let bal = d.remaining || d.total || 0;
@@ -513,7 +576,7 @@ function _renderDebtTimeline() {
       <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">
         <label style="font-size:12px;color:var(--muted2);">Extra monthly payment:</label>
         <input type="range" id="debtExtraSlider" min="0" max="1000" step="50" value="0" style="flex:1;min-width:120px;">
-        <span id="debtExtraVal" style="font-size:12px;font-variation-settings:'wght' 700;color:#5046e5;min-width:50px;">£0</span>
+        <span id="debtExtraVal" style="font-size:12px;font-variation-settings:'wght' 700;color:#034694;min-width:50px;">£0</span>
       </div>
       <div id="debtExtraSavings" style="font-size:12px;color:var(--muted);margin-top:4px;"></div>`;
 
@@ -640,7 +703,7 @@ function _renderNWChart() {
 
   const labels = hist.map(h => new Date(h.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
   const change = hist.at(-1).value - hist[0].value;
-  const color = change >= 0 ? '#5046e5' : '#cc3333';
+  const color = change >= 0 ? '#034694' : '#cc3333';
 
   const crosshairPlugin = {
     id: 'crosshair',
@@ -651,11 +714,11 @@ function _renderNWChart() {
       const y = tooltip._active[0].element.y;
       ctx.save();
       ctx.beginPath(); ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = 'rgba(80,70,229,0.35)'; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(3,70,148,0.35)'; ctx.lineWidth = 1.5;
       ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
       ctx.beginPath(); ctx.setLineDash([]);
       ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#5046e5'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+      ctx.fillStyle = '#034694'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
       ctx.fill(); ctx.stroke(); ctx.restore();
     }
   };
@@ -668,7 +731,7 @@ function _renderNWChart() {
       datasets: [{
         data: hist.map(h => h.value),
         borderColor: color,
-        backgroundColor: change >= 0 ? 'rgba(80,70,229,.07)' : 'rgba(204,51,51,.07)',
+        backgroundColor: change >= 0 ? 'rgba(3,70,148,.1)' : 'rgba(204,51,51,.07)',
         borderWidth: 2, tension: 0.4, fill: true,
         pointRadius: 0, pointHitRadius: 20,
       }]
@@ -701,7 +764,7 @@ function _renderNWChart() {
 function _renderGoalRings() {
   const el = document.getElementById('goalsRings');
   if (!S.goals.length) { el.innerHTML = '<div class="empty"><div class="ei">◐</div><p>No goals yet.</p></div>'; return; }
-  const COLS = ['#5046e5', '#0a8f5c', '#1d6fca', '#b87309', '#b03070', '#0b7a6e'];
+  const COLS = ['#034694', '#0a8f5c', '#1d6fca', '#b87309', '#b03070', '#0b7a6e'];
   const R = 36, C = 2 * Math.PI * R, SZ = 90;
   el.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:18px;padding:4px 0;">' + S.goals.map((g, i) => {
     const p = clamp(g.saved / g.target, 0, 1), col = COLS[i % COLS.length];

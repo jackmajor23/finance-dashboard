@@ -1,7 +1,23 @@
 // ── Goals ─────────────────────────────────────────────
 // JS: GOALS
 // ═══════════════════════════════════════════════════
-const GOAL_COLS = ['#5046e5', '#0a8f5c', '#1d6fca', '#b87309', '#b03070', '#0b7a6e'];
+const GOAL_COLS = ['#034694'];
+
+/** Quick-add template library for goals */
+const GOAL_TEMPLATES = [
+  { name: 'House Deposit', emoji: '🏠', target: 50000, monthly: 500 },
+  { name: 'Emergency Fund', emoji: '🚨', target: 10000, monthly: 200 },
+  { name: 'New Car', emoji: '🚗', target: 15000, monthly: 300 },
+  { name: 'Vacation', emoji: '✈️', target: 3000, monthly: 250 },
+  { name: 'Wedding', emoji: '💍', target: 20000, monthly: 500 },
+  { name: 'Retirement', emoji: '🏖️', target: 500000, monthly: 1000 },
+  { name: 'Education', emoji: '🎓', target: 10000, monthly: 200 },
+  { name: 'Home Renovation', emoji: '🏠', target: 25000, monthly: 400 },
+  { name: 'Investment Portfolio', emoji: '📈', target: 100000, monthly: 1000 },
+  { name: 'Gaming PC', emoji: '🎮', target: 2000, monthly: 200 },
+  { name: 'Wedding Ring', emoji: '💍', target: 5000, monthly: 200 },
+  { name: 'Holiday Gift Fund', emoji: '🎁', target: 1000, monthly: 100 },
+];
 
 let _goalDragSrc = null;
 
@@ -34,14 +50,48 @@ function _goalSchedule(g) {
   return { expectedSaved, delta, pctTime, status };
 }
 
+// ── Render Goal Templates ─────────────────────────────
+function renderGoalTemplates() {
+  const container = document.getElementById('goalTemplates');
+  if (!container) return;
+  const existingNames = new Set(S.goals.map(g => g.name.toLowerCase()));
+  container.innerHTML = GOAL_TEMPLATES
+    .filter(t => !existingNames.has(t.name.toLowerCase()))
+    .map(t => {
+      const safe = t.name.replace(/'/g, "\\'");
+      return `<button class="btn btn-secondary btn-sm" onclick="applyGoalTemplate('${safe}', ${t.target}, ${t.monthly}, '${t.emoji}')">
+        ${t.emoji} ${t.name}
+      </button>`;
+    }).join('');
+
+  // Populate linked account dropdown
+  const accountSelect = document.getElementById('gLinkedAccount');
+  if (accountSelect) {
+    const currentValue = accountSelect.value;
+    accountSelect.innerHTML = '<option value="">No account linked</option>' +
+      S.accounts.map((a, idx) => `<option value="${idx}">${a.name} (${a.type})</option>`).join('');
+    accountSelect.value = currentValue;
+  }
+}
+
+function applyGoalTemplate(name, target, monthly, emoji) {
+  document.getElementById('gName').value = name;
+  document.getElementById('gTarget').value = target;
+  document.getElementById('gMonthly').value = monthly;
+  document.getElementById('gEmoji').value = emoji;
+  document.getElementById('gName').focus();
+}
+
 // ── Render ─────────────────────────────────────────────
 function renderGoals() {
   const grid = document.getElementById('goalsGrid');
 
   if (!S.goals.length) {
     grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="ei">◐</div><p>No goals yet.</p></div>`;
+    renderGoalTemplates();
     return;
   }
+  renderGoalTemplates();
   grid.innerHTML = S.goals.map((g, i) => {
     const p = clamp(g.saved / g.target, 0, 1);
     const col = GOAL_COLS[i % GOAL_COLS.length];
@@ -59,6 +109,15 @@ function renderGoals() {
       dateLabel = `Target: ${fmtDate(g.date)}${mo != null ? ' · ' + mo + ' mo' : ''}`;
     } else if (g.startDate) {
       dateLabel = `Started: ${fmtDate(g.startDate)}`;
+    }
+
+    // ── Linked account label ───────────────────────────
+    let accountLabel = '';
+    if (g.linkedAccountId != null && S.accounts[g.linkedAccountId]) {
+      const acc = S.accounts[g.linkedAccountId];
+      accountLabel = `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface2);color:var(--muted2);border-radius:999px;padding:2px 8px;font-size:11px;margin-left:6px;">
+        🏦 ${acc.name}
+      </span>`;
     }
 
     // ── Schedule badge ────────────────────────────────
@@ -129,7 +188,7 @@ function renderGoals() {
         <div style="min-width:0;">
           <div class="goal-name">${g.emoji || '◐'} ${g.name}</div>
           <div class="goal-meta flex-row flex-wrap gap-2" style="margin-top:2px;">
-            <span>${dateLabel}</span>${schedBadge}
+            <span>${dateLabel}</span>${schedBadge}${accountLabel}
           </div>
         </div>
         <div class="flex-row gap-4" style="flex-shrink:0;">
@@ -171,13 +230,17 @@ function renderGoals() {
 
       <!-- Contributions timeline -->
       ${contribs.length ? `
-      <button onclick="_tlToggle(${i})" style="all:unset;cursor:pointer;margin-top:10px;" class="flex-row gap-6 text-sm text-muted" style="border-top:1px solid var(--border,#eee);padding-top:8px;width:100%;box-sizing:border-box;">
-        <span id="tl-arr-${i}" style="font-size:10px;transition:transform .2s;">▶</span>
-        ${contribs.length} contribution${contribs.length !== 1 ? 's' : ''}
-        <span class="text-xs" style="opacity:.7;">(${fmt(contribs.reduce((s, c) => s + c.amount, 0))} total)</span>
-      </button>
-      <div id="tl-${i}" style="display:none;margin-top:4px;max-height:200px;overflow-y:auto;">
-        ${tlRows}
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border,#eee);">
+        <button onclick="_tlToggle(${i})" style="all:unset;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-size:13px;color:var(--muted2);transition:color .15s;">
+          <div class="flex-row gap-6">
+            <span id="tl-arr-${i}" style="font-size:10px;transition:transform .2s;">▶</span>
+            <span>${contribs.length} contribution${contribs.length !== 1 ? 's' : ''}</span>
+            <span class="text-xs" style="opacity:.7;">(${fmt(contribs.reduce((s, c) => s + c.amount, 0))} total)</span>
+          </div>
+        </button>
+        <div id="tl-${i}" style="display:none;margin-top:8px;max-height:200px;overflow-y:auto;">
+          ${tlRows}
+        </div>
       </div>`
         : `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border,#eee);font-size:12px;color:var(--muted);">No contributions yet — use ✎ to log one.</div>`}
     </div>`;
@@ -192,6 +255,8 @@ function _tlToggle(i) {
   const open = box.style.display === 'none';
   box.style.display = open ? 'block' : 'none';
   if (arr) arr.style.transform = open ? 'rotate(90deg)' : 'none';
+  const btn = box.previousElementSibling;
+  if (btn) btn.style.color = open ? 'var(--text)' : 'var(--muted2)';
 }
 
 // ── Drag & Drop reordering ─────────────────────────────
@@ -234,25 +299,41 @@ function addGoal() {
   const date = document.getElementById('gDate').value || '';
   const monthly = parseMoney(document.getElementById('gMonthly').value) || 0;
   const emoji = document.getElementById('gEmoji').value || '◐';
+  const linkedAccountId = document.getElementById('gLinkedAccount')?.value || '';
   // gStartDate is optional in HTML — falls back to today so schedule tracking works immediately
   const startDateEl = document.getElementById('gStartDate');
   const startDate = startDateEl && startDateEl.value
     ? startDateEl.value
     : new Date().toISOString().slice(0, 10);
 
-  if (!name || isNaN(target) || target <= 0) { toast('Please fill in a name and target amount.'); return; }
+  if (!validateRequiredFields([
+    'gName',
+    { id: 'gTarget', type: 'money' },
+  ], 'Please fill in a name and target amount.')) return;
 
   const contributions = saved > 0
     ? [{ date: new Date().toLocaleDateString(), amount: saved, note: 'Initial amount' }]
     : [];
 
-  S.goals.push({ name, target, saved, date, startDate, monthly, emoji, contributions });
+  S.goals.push({
+    name,
+    target,
+    saved,
+    date,
+    startDate,
+    monthly,
+    emoji,
+    contributions,
+    linkedAccountId: linkedAccountId ? parseInt(linkedAccountId) : null
+  });
   save(); toast(`Added: ${name}`);
-  ['gName', 'gTarget', 'gSaved', 'gDate', 'gMonthly', 'gStartDate'].forEach(id => {
+  ['gName', 'gTarget', 'gSaved', 'gDate', 'gMonthly', 'gStartDate', 'gLinkedAccount'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   const emojiEl = document.getElementById('gEmoji'); if (emojiEl) emojiEl.selectedIndex = 0;
   renderGoals();
+  renderGoalTemplates();
+  renderAccounts(); // Refresh accounts to update any linked goal displays
 }
 
 function deleteGoal(i) {
@@ -261,6 +342,7 @@ function deleteGoal(i) {
   updateUndoButton('goalsUndoBtn', window._lastDeletedGoal);
   save();
   renderGoals();
+  renderGoalTemplates();
   toast('Removed');
 }
 
@@ -272,6 +354,7 @@ function undoLastGoalDelete() {
   updateUndoButton('goalsUndoBtn', null);
   save();
   renderGoals();
+  renderGoalTemplates();
   toast('Restored');
 }
 
@@ -283,8 +366,8 @@ function openEditGoal(i) {
   if (!modal) {
     modal = document.createElement('div');
     modal.id = '_goalEditModal';
+    modal.className = 'modal-overlay';
     modal.setAttribute('onclick', 'if(event.target===this)closeEditGoal()');
-    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);' + 'display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
     document.body.appendChild(modal);
   }
 
@@ -305,61 +388,76 @@ function openEditGoal(i) {
     </div>`;
   }
 
-  modal.innerHTML = `
-    <div style="background:var(--card,#fff);border-radius:18px;padding:24px;width:min(440px,100%);display:flex;flex-direction:column;gap:14px;box-shadow:0 12px 40px rgba(0,0,0,.22);max-height:92vh;overflow-y:auto;">
+  // Build account options for linking
+  const accountOptions = S.accounts.map((a, idx) =>
+    `<option value="${idx}" ${g.linkedAccountId === idx ? 'selected' : ''}>${a.name} (${a.type})</option>`
+  ).join('');
 
+  modal.innerHTML = `
+    <div class="modal">
       <div class="flex-row-between">
-        <h3 style="margin:0;font-size:17px;">${g.emoji || '◐'} ${g.name}</h3>
-        <button onclick="closeEditGoal()" style="all:unset;cursor:pointer;font-size:22px;color:var(--muted);line-height:1;">✕</button>
+        <h3>${g.emoji || '◐'} ${g.name}</h3>
+        <button onclick="closeEditGoal()" class="icon-btn">✕</button>
       </div>
 
       ${schedNote}
 
-      <label class="text-muted" style="font-size:13px;" class="flex-col gap-4">Name
-        <input id="_eg-name" class="input" value="${g.name}">
-      </label>
-
-      <label class="text-muted" style="font-size:13px;" class="flex-col gap-4">Target Amount
-        <input id="_eg-target" class="input" type="number" min="0" value="${g.target}">
-      </label>
-
-      <!-- Start + End dates side by side -->
-      <div class="grid-2col-sm">
-        <label class="text-muted" style="font-size:13px;" class="flex-col gap-4">
-          Start Date
-          <input id="_eg-start" class="input" type="date" value="${g.startDate || ''}">
-        </label>
-        <label class="text-muted" style="font-size:13px;" class="flex-col gap-4">
-          Target Date <span style="font-style:italic;font-weight:400;">(optional)</span>
-          <input id="_eg-date" class="input" type="date" value="${g.date || ''}">
-        </label>
+      <div class="form-grid">
+        <div class="ff">
+          <label>Name</label>
+          <input id="_eg-name" class="form-input" value="${g.name}">
+        </div>
+        <div class="ff">
+          <label>Target Amount</label>
+          <input id="_eg-target" class="form-input" type="number" min="0" value="${g.target}">
+        </div>
+        <div class="ff">
+          <label>Start Date</label>
+          <input id="_eg-start" class="form-input" type="date" value="${g.startDate || ''}">
+        </div>
+        <div class="ff">
+          <label>Target Date <span style="font-style:italic;font-weight:400;">(optional)</span></label>
+          <input id="_eg-date" class="form-input" type="date" value="${g.date || ''}">
+        </div>
+        <div class="ff">
+          <label>Linked Account</label>
+          <select id="_eg-account" class="form-input">
+            <option value="">No account linked</option>
+            ${accountOptions}
+          </select>
+        </div>
+        <div class="ff">
+          <label>Monthly Savings (reference)</label>
+          <input id="_eg-monthly" class="form-input" type="number" min="0" value="${g.monthly || 0}">
+        </div>
       </div>
 
-      <fieldset style="border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:12px 14px;margin:0;">
-        <legend class="text-sm text-muted" style="padding:0 4px;">Log a Contribution</legend>
-        <div class="flex-row gap-8">
-          <input id="_eg-add"  class="input" type="number" min="0" placeholder="Amount" style="flex:1;">
-          <input id="_eg-note" class="input" placeholder="Note (optional)" style="flex:1.4;">
+      <div class="modal-section">
+        <div class="modal-section-title">Log a Contribution</div>
+        <div class="form-grid">
+          <div class="ff">
+            <label>Amount</label>
+            <input id="_eg-add" class="form-input" type="number" min="0" placeholder="Amount">
+          </div>
+          <div class="ff">
+            <label>Note (optional)</label>
+            <input id="_eg-note" class="form-input" placeholder="Note">
+          </div>
         </div>
-      </fieldset>
+      </div>
 
-      <label class="text-muted" style="font-size:13px;" class="flex-col gap-4">Monthly Savings (reference)
-        <input id="_eg-monthly" class="input" type="number" min="0" value="${g.monthly || 0}">
-      </label>
-
-      <button onclick="saveEditGoal(${i})"
-        style="background:${col};color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;cursor:pointer;font-weight:700;margin-top:2px;">
-        Save Changes
-      </button>
+      <div class="modal-actions">
+        <button onclick="saveEditGoal(${i})" class="btn btn-primary">Save Changes</button>
+      </div>
     </div>`;
 
-  modal.style.display = 'flex';
+  modal.classList.remove('hidden');
   setTimeout(() => { const el = document.getElementById('_eg-add'); if (el) el.focus(); }, 50);
 }
 
 function closeEditGoal() {
   const modal = document.getElementById('_goalEditModal');
-  if (modal) modal.style.display = 'none';
+  if (modal) modal.classList.add('hidden');
 }
 
 function saveEditGoal(i) {
@@ -371,10 +469,15 @@ function saveEditGoal(i) {
   const monthly = parseMoney(document.getElementById('_eg-monthly').value) || 0;
   const date = document.getElementById('_eg-date').value || '';
   const startDate = document.getElementById('_eg-start').value || '';
+  const linkedAccountId = document.getElementById('_eg-account').value;
 
-  if (!name || isNaN(target) || target <= 0) { toast('Name and a valid target are required.'); return; }
+  if (!validateRequiredFields([
+    '_eg-name',
+    { id: '_eg-target', type: 'money' },
+  ], 'Name and a valid target are required.')) return;
 
   g.name = name; g.target = target; g.monthly = monthly; g.date = date; g.startDate = startDate;
+  g.linkedAccountId = linkedAccountId ? parseInt(linkedAccountId) : null;
 
   if (addAmt > 0) {
     g.saved = (g.saved || 0) + addAmt;
@@ -386,4 +489,6 @@ function saveEditGoal(i) {
   }
 
   save(); closeEditGoal(); renderGoals();
+  renderGoalTemplates();
+  renderAccounts(); // Refresh accounts to update any linked goal displays
 }

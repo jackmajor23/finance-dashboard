@@ -198,16 +198,49 @@ function renderTax() {
   const netGain = realisedGains - realisedLosses;
   const CGT_ALLOWANCE = 3000;
   const cgtLiable = Math.max(0, netGain - CGT_ALLOWANCE);
+  const cgtUsed = Math.max(0, netGain);
+  const cgtRemaining = Math.max(0, CGT_ALLOWANCE - cgtUsed);
+  const cgtUtil = Math.min(100, (cgtUsed / CGT_ALLOWANCE) * 100);
   const pbWins = S.premiumBonds.wins.reduce((s, w) => s + w.amount, 0);
   const sal = S.salaries.length ? S.salaries[S.salaries.length - 1] : null;
 
+  // Calculate current tax year and days left
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const taxYearStart = new Date(currentYear, 3, 6); // April 6th
+  const taxYearEnd = new Date(currentYear + 1, 3, 5); // April 5th next year
+
+  let taxYearStr, daysLeft;
+  if (now >= taxYearStart && now <= taxYearEnd) {
+    taxYearStr = `${currentYear}/${(currentYear + 1).toString().slice(-2)}`;
+    const diffTime = taxYearEnd - now;
+    daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  } else {
+    taxYearStr = `${currentYear - 1}/${currentYear.toString().slice(-2)}`;
+    const prevTaxYearEnd = new Date(currentYear, 3, 5);
+    const diffTime = prevTaxYearEnd - now;
+    daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
   document.getElementById('taxGrid').innerHTML = `
     <div class="tax-card"><div class="stat-label">Realised P&amp;L (total)</div><div class="stat-val ${cls(netGain)} val">${fmtS(netGain)}</div><div class="stat-sub val">Gains: ${fmt(realisedGains)} · Losses: ${fmt(realisedLosses)}</div></div>
-    <div class="tax-card"><div class="stat-label">CGT allowance 2025/26</div><div class="stat-val val">${fmt(CGT_ALLOWANCE)}</div><div class="stat-sub ${cgtLiable > 0 ? 'neg' : 'pos'}">${cgtLiable > 0 ? fmt(cgtLiable) + ' potentially liable' : 'Within allowance ✓'}</div></div>
-    <div class="tax-card"><div class="stat-label">ISA allowance left</div><div class="stat-val pos val">${fmt(isaLeft)}</div><div class="stat-sub">of <span class="val">${fmt(isaLimit)}</span> · <span class="val">${fmt(isaUsed)}</span> used</div></div>
+    <div class="tax-card"><div class="stat-label">CGT allowance ${taxYearStr} <span class="info-icon" data-tooltip="Capital Gains Tax: tax on profit from selling assets such as investments or property.">i</span></div><div class="stat-val val">${fmt(CGT_ALLOWANCE)}</div><div class="stat-sub ${cgtLiable > 0 ? 'neg' : 'pos'}">${fmt(cgtRemaining)} remaining · ${cgtLiable > 0 ? fmt(cgtLiable) + ' liable' : 'Within allowance'}</div><div class="allowance-gauge"><span style="width:${cgtUtil.toFixed(1)}%;"></span></div></div>
+    <div class="tax-card"><div class="stat-label">ISA allowance left</div><div class="stat-val val" style="color:${isaLeft === 0 ? '#212433' : 'var(--green)'};">${fmt(isaLeft)}</div><div class="stat-sub">of <span class="val">${fmt(isaLimit)}</span> · <span class="val">${fmt(isaUsed)}</span> used</div></div>
     <div class="tax-card"><div class="stat-label">Premium bond wins</div><div class="stat-val pos val">${fmt(pbWins)}</div><div class="stat-sub">Tax-free ✓</div></div>
     <div class="tax-card"><div class="stat-label">Unrealised P&amp;L</div><div class="stat-val ${cls(S.holdings.reduce((s, h) => s + (h.current - h.invested), 0))} val">${fmtS(S.holdings.reduce((s, h) => s + (h.current - h.invested), 0))}</div><div class="stat-sub">Not yet taxable</div></div>
     <div class="tax-card"><div class="stat-label">Gross salary</div><div class="stat-val val">${sal ? fmt(sal.gross) : '—'}</div><div class="stat-sub">Personal allowance: ${fmt(UK_TAX.personalAllowance)}</div></div>`;
+
+  // Update tax year display in header
+  const taxYearDisplay = document.getElementById('taxYearDisplay');
+  const taxYearCountdown = document.getElementById('taxYearCountdown');
+  if (taxYearDisplay) taxYearDisplay.textContent = taxYearStr;
+  if (taxYearCountdown) {
+    if (daysLeft > 0) {
+      taxYearCountdown.textContent = `${daysLeft} days left`;
+    } else {
+      taxYearCountdown.textContent = 'Tax year ended';
+    }
+  }
 
   const el = document.getElementById('taxIsaDetail');
   const relevant = S.accounts.filter(a => ISA_INFO[a.type]);

@@ -17,7 +17,7 @@ let txDateFrom = '';
 let txDateTo = '';
 let txAmountMin = null;
 let txAmountMax = null;
-let showGeneratedTxs = true; // Show transactions generated from bills, salaries, etc.
+let txSourceFilter = 'all'; // 'all' | 'manual' | 'automatic'
 
 // ── Core helpers ─────────────────────────────────────
 function _addTx({ txtype, date, desc, amount, pnl, notes, source, sourceId }) {
@@ -88,10 +88,10 @@ function _isLegacyAggregateTx(tx) {
     desc.startsWith('salary:') &&
     (notes.includes('net/mo') || notes.includes('person'))
   ) || (
-    tx.txtype === 'payment' &&
-    desc.startsWith('debt:') &&
-    (notes.includes('/month') || notes.includes('apr'))
-  );
+      tx.txtype === 'payment' &&
+      desc.startsWith('debt:') &&
+      (notes.includes('/month') || notes.includes('apr'))
+    );
 }
 
 // ── Generate all transactions from across the site ─────
@@ -108,7 +108,7 @@ function generateAllTransactions() {
 
   // 1. Manual transactions
   S.transactions.forEach(tx => {
-    if (showGeneratedTxs && _isLegacyAggregateTx(tx)) return;
+    if (_isLegacyAggregateTx(tx)) return;
     allTxs.push({ ...tx, source: 'manual' });
   });
 
@@ -524,6 +524,16 @@ function _inDateRange(t) {
       cutoff.setDate(cutoff.getDate() - 29);
       return d >= cutoff;
     }
+    case '3m': {
+      const cutoff = new Date(startOfToday);
+      cutoff.setMonth(cutoff.getMonth() - 3);
+      return d >= cutoff;
+    }
+    case '1y': {
+      const cutoff = new Date(startOfToday);
+      cutoff.setFullYear(cutoff.getFullYear() - 1);
+      return d >= cutoff;
+    }
     case 'month': {
       return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
     }
@@ -541,14 +551,21 @@ function renderTransactions() {
   const q = (document.getElementById('txSearch') || {}).value || '';
 
   // Get all transactions (manual + generated)
-  let T = showGeneratedTxs ? generateAllTransactions() : S.transactions.map(tx => ({ ...tx, source: 'manual' }));
+  let T = generateAllTransactions();
 
-  // 1. Type filter (multi)
+  // 1. Source filter (all / manual / automatic)
+  if (txSourceFilter === 'manual') {
+    T = T.filter(t => t.source === 'manual');
+  } else if (txSourceFilter === 'automatic') {
+    T = T.filter(t => t.source !== 'manual');
+  }
+
+  // 2. Type filter (multi)
   if (!txActiveTypes.has('all')) {
     T = T.filter(t => txActiveTypes.has(t.txtype));
   }
 
-  // 2. Text search
+  // 3. Text search
   if (q) {
     const ql = q.toLowerCase();
     T = T.filter(t =>
@@ -557,23 +574,32 @@ function renderTransactions() {
     );
   }
 
-  // 3. Date range
+  // 4. Date range
   T = T.filter(_inDateRange);
 
-  // 4. Amount range (operates on absolute value)
+  // 5. Amount range (operates on absolute value)
   if (txAmountMin !== null) T = T.filter(t => Math.abs(t.amount) >= txAmountMin);
   if (txAmountMax !== null) T = T.filter(t => Math.abs(t.amount) <= txAmountMax);
 
-  // 5. Sort
+  // 6. Sort
   T = _applySort(T);
 
-  // 6. Result count
-  const totalCount = showGeneratedTxs ? generateAllTransactions().length : S.transactions.length;
+  // 7. Result count
+  const allTxs = generateAllTransactions();
+  let totalCount;
+  if (txSourceFilter === 'manual') {
+    totalCount = allTxs.filter(t => t.source === 'manual').length;
+  } else if (txSourceFilter === 'automatic') {
+    totalCount = allTxs.filter(t => t.source !== 'manual').length;
+  } else {
+    totalCount = allTxs.length;
+  }
   const filteredCount = T.length;
   const countEl = document.getElementById('txResultCount');
   if (countEl) {
     const isFiltered = filteredCount !== totalCount;
-    const sourceLabel = showGeneratedTxs ? 'all payments' : 'manual transactions';
+    const sourceLabel = txSourceFilter === 'manual' ? 'manual transactions' :
+      txSourceFilter === 'automatic' ? 'automatic transactions' : 'all payments';
     countEl.textContent = isFiltered
       ? `Showing ${filteredCount} of ${totalCount} ${sourceLabel}`
       : `${totalCount} ${sourceLabel}`;
@@ -623,7 +649,15 @@ function renderTransactions() {
  */
 function _getFilteredTx() {
   const q = (document.getElementById('txSearch') || {}).value || '';
-  let T = showGeneratedTxs ? generateAllTransactions() : S.transactions.map(tx => ({ ...tx, source: 'manual' }));
+  let T = generateAllTransactions();
+
+  // Source filter (all / manual / automatic)
+  if (txSourceFilter === 'manual') {
+    T = T.filter(t => t.source === 'manual');
+  } else if (txSourceFilter === 'automatic') {
+    T = T.filter(t => t.source !== 'manual');
+  }
+
   if (!txActiveTypes.has('all')) T = T.filter(t => txActiveTypes.has(t.txtype));
   if (q) {
     const ql = q.toLowerCase();
@@ -640,14 +674,15 @@ function exportTxCSV() {
   const T = _getFilteredTx();
   if (!T.length) { toast('Nothing to export'); return; }
 
-  const headers = ['Date', 'Type', 'Description', 'Amount', 'P&L', 'Notes'];
+  const headers = ['Date', 'Type', 'Description', 'Amount', 'P&L', 'Notes', 'Source'];
   const rows = T.map(t => [
     t.date,
     t.txtype,
     _csvEsc(t.desc || ''),
     t.amount,
     t.pnl != null ? t.pnl : '',
-    _csvEsc(t.notes || '')
+    _csvEsc(t.notes || ''),
+    t.source || 'manual'
   ]);
 
   const csv = [headers, ...rows].map(r => r.join(',')).join('\r\n');
@@ -745,13 +780,22 @@ function updateTxUndoButton() {
   updateUndoButton('txUndoBtn', window._lastDeletedTx);
 }
 
-// ── Toggle generated transactions ─────────────────────
+// ── Toggle source filter (All / Manual / Automatic) ─────────────────────
 function toggleGeneratedTxs() {
-  showGeneratedTxs = !showGeneratedTxs;
+  // Cycle through: all -> manual -> automatic -> all
+  const states = ['all', 'manual', 'automatic'];
+  const currentIndex = states.indexOf(txSourceFilter);
+  txSourceFilter = states[(currentIndex + 1) % states.length];
+
   const btn = document.getElementById('toggleGeneratedTxs');
   if (btn) {
-    btn.classList.toggle('active', showGeneratedTxs);
-    btn.textContent = showGeneratedTxs ? '🔄 All payments' : '📝 Manual only';
+    const labels = {
+      'all': '💳 All payments',
+      'manual': '📝 Manual only',
+      'automatic': '⚙ Automatic only'
+    };
+    btn.textContent = labels[txSourceFilter];
+    btn.classList.toggle('active', txSourceFilter === 'all');
   }
   renderTransactions();
 }

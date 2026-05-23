@@ -206,7 +206,7 @@ function _renderNWChart() {
   const labels = hist.map(h => new Date(h.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
   nwChart = new Chart(document.getElementById('nwChart'), {
     type: 'line',
-    data: { labels, datasets: [{ data: hist.map(h => h.value), borderColor: '#5046e5', backgroundColor: 'rgba(80,70,229,.07)', borderWidth: 2, pointRadius: 0, tension: .4, fill: true }] },
+    data: { labels, datasets: [{ data: hist.map(h => h.value), borderColor: '#034694', backgroundColor: 'rgba(3,70,148,.1)', borderWidth: 2, pointRadius: 0, tension: .4, fill: true }] },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw)}` } } },

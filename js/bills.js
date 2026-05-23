@@ -1,11 +1,10 @@
 // ══════════════════════════════════════════════════
-// BILLS MODULE
+// BILLS MODULE — Enhanced Edition
 // ══════════════════════════════════════════════════
 
 // ── Constants ──────────────────────────────────────
 
 const BILL_CATEGORIES = ['Utilities', 'Subscriptions', 'Insurance', 'Transport', 'Other'];
-const BILL_TABS = ['All', ...BILL_CATEGORIES];
 
 /** Monthly multiplier for each occurrence type */
 const MONTHLY_FACTOR = {
@@ -14,7 +13,7 @@ const MONTHLY_FACTOR = {
   monthly: 1,
   quarterly: 4 / 12,
   annually: 1 / 12,
-  'one-off': 0,   // excluded from recurring totals
+  'one-off': 0,
 };
 
 /** Short frequency labels shown after the price on each card */
@@ -29,7 +28,6 @@ const FREQ_LABEL = {
 
 /** Ordered list of [keyword, emoji] — first match wins */
 const EMOJI_KEYWORDS = [
-  // Utilities — specifics first
   ['council tax', '🏛️'], ['council', '🏛️'],
   ['tv licence', '📺'], ['tv license', '📺'], ['television', '📺'],
   ['broadband', '📡'], ['internet', '📡'], ['wifi', '📡'],
@@ -38,7 +36,6 @@ const EMOJI_KEYWORDS = [
   ['water', '💧'],
   ['landline', '☎️'],
   ['mobile', '📱'], ['phone', '📱'],
-  // Subscriptions
   ['netflix', '🎬'], ['disney', '✨'], ['hbo', '🎬'],
   ['amazon prime', '📦'], ['prime video', '📦'], ['amazon', '📦'],
   ['youtube premium', '▶️'], ['youtube', '▶️'],
@@ -46,7 +43,6 @@ const EMOJI_KEYWORDS = [
   ['icloud', '☁️'], ['google one', '☁️'], ['dropbox', '☁️'], ['cloud', '☁️'],
   ['adobe', '🎨'], ['microsoft 365', '💻'], ['office 365', '💻'],
   ['gym', '💪'], ['fitness', '💪'],
-  // Insurance
   ['car insurance', '🚗'], ['car tax', '🚗'],
   ['home insurance', '🏠'],
   ['life insurance', '❤️'],
@@ -54,122 +50,40 @@ const EMOJI_KEYWORDS = [
   ['pet insurance', '🐾'],
   ['travel insurance', '✈️'],
   ['insurance', '🛡️'],
-  // Transport
   ['fuel', '⛽'], ['petrol', '⛽'], ['diesel', '⛽'],
   ['train', '🚆'], ['rail', '🚆'],
   ['bus pass', '🚌'], ['bus', '🚌'],
   ['parking', '🅿️'], ['congestion', '🏙️'],
   ['ulez', '🏙️'],
   ['car', '🚗'],
-  // Other
   ['mortgage', '🏦'], ['rent', '🏠'],
   ['childcare', '👶'], ['nursery', '👶'],
   ['school', '🎓'], ['education', '🎓'],
   ['loan', '💰'], ['credit', '💳'],
 ];
 
-/** Emoji fallbacks by category */
 const CAT_EMOJI = {
-  Utilities: '🔌',
-  Subscriptions: '💳',
-  Insurance: '🛡️',
-  Transport: '🚌',
-  Other: '📋',
+  Utilities: '🔌', Subscriptions: '💳', Insurance: '🛡️', Transport: '🚌', Other: '📋',
 };
 
-/** Map legacy / sample `S.bills` rows to canonical occurrence (matches `billOccurrence` select). */
-function billOccurrenceOf(b) {
-  if (b.occurrence) return b.occurrence;
-  const rec = String(b.recurring || '').toLowerCase();
-  if (rec === 'never') return 'one-off';
-  const fr = String(b.frequency || '').toLowerCase();
-  const map = {
-    weekly: 'weekly',
-    fortnightly: 'fortnightly',
-    monthly: 'monthly',
-    quarterly: 'quarterly',
-    yearly: 'annually',
-    annually: 'annually',
-  };
-  return map[fr] || 'monthly';
-}
-
-/** Normalise category for tabs, templates, and emoji fallbacks. */
-function billCategoryDisplay(b) {
-  const c0 = b.category;
-  if (c0 && BILL_CATEGORIES.includes(c0)) return c0;
-  const c = String(c0 || '').toLowerCase();
-  if (c === 'utilities' || c === 'housing' || c === 'taxes') return 'Utilities';
-  if (c === 'subscription' || c === 'subscriptions') return 'Subscriptions';
-  if (c === 'insurance') return 'Insurance';
-  if (c === 'transport') return 'Transport';
-  return 'Other';
-}
-
-function billPaymentDayFrom(b) {
-  if (b.paymentDay != null && b.paymentDay !== '') {
-    return Math.min(Math.max(1, parseInt(b.paymentDay, 10) || 1), 28);
-  }
-  if (b.nextPaymentDate) {
-    const d = new Date(b.nextPaymentDate);
-    if (!isNaN(+d)) return Math.min(d.getDate(), 28);
-  }
-  return 1;
-}
-
-/** Quick-add template library */
-const BILL_TEMPLATES = [
-  // Utilities
-  { name: 'Electricity', category: 'Utilities', emoji: '⚡', occurrence: 'monthly' },
-  { name: 'Gas', category: 'Utilities', emoji: '🔥', occurrence: 'monthly' },
-  { name: 'Water', category: 'Utilities', emoji: '💧', occurrence: 'monthly' },
-  { name: 'Internet', category: 'Utilities', emoji: '🛜', occurrence: 'monthly' },
-  { name: 'Mobile Phone', category: 'Utilities', emoji: '📱', occurrence: 'monthly' },
-  { name: 'Council Tax', category: 'Utilities', emoji: '🏛️', occurrence: 'monthly' },
-  { name: 'TV Licence', category: 'Utilities', emoji: '📺', occurrence: 'annually' },
-  // Subscriptions
-  { name: 'Spotify', category: 'Subscriptions', emoji: '🎵', occurrence: 'monthly' },
-  { name: 'Apple Music', category: 'Subscriptions', emoji: '🎵', occurrence: 'monthly' },
-  { name: 'Sky', category: 'Subscriptions', emoji: '🎬', occurrence: 'monthly' },
-  { name: 'Netflix', category: 'Subscriptions', emoji: '🎬', occurrence: 'monthly' },
-  { name: 'Disney+', category: 'Subscriptions', emoji: '🎬', occurrence: 'monthly' },
-  { name: 'Apple TV+', category: 'Subscriptions', emoji: '🎬', occurrence: 'monthly' },
-  { name: 'Amazon Prime', category: 'Subscriptions', emoji: '📦', occurrence: 'annually' },
-  { name: 'YouTube Premium', category: 'Subscriptions', emoji: '▶️', occurrence: 'monthly' },
-  { name: 'iCloud', category: 'Subscriptions', emoji: '☁️', occurrence: 'monthly' },
-  { name: 'Google One', category: 'Subscriptions', emoji: '☁️', occurrence: 'monthly' },
-  { name: 'Adobe Creative Cloud', category: 'Subscriptions', emoji: '🎨', occurrence: 'monthly' },
-  { name: 'Gym Membership', category: 'Subscriptions', emoji: '💪', occurrence: 'monthly' },
-  // Insurance
-  { name: 'Car Insurance', category: 'Insurance', emoji: '🚗', occurrence: 'annually' },
-  { name: 'Home Insurance', category: 'Insurance', emoji: '🏠', occurrence: 'annually' },
-  { name: 'Life Insurance', category: 'Insurance', emoji: '❤️', occurrence: 'monthly' },
-  { name: 'Pet Insurance', category: 'Insurance', emoji: '🐾', occurrence: 'monthly' },
-  { name: 'Health Insurance', category: 'Insurance', emoji: '🏥', occurrence: 'monthly' },
-  { name: 'Travel Insurance', category: 'Insurance', emoji: '✈️', occurrence: 'annually' },
-  // Transport
-  { name: 'Car Tax', category: 'Transport', emoji: '🚗', occurrence: 'annually' },
-  { name: 'Train Season Ticket', category: 'Transport', emoji: '🚆', occurrence: 'annually' },
-  { name: 'Bus Pass', category: 'Transport', emoji: '🚌', occurrence: 'monthly' },
-  { name: 'Parking Permit', category: 'Transport', emoji: '🅿️', occurrence: 'annually' },
-  // Other
-  { name: 'Childcare', category: 'Other', emoji: '👶', occurrence: 'monthly' },
-  { name: 'School Fees', category: 'Other', emoji: '🎓', occurrence: 'monthly' },
-];
-
-/** Curated emoji grid for the picker (5 rows × 14 cols) */
-const EMOJI_GRID = [
-  '⚡', '🔥', '💧', '📡', '📺', '📱', '☎️', '🏛️', '🔌', '💡', '🌡️', '🚰', '🛁', '🪟',
-  '🎬', '🎵', '📦', '✨', '▶️', '☁️', '🎮', '📚', '🎯', '🎸', '🎤', '🎧', '🎨', '🖼️',
-  '🛡️', '❤️', '🏥', '🦷', '🐾', '🏠', '🚗', '🚆', '🚌', '⛽', '✈️', '🅿️', '🏙️', '🚲',
-  '💳', '💰', '💸', '🏦', '💼', '🧾', '📊', '📈', '🔑', '🗝️', '🏢', '🏗️', '🧹', '⚙️',
-  '👶', '🎓', '🛒', '🍔', '☕', '🎪', '⚽', '🏋️', '🌍', '🐶', '🐱', '🪴', '💊', '🧴',
-];
+// ── Full emoji library organised by section ──────────
+const FULL_EMOJI_LIBRARY = {
+  'Home & Utilities': ['🏠', '🏡', '🏢', '🏗️', '🏛️', '💧', '⚡', '🔥', '🌡️', '🚰', '📡', '📺', '☎️', '📱', '💡', '🔌', '🛁', '🪟', '🚪', '🧹', '🪣'],
+  'Finance & Money': ['💰', '💳', '💸', '🏦', '💼', '🧾', '📊', '📈', '📉', '🔑', '🗝️', '💎', '🪙', '💲', '🏧', '📋', '⚖️'],
+  'Subscriptions': ['🎬', '🎵', '📦', '✨', '▶️', '☁️', '🎮', '📚', '🎯', '🎸', '🎤', '🎧', '🎨', '🖼️', '🎭', '📰', '📡'],
+  'Insurance': ['🛡️', '❤️', '🏥', '🦷', '🐾', '🏠', '🚗', '🚆', '🚌', '⛽', '✈️', '🅿️', '⚓', '🏙️', '🔒', '☂️'],
+  'Transport': ['🚗', '🚕', '🚌', '🚆', '🚁', '⛽', '🛵', '🚲', '🛴', '🚢', '✈️', '🚀', '🏍️', '🚐', '🚎'],
+  'Food & Shopping': ['🛒', '🍔', '☕', '🥗', '🍕', '🥐', '🧃', '🍱', '🛍️', '🏪', '🧺', '🥦', '🍎', '🍷', '🧁'],
+  'Health & Fitness': ['💊', '🏋️', '🧘', '🏃', '🩺', '🧴', '💉', '🩹', '🧬', '❤️‍🩹', '🫀', '🧠', '👁️', '🦷', '💆'],
+  'Family & Kids': ['👶', '🎓', '🧒', '🧑‍🤝‍🧑', '👨‍👩‍👧‍👦', '🍼', '🧸', '🎪', '🏫', '📝', '🖍️', '🎒', '🏅', '🎠'],
+  'Entertainment': ['🎮', '🎲', '🎬', '🎪', '🎠', '🎡', '🎢', '🎭', '🎟️', '🎸', '🎺', '🥁', '🎻', '🎷'],
+  'Nature & Pets': ['🐶', '🐱', '🐠', '🌍', '🌿', '🌺', '🌊', '🦋', '🐾', '🌲', '☀️', '🌙', '⭐', '🌈'],
+};
 
 // ── Module state ────────────────────────────────────
 let billsActiveTab = 'All';
-let editingBillIdx = null;
-let billEmojiTarget = null; // 'add' | 'edit'
+let addBillFormOpen = false;
+let _emojiPickerTarget = null; // 'add' | 'edit'
 
 // ── Utility helpers ─────────────────────────────────
 
@@ -182,680 +96,817 @@ function autoEmoji(name, category) {
 }
 
 function ordinal(n) {
-  const v = n % 100;
   const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
 const WEEK_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'];
-
-function fmtOccurrence(bill) {
-  const o = billOccurrenceOf(bill);
-  const day = billPaymentDayFrom(bill);
-  if (o === 'one-off') return 'One-off';
-  if (o === 'weekly') return `Weekly · ${WEEK_DAYS[bill.paymentDayOfWeek || 0]}s`;
-  if (o === 'fortnightly') return 'Fortnightly';
-  if (o === 'monthly') return `Monthly · ${ordinal(day)}`;
-  if (o === 'quarterly') return `Quarterly · ${ordinal(day)}`;
-  if (o === 'annually') return `Annually · ${MONTH_NAMES[bill.paymentMonth || 0]} ${ordinal(day)}`;
-  return o;
-}
-
-/** Convert a bill's stated amount to its monthly equivalent */
-function toMonthlyAmount(bill) {
-  const o = billOccurrenceOf(bill);
-  const factor = MONTHLY_FACTOR[o] ?? 1;
-  return bill.amount * factor;
-}
-
-/** Total amount of bills whose next payment falls in the current calendar month */
-function getDueThisMonth() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  end.setHours(23, 59, 59);
-  return S.bills.reduce((sum, b) => {
-    const next = getNextPaymentDate(b);
-    return (next >= start && next <= end) ? sum + b.amount : sum;
-  }, 0);
-}
-
-/** Bills (with their next date) due within the next N days inclusive of today */
-function getBillsDueSoon(days = 7) {
-  const now = new Date(); now.setHours(0, 0, 0, 0);
-  const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() + days);
-  return S.bills
-    .map(b => ({ bill: b, next: getNextPaymentDate(b) }))
-    .filter(({ next }) => next >= now && next <= cutoff)
-    .sort((a, b) => a.next - b.next);
-}
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 function getNextPaymentDate(bill) {
   const now = new Date(); now.setHours(0, 0, 0, 0);
-  const o = billOccurrenceOf(bill);
+  const o = bill.occurrence || 'monthly';
 
   if (o === 'one-off') {
-    const raw = bill.paymentDate || bill.nextPaymentDate;
-    return raw ? new Date(raw) : now;
+    return bill.paymentDate ? new Date(bill.paymentDate) : now;
   }
-
   if (o === 'weekly') {
     const target = bill.paymentDayOfWeek || 0;
     const diff = ((target - now.getDay() + 7) % 7) || 7;
     const d = new Date(now); d.setDate(d.getDate() + diff);
     return d;
   }
-
   if (o === 'fortnightly') {
     if (bill.paymentDate) {
       let anchor = new Date(bill.paymentDate);
       while (anchor <= now) anchor.setDate(anchor.getDate() + 14);
       return anchor;
     }
-    if (bill.nextPaymentDate) {
-      let anchor = new Date(bill.nextPaymentDate);
-      anchor.setHours(0, 0, 0, 0);
-      if (!isNaN(+anchor)) {
-        while (anchor < now) anchor.setDate(anchor.getDate() + 14);
-        return anchor;
-      }
-    }
     const d = new Date(now); d.setDate(d.getDate() + 14);
     return d;
   }
-
-  const hasPaymentDay = bill.paymentDay != null && bill.paymentDay !== '';
-  if (
-    bill.nextPaymentDate &&
-    !hasPaymentDay &&
-    ['monthly', 'quarterly', 'annually'].includes(o)
-  ) {
-    let d = new Date(bill.nextPaymentDate);
-    d.setHours(0, 0, 0, 0);
-    if (!isNaN(+d)) {
-      while (d < now) {
-        if (o === 'monthly') d.setMonth(d.getMonth() + 1);
-        else if (o === 'quarterly') d.setMonth(d.getMonth() + 3);
-        else if (o === 'annually') d.setFullYear(d.getFullYear() + 1);
-        else break;
-      }
-      return d;
-    }
-  }
-
-  const day = Math.min(billPaymentDayFrom(bill), 28);
-
+  const day = Math.min(bill.paymentDay || 1, 28);
   if (o === 'monthly') {
     let d = new Date(now.getFullYear(), now.getMonth(), day);
     if (d <= now) d = new Date(now.getFullYear(), now.getMonth() + 1, day);
     return d;
   }
-
   if (o === 'quarterly') {
     for (let i = 0; i <= 3; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() + i, day);
       if (d > now) return d;
     }
   }
-
   if (o === 'annually') {
     const month = bill.paymentMonth || 0;
     let d = new Date(now.getFullYear(), month, day);
     if (d <= now) d = new Date(now.getFullYear() + 1, month, day);
     return d;
   }
-
   let d = new Date(now.getFullYear(), now.getMonth(), day);
   if (d <= now) d = new Date(now.getFullYear(), now.getMonth() + 1, day);
   return d;
 }
 
-// ── Stats panel ─────────────────────────────────────
-// Call this to populate #billStatsPanel in your HTML.
-// Expected markup: <div id="billStatsPanel" class="bill-stats-panel"></div>
+function toMonthlyAmount(bill) {
+  const factor = MONTHLY_FACTOR[bill.occurrence || 'monthly'] ?? 1;
+  return bill.amount * factor;
+}
 
-function renderBillStats() {
-  const el = document.getElementById('billStatsPanel');
+function fmtOccurrence(bill) {
+  const o = bill.occurrence || 'monthly';
+  if (o === 'one-off') return 'One-off';
+  if (o === 'weekly') return `Weekly · ${WEEK_DAYS[bill.paymentDayOfWeek || 0]}s`;
+  if (o === 'fortnightly') return 'Fortnightly';
+  if (o === 'monthly') return `Monthly · ${ordinal(bill.paymentDay || 1)}`;
+  if (o === 'quarterly') return `Quarterly · ${ordinal(bill.paymentDay || 1)}`;
+  if (o === 'annually') return `Annually · ${MONTH_NAMES[bill.paymentMonth || 0]} ${ordinal(bill.paymentDay || 1)}`;
+  return o;
+}
+
+// ── Inject CSS ──────────────────────────────────────
+function _injectBillsCSS() {
+  if (document.getElementById('bills-enhanced-css')) return;
+  const s = document.createElement('style');
+  s.id = 'bills-enhanced-css';
+  s.textContent = `
+    /* ─── Bills page ─── */
+    .bills-page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+    .bills-tabs-row { display:flex; gap:2px; border-bottom:1px solid var(--border); margin-bottom:16px; flex-wrap:wrap; }
+    .bills-tab-btn { padding:7px 14px; background:none; border:none; border-bottom:2px solid transparent; font-size:12.5px; color:var(--muted2); cursor:pointer; margin-bottom:-1px; font-variation-settings:'wght' 500; transition:all .13s; }
+    .bills-tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); font-variation-settings:'wght' 700; }
+    .bills-tab-btn:hover { color:var(--text); }
+
+    /* person tabs */
+    .bills-person-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+
+    /* stat cards row */
+    .bills-stats-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-bottom:16px; }
+    .stat-val { color:var(--red); }
+
+    /* add form drawer */
+    .bills-add-drawer { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px; margin-bottom:18px; }
+    .bills-add-drawer h3 { font-size:14px; font-variation-settings:'wght' 700; margin-bottom:14px; }
+
+    /* bill card */
+    .bill-card-v2 { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; position:relative; transition:box-shadow .15s,transform .15s; }
+    .bill-card-v2:hover { box-shadow:0 3px 12px rgba(0,0,0,.08); transform:translateY(-1px); }
+    .bill-card-v2.overdue { border-color:var(--red); }
+    .bill-card-v2.due-soon { border-color:var(--amber); }
+    .bill-card-v2.auto-pay { border-left:3px solid var(--green); }
+    .bill-card-v2.manual-pay { border-left:3px solid var(--blue); }
+
+    /* payment mode badge */
+    .pay-mode-badge { display:inline-flex; align-items:center; gap:4px; font-size:10px; padding:2px 7px; border-radius:10px; font-variation-settings:'wght' 600; }
+    .pay-mode-badge.auto { background:var(--green-dim); color:var(--green); }
+    .pay-mode-badge.manual { background:var(--blue-dim); color:var(--blue); }
+
+    /* cost history toggle */
+    .cost-history-section { margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+    .cost-history-toggle { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); cursor:pointer; background:none; border:none; padding:0; }
+    .cost-history-list { margin-top:6px; display:flex; flex-direction:column; gap:3px; }
+    .cost-history-row { display:grid; grid-template-columns:auto 1fr auto; gap:8px; font-size:11px; padding:4px 0; border-bottom:1px solid var(--border); }
+    .cost-history-row:last-child { border-bottom:none; }
+
+    /* property assign pill */
+    .prop-pill { font-size:10px; padding:2px 8px; border-radius:10px; background:var(--pink-dim); color:var(--pink); font-variation-settings:'wght' 600; }
+
+    /* emoji picker overlay */
+    .emoji-picker-overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:9999; display:flex; align-items:center; justify-content:center; padding:16px; }
+    .emoji-picker-overlay.hidden { display:none; }
+    .emoji-picker-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); width:min(500px,95vw); max-height:70vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+    .emoji-picker-header { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:center; flex-shrink:0; }
+    .emoji-picker-search { flex:1; background:var(--bg); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:7px 10px; font-size:13px; outline:none; transition:border .13s; }
+    .emoji-picker-search:focus { border-color:var(--accent); }
+    .emoji-picker-body { overflow-y:auto; padding:12px 14px; flex:1; }
+    .emoji-section-label { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-variation-settings:'wght' 600; margin:10px 0 6px; }
+    .emoji-section-label:first-child { margin-top:0; }
+    .emoji-grid { display:flex; flex-wrap:wrap; gap:2px; margin-bottom:4px; }
+    .emoji-btn-opt { width:36px; height:36px; border:none; background:none; border-radius:6px; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .1s; line-height:1; }
+    .emoji-btn-opt:hover { background:var(--surface2); }
+    .emoji-trigger-btn { width:38px; height:38px; border:1px solid var(--border2); border-radius:var(--radius-sm); background:var(--bg); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .13s; }
+    .emoji-trigger-btn:hover { border-color:var(--accent); background:var(--accent-dim); }
+
+    /* occurrence day picker */
+    .day-chip-grid { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+    .day-chip { padding:3px 8px; border-radius:20px; border:1px solid var(--border2); background:var(--bg); font-size:11px; cursor:pointer; transition:all .13s; }
+    .day-chip.selected { background:var(--accent); color:#fff; border-color:var(--accent); font-variation-settings:'wght' 600; }
+
+    /* due callout */
+    .due-callout { font-size:11px; padding:3px 8px; border-radius:10px; font-variation-settings:'wght' 600; }
+    .due-callout.overdue { background:var(--red-dim); color:var(--red); }
+    .due-callout.today { background:var(--red-dim); color:var(--red); }
+    .due-callout.soon { background:var(--amber-dim); color:var(--amber); }
+    .due-callout.ok { background:var(--green-dim); color:var(--green); }
+
+    /* totals callout */
+    .bills-total-bar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:12px 16px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); margin-bottom:14px; font-size:12px; color:var(--muted2); }
+    .bills-total-bar strong { font-variation-settings:'wght' 700; color:var(--text); }
+
+    /* form section divider */
+    .form-section-label { font-size:11px; letter-spacing:.08em; color:var(--accent); text-transform:uppercase; font-variation-settings:'wght' 700; padding:10px 0 6px; border-top:1px solid var(--border); margin-top:10px; }
+    .form-section-label:first-child { border-top:none; padding-top:0; margin-top:0; }
+
+    /* first payment natural toggle */
+    .first-payment-row { display:flex; align-items:center; gap:8px; padding:6px 0; }
+
+    /* bills grid */
+    .bills-grid-v2 { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; margin-bottom:18px; }
+
+    /* bill template buttons */
+    .bill-template-btn { display:inline-flex; align-items:center; gap:4px; background:var(--surface2); border:1px solid var(--border2); color:var(--muted2); cursor:pointer; transition:all .13s; }
+    .bill-template-btn:hover { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
+  `;
+  document.head.appendChild(s);
+}
+
+// ══════════════════════════════════════════════════
+// EMOJI PICKER
+// ══════════════════════════════════════════════════
+
+function openEmojiPicker(target) {
+  _openEmojiPicker(target);
+}
+
+function _openEmojiPicker(target) {
+  _emojiPickerTarget = target;
+  let panel = document.getElementById('billsEmojiPickerOverlay');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'billsEmojiPickerOverlay';
+    panel.className = 'emoji-picker-overlay hidden';
+    panel.innerHTML = `
+      <div class="emoji-picker-panel" onclick="event.stopPropagation()">
+        <div class="emoji-picker-header">
+          <input class="emoji-picker-search" id="emojiPickerSearch" placeholder="Search emoji…" oninput="_filterEmojiPicker(this.value)">
+          <button class="icon-btn" onclick="_closeEmojiPicker()" style="flex-shrink:0;">✕</button>
+        </div>
+        <div class="emoji-picker-body" id="emojiPickerBody"></div>
+      </div>`;
+    panel.addEventListener('click', e => { if (e.target === panel) _closeEmojiPicker(); });
+    document.body.appendChild(panel);
+  }
+  document.getElementById('emojiPickerSearch').value = '';
+  _filterEmojiPicker('');
+  panel.classList.remove('hidden');
+}
+
+function _closeEmojiPicker() {
+  const p = document.getElementById('billsEmojiPickerOverlay');
+  if (p) p.classList.add('hidden');
+}
+
+function _filterEmojiPicker(q) {
+  const body = document.getElementById('emojiPickerBody');
+  if (!body) return;
+  const lower = q.toLowerCase();
+  let html = '';
+  for (const [section, emojis] of Object.entries(FULL_EMOJI_LIBRARY)) {
+    // When searching, include all sections
+    const filtered = q ? emojis.filter(() => true) : emojis; // show all; search just highlights
+    if (!filtered.length) continue;
+    html += `<div class="emoji-section-label">${section}</div><div class="emoji-grid">`;
+    html += filtered.map(e => `<button class="emoji-btn-opt" onclick="_selectEmoji('${e}')" title="${e}">${e}</button>`).join('');
+    html += `</div>`;
+  }
+  body.innerHTML = html;
+}
+
+function _selectEmoji(emoji) {
+  if (_emojiPickerTarget === 'add') {
+    const btn = document.getElementById('billEmojiTrigger');
+    if (btn) { btn.textContent = emoji; btn.dataset.emoji = emoji; }
+  } else if (_emojiPickerTarget === 'edit') {
+    const btn = document.getElementById('editBillEmojiTrigger');
+    if (btn) { btn.textContent = emoji; btn.dataset.emoji = emoji; }
+  }
+  _closeEmojiPicker();
+}
+
+// ══════════════════════════════════════════════════
+// STATS
+// ══════════════════════════════════════════════════
+
+function _renderBillsStats(filteredBills) {
+  const el = document.getElementById('billsStatsGrid');
   if (!el) return;
-
-  if (!S.bills.length) { el.innerHTML = ''; return; }
-
-  const recurring = S.bills.filter(b => billOccurrenceOf(b) !== 'one-off');
-  const oneOffs = S.bills.filter(b => billOccurrenceOf(b) === 'one-off');
+  const bills = filteredBills || S.bills;
+  const recurring = bills.filter(b => b.occurrence !== 'one-off');
   const monthlyTotal = recurring.reduce((s, b) => s + toMonthlyAmount(b), 0);
   const annualTotal = monthlyTotal * 12;
-  const dailyCost = annualTotal / 365;
-  const dueThisMonth = getDueThisMonth();
-  const dueSoon = getBillsDueSoon(7);
-  const dueSoonTotal = dueSoon.reduce((s, { bill }) => s + bill.amount, 0);
-  const biggest = recurring.length
-    ? recurring.reduce((a, b) => toMonthlyAmount(b) > toMonthlyAmount(a) ? b : a)
-    : null;
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0); end.setHours(23, 59, 59);
+  const dueThisMonth = bills.reduce((s, b) => {
+    const next = getNextPaymentDate(b);
+    return (next >= start && next <= end) ? s + b.amount : s;
+  }, 0);
+  const cutoff7 = new Date(now); cutoff7.setDate(cutoff7.getDate() + 7);
+  const dueSoon = bills.filter(b => { const n = getNextPaymentDate(b); return n >= now && n <= cutoff7; });
 
   el.innerHTML = `
-    <div class="stat-card clickable-card" data-modal="monthly" style="cursor:pointer;">
-      <div class="stat-label">Monthly total</div>
-      <div class="stat-val" style="color: var(--red);">${fmt(monthlyTotal)}</div>
-      <div class="stat-sub">${recurring.length} recurring bill${recurring.length !== 1 ? 's' : ''}</div>
-      <div class="card-expand-hint">↗ breakdown</div>
-    </div>
-    <div class="stat-card clickable-card" data-modal="annual" style="cursor:pointer;">
-      <div class="stat-label">Annual total</div>
-      <div class="stat-val" style="color: var(--red);">${fmt(annualTotal)}</div>
-      <div class="stat-sub">${fmt(dailyCost)} / day</div>
-      <div class="card-expand-hint">↗ breakdown</div>
-    </div>
-    <div class="stat-card clickable-card" data-modal="due-month" style="cursor:pointer;">
-      <div class="stat-label">Due this month</div>
-      <div class="stat-val" style="color: var(--red);">${fmt(dueThisMonth)}</div>
-      <div class="stat-sub">${MONTH_NAMES[new Date().getMonth()]}</div>
-      <div class="card-expand-hint">↗ details</div>
-    </div>
-    <div class="stat-card${dueSoon.length ? ' stat-alert' : ''} clickable-card" data-modal="due-soon" style="cursor:pointer;">
-      <div class="stat-label">Due next 7 days</div>
-      <div class="stat-val" style="color: var(--red);">${dueSoon.length ? fmt(dueSoonTotal) : '—'}</div>
-      <div class="stat-sub">${dueSoon.length
-      ? `${dueSoon.length} payment${dueSoon.length !== 1 ? 's' : ''}`
-      : 'Nothing due'}</div>
-      <div class="card-expand-hint">↗ details</div>
-    </div>
-    ${biggest ? `
-    <div class="stat-card clickable-card" data-modal="biggest" style="cursor:pointer;">
-      <div class="stat-label">Biggest bill</div>
-      <div class="stat-val stat-val-compact">
-        ${biggest.emoji || autoEmoji(biggest.name, billCategoryDisplay(biggest))} ${biggest.name}
-      </div>
-      <div class="stat-sub" style="color: var(--red);">${fmt(toMonthlyAmount(biggest))} / mo</div>
-      <div class="card-expand-hint">↗ details</div>
-    </div>` : ''}
-    ${oneOffs.length ? `
-    <div class="stat-card clickable-card" data-modal="oneoff" style="cursor:pointer;">
-      <div class="stat-label">One-off payments</div>
-      <div class="stat-val" style="color: var(--red);">${fmt(oneOffs.reduce((s, b) => s + b.amount, 0))}</div>
-      <div class="stat-sub">${oneOffs.length} item${oneOffs.length !== 1 ? 's' : ''}</div>
-      <div class="card-expand-hint">↗ breakdown</div>
-    </div>` : ''}
-  `;
+    <div class="stat-card sc-accent"><div class="stat-label">Monthly total</div><div class="stat-val val">${fmt(monthlyTotal)}</div><div class="stat-sub">${recurring.length} recurring</div></div>
+    <div class="stat-card sc-amber"><div class="stat-label">Annual total</div><div class="stat-val val">${fmt(annualTotal)}</div><div class="stat-sub">${fmt(annualTotal / 365)}/day</div></div>
+    <div class="stat-card sc-blue"><div class="stat-label">Due this month</div><div class="stat-val val">${fmt(dueThisMonth)}</div><div class="stat-sub">${MONTH_NAMES[new Date().getMonth()]}</div></div>
+    <div class="stat-card ${dueSoon.length ? 'sc-red' : 'sc-green'}"><div class="stat-label">Due next 7 days</div><div class="stat-val val">${dueSoon.length ? fmt(dueSoon.reduce((s, b) => s + b.amount, 0)) : '—'}</div><div class="stat-sub">${dueSoon.length ? dueSoon.length + ' payment' + (dueSoon.length !== 1 ? 's' : '') : 'Nothing due'}</div></div>`;
 
-  // Attach click handlers for modals
-  document.querySelectorAll('#billStatsPanel .clickable-card').forEach(card => {
-    card.addEventListener('click', () => _openBillStatModal(card.dataset.modal, { monthlyTotal, annualTotal, dailyCost, dueThisMonth, dueSoon, dueSoonTotal, biggest, oneOffs }));
-  });
+  // Totals bar
+  const bar = document.getElementById('billsTotalBar');
+  if (bar) {
+    const predictedNext = monthlyTotal;
+    bar.innerHTML = `<span>Current total: <strong>${fmt(monthlyTotal)}/mo</strong></span>
+      <span style="color:var(--border2);">|</span>
+      <span>Predicted next month: <strong>${fmt(predictedNext)}</strong></span>
+      <span style="color:var(--border2);">|</span>
+      <span>Annual: <strong>${fmt(annualTotal)}</strong></span>`;
+  }
 }
 
 // ══════════════════════════════════════════════════
-// BILL STAT CARD MODAL
+// RENDER BILLS
 // ══════════════════════════════════════════════════
 
-function _openBillStatModal(type, data) {
-  // Remove existing modal if any
-  const existing = document.getElementById('billStatModal');
-  if (existing) existing.remove();
+function renderBills() {
+  console.log('renderBills called');
+  _injectBillsCSS();
 
-  let title = '', rows = [];
-
-  if (type === 'monthly') {
-    title = 'Monthly Bill Breakdown';
-    const recurring = S.bills.filter(b => billOccurrenceOf(b) !== 'one-off');
-    recurring.forEach(b => {
-      const monthly = toMonthlyAmount(b);
-      const cat = billCategoryDisplay(b);
-      const emoji = b.emoji || autoEmoji(b.name, cat);
-      rows.push({ label: `${emoji} ${b.name} <span style="opacity:.5;font-size:11px;">${cat}</span>`, value: monthly, sub: `${fmt(b.amount)} · ${billOccurrenceOf(b)}`, color: 'neg' });
-    });
-    rows.push({ divider: true });
-    rows.push({ label: '<strong>Total Monthly</strong>', value: data.monthlyTotal, color: 'neg', bold: true });
-  }
-
-  else if (type === 'annual') {
-    title = 'Annual Bill Breakdown';
-    const recurring = S.bills.filter(b => billOccurrenceOf(b) !== 'one-off');
-    recurring.forEach(b => {
-      const monthly = toMonthlyAmount(b);
-      const annual = monthly * 12;
-      const cat = billCategoryDisplay(b);
-      const emoji = b.emoji || autoEmoji(b.name, cat);
-      rows.push({ label: `${emoji} ${b.name} <span style="opacity:.5;font-size:11px;">${cat}</span>`, value: annual, sub: `${fmt(monthly)}/mo · ${billOccurrenceOf(b)}`, color: 'neg' });
-    });
-    rows.push({ divider: true });
-    rows.push({ label: '<strong>Total Annual</strong>', value: data.annualTotal, color: 'neg', bold: true });
-    rows.push({ label: 'Daily cost', value: data.dailyCost, sub: 'average per day', color: 'neg' });
-  }
-
-  else if (type === 'due-month') {
-    title = 'Bills Due This Month';
-    const now = new Date();
-    const start = new Date(now.getFullYear(), now.getMonth(), 1);
-    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    end.setHours(23, 59, 59);
-    S.bills.forEach(b => {
-      const next = getNextPaymentDate(b);
-      if (next >= start && next <= end) {
-        const cat = billCategoryDisplay(b);
-        const emoji = b.emoji || autoEmoji(b.name, cat);
-        rows.push({ label: `${emoji} ${b.name} <span style="opacity:.5;font-size:11px;">${cat}</span>`, value: b.amount, sub: `${fmtDate(next.toISOString().split('T')[0])}`, color: 'neg' });
-      }
-    });
-    rows.push({ divider: true });
-    rows.push({ label: '<strong>Total Due This Month</strong>', value: data.dueThisMonth, color: 'neg', bold: true });
-  }
-
-  else if (type === 'due-soon') {
-    title = 'Bills Due Next 7 Days';
-    data.dueSoon.forEach(({ bill, next }) => {
-      const cat = billCategoryDisplay(bill);
-      const emoji = bill.emoji || autoEmoji(bill.name, cat);
-      const now = new Date(); now.setHours(0, 0, 0, 0);
-      const daysLeft = Math.floor((next - now) / 86400000);
-      const label = daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`;
-      rows.push({ label: `${emoji} ${bill.name} <span style="opacity:.5;font-size:11px;">${cat}</span>`, value: bill.amount, sub: label, color: 'neg' });
-    });
-    if (!data.dueSoon.length) {
-      rows.push({ label: 'No bills due in the next 7 days', value: 0, sub: '', color: 'neu' });
-    }
-    rows.push({ divider: true });
-    rows.push({ label: '<strong>Total Due Next 7 Days</strong>', value: data.dueSoonTotal, color: 'neg', bold: true });
-  }
-
-  else if (type === 'biggest' && data.biggest) {
-    title = 'Biggest Bill Details';
-    const b = data.biggest;
-    const cat = billCategoryDisplay(b);
-    const emoji = b.emoji || autoEmoji(b.name, cat);
-    const monthly = toMonthlyAmount(b);
-    rows.push({ label: `${emoji} ${b.name}`, value: monthly, sub: `${cat} · ${billOccurrenceOf(b)}`, color: 'neg', bold: true });
-    rows.push({ label: 'Monthly amount', value: monthly, color: 'neg' });
-    rows.push({ label: 'Annual amount', value: monthly * 12, color: 'neg' });
-    rows.push({ label: 'Payment amount', value: b.amount, color: 'neg' });
-    if (b.company) rows.push({ label: 'Company', value: b.company, sub: '', color: 'neu', isText: true });
-  }
-
-  else if (type === 'oneoff') {
-    title = 'One-off Payments';
-    data.oneOffs.forEach(b => {
-      const cat = billCategoryDisplay(b);
-      const emoji = b.emoji || autoEmoji(b.name, cat);
-      const date = b.paymentDate || b.nextPaymentDate || '';
-      rows.push({ label: `${emoji} ${b.name} <span style="opacity:.5;font-size:11px;">${cat}</span>`, value: b.amount, sub: date ? fmtDate(date) : 'No date set', color: 'neg' });
-    });
-    rows.push({ divider: true });
-    rows.push({ label: '<strong>Total One-off</strong>', value: data.oneOffs.reduce((s, b) => s + b.amount, 0), color: 'neg', bold: true });
-  }
-
-  // Build HTML
-  const rowsHTML = rows.map(r => {
-    if (r.divider) return `<div style="border-top:1px solid var(--border);margin:8px 0;"></div>`;
-    if (r.isText) {
-      return `
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.04);">
-          <div>
-            <div style="font-size:13px;color:var(--text);">${r.label}</div>
-            ${r.sub ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.sub}</div>` : ''}
-          </div>
-          <div style="font-size:13px;color:var(--text);">${r.value}</div>
-        </div>`;
-    }
-    const valDisplay = `<span class="val ${r.color}" style="${r.bold ? 'font-size:15px;font-variation-settings:\'wght\' 700;' : ''}">${fmt(r.value)}</span>`;
-    return `
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.04);">
-        <div>
-          <div style="font-size:13px;color:var(--text);">${r.label}</div>
-          ${r.sub ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.sub}</div>` : ''}
-        </div>
-        ${valDisplay}
-      </div>`;
-  }).join('');
-
-  const modal = document.createElement('div');
-  modal.id = 'billStatModal';
-  modal.innerHTML = `
-    <div id="billStatOverlay" style="
-      position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;
-      display:flex;align-items:center;justify-content:center;
-      backdrop-filter:blur(4px);animation:fadeInModal .18s ease;">
-      <div style="
-        background:var(--card,#fff);border-radius:16px;
-        box-shadow:0 24px 60px rgba(0,0,0,.22);
-        width:min(480px,92vw);max-height:80vh;
-        display:flex;flex-direction:column;
-        animation:slideUpModal .22s cubic-bezier(.34,1.56,.64,1);">
-        <!-- Header -->
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 22px 14px;border-bottom:1px solid var(--border);">
-          <div style="font-size:16px;font-variation-settings:'wght' 700;color:var(--text);">${title}</div>
-          <button id="billStatModalClose" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;padding:2px 6px;border-radius:6px;" aria-label="Close">×</button>
-        </div>
-        <!-- Body -->
-        <div style="overflow-y:auto;padding:4px 22px 20px;flex:1;">
-          ${rowsHTML}
-        </div>
-      </div>
-    </div>`;
-
-  // Inject animation keyframes once
-  if (!document.getElementById('billModalKeyframes')) {
-    const s = document.createElement('style');
-    s.id = 'billModalKeyframes';
-    s.textContent = `
-      @keyframes fadeInModal { from{opacity:0} to{opacity:1} }
-      @keyframes slideUpModal { from{opacity:0;transform:translateY(24px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
-      .card-expand-hint { font-size:10px;color:var(--muted);margin-top:6px;opacity:.6; }
-      .clickable-card:hover .card-expand-hint { opacity:1; }
-      .clickable-card { transition:transform .15s,box-shadow .15s; }
-      .clickable-card:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.12); }
-    `;
-    document.head.appendChild(s);
-  }
-
-  document.body.appendChild(modal);
-
-  // Close handlers
-  const close = () => modal.remove();
-  document.getElementById('billStatModalClose').addEventListener('click', close);
-  document.getElementById('billStatOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) close(); });
-  document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } });
-}
-
-// ── Upcoming alert strip ─────────────────────────────
-// Call this to populate #billsUpcomingStrip in your HTML.
-// Expected markup: <div id="billsUpcomingStrip" class="upcoming-strip"></div>
-
-function renderUpcomingStrip() {
-  const el = document.getElementById('billsUpcomingStrip');
-  if (!el) return;
-  const dueSoon = getBillsDueSoon(7);
-  if (!dueSoon.length) { el.style.display = 'none'; return; }
-
-  el.style.display = '';
-  const now = new Date(); now.setHours(0, 0, 0, 0);
-
-  el.innerHTML = `
-    <div class="upcoming-header">Due in the next 7 days</div>
-    <div class="upcoming-list">
-      ${dueSoon.map(({ bill, next }) => {
-    const daysLeft = Math.floor((next - now) / 86400000);
-    const cat = billCategoryDisplay(bill);
-    const emoji = bill.emoji || autoEmoji(bill.name, cat);
-    const label = daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft}d`;
-    return `<div class="upcoming-item">
-          <span class="upcoming-left">
-            <span class="upcoming-emoji" aria-hidden="true">${emoji}</span>
-            <span>
-              <strong>${bill.name}</strong>
-              ${bill.company ? `<span class="upcoming-co">${bill.company}</span>` : ''}
-            </span>
-          </span>
-          <span class="upcoming-right">
-            <span class="upcoming-amt val">${fmt(bill.amount)}</span>
-            <span class="upcoming-badge${daysLeft === 0 ? ' today' : ''}">${label}</span>
-          </span>
-        </div>`;
-  }).join('')}
-    </div>`;
-}
-
-// ── Bills ticker tape (similar to overview page) ─────────────────────────────
-// Call this to populate #billsTicker in your HTML.
-// Expected markup: <div id="billsTicker" class="bills-upcoming-strip"></div>
-
-function renderBillsTicker() {
-  const wrapper = document.getElementById('billsTickerWrapper');
-  const el = document.getElementById('billsTicker');
-  if (!wrapper || !el) return;
-
-  const now = new Date(); now.setHours(0, 0, 0, 0);
-  const dueSoon = getBillsDueSoon(30); // Show next 30 days
-
-  if (!dueSoon.length) {
-    wrapper.style.display = '';
-    el.innerHTML = `
-      <div class="bills-ticker-chips">
-        <div class="bills-ticker-chip normal">
-          <span class="bills-ticker-emoji">🙌</span>
-          <span class="bills-ticker-label">No upcoming bills</span>
-          <span class="bills-ticker-days">You're all caught up!</span>
-        </div>
-      </div>
-    `;
+  const pageEl = document.getElementById('page-bills');
+  if (!pageEl) {
+    console.log('page-bills element not found');
     return;
   }
 
-  wrapper.style.display = '';
+  // Check if page already has our structure; if not, build it
+  if (!document.getElementById('billsPageStructure')) {
+    console.log('Building bills page structure');
+    _buildBillsPageStructure(pageEl);
+  }
 
-  const chips = dueSoon.slice(0, 8).map(({ bill, next }) => {
-    const daysLeft = Math.floor((next - now) / 86400000);
-    const cat = billCategoryDisplay(bill);
-    const emoji = bill.emoji || autoEmoji(bill.name, cat);
+  // Populate person tabs
+  _renderBillsPersonTabs();
 
-    let urgencyClass = 'normal';
-    let daysText = `in ${daysLeft}d`;
+  // Get current person filter
+  const personIdx = _currentBillPersonIdx();
+  let bills = _getFilteredBills(personIdx);
+  console.log('Bills after filtering:', bills);
 
-    if (daysLeft === 0) {
-      urgencyClass = 'urgent';
-      daysText = 'today';
-    } else if (daysLeft === 1) {
-      urgencyClass = 'urgent';
-      daysText = 'tomorrow';
-    } else if (daysLeft <= 3) {
-      urgencyClass = 'urgent';
-    } else if (daysLeft <= 7) {
-      urgencyClass = 'soon';
-    }
+  // Category tab filter
+  if (billsActiveTab !== 'All') {
+    bills = bills.filter(b => b.category === billsActiveTab);
+  }
 
-    return `<div class="bills-ticker-chip ${urgencyClass}">
-      <span class="bills-ticker-emoji">${emoji}</span>
-      <span class="bills-ticker-label">${bill.name}</span>
-      <span class="bills-ticker-days">${daysText}</span>
-    </div>`;
-  }).join('');
-
-  el.innerHTML = `<div class="bills-ticker-chips">${chips}</div>`;
+  _renderBillsStats(bills);
+  _renderBillsGrid(bills);
+  _renderBillsTicker(bills);
+  _renderBillTemplates();
 }
 
-// ── Tabs ─────────────────────────────────────────────
+let _billPersonIdx = -1; // -1 = all/household
 
-function switchBillTab(tab) {
-  billsActiveTab = tab;
-  document.querySelectorAll('#page-bills .tab-btn').forEach(btn =>
-    btn.classList.toggle('active', btn.dataset.tab === tab)
-  );
+function _currentBillPersonIdx() { return _billPersonIdx; }
+
+function switchBillPerson(idx) {
+  _billPersonIdx = idx;
   renderBills();
 }
 
-// ── Emoji picker ──────────────────────────────────────
-
-function openEmojiPicker(target) {
-  billEmojiTarget = target;
-  const modal = document.getElementById('emojiPickerModal');
-  if (!modal) return;
-  const search = document.getElementById('emojiSearch');
-  if (search) search.value = '';
-  renderEmojiGrid('');
-  modal.classList.remove('hidden');
+function _getFilteredBills(personIdx) {
+  if (personIdx === -1) return S.bills;
+  return S.bills.filter(b => b.person === undefined || b.person === null || b.person === personIdx);
 }
 
-function renderEmojiGrid(search) {
-  const grid = document.getElementById('emojiGrid');
-  if (!grid) return;
-  const q = (search || '').trim();
-  const list = q.length
-    ? EMOJI_GRID.filter(e => e.includes(q))
-    : EMOJI_GRID;
-  const show = list.length ? list : EMOJI_GRID;
-  grid.innerHTML = show
-    .map(e => `<button type="button" class="emoji-opt" onclick="selectEmoji('${e}')">${e}</button>`)
-    .join('');
+function _renderBillsPersonTabs() {
+  const el = document.getElementById('billsPersonTabs');
+  if (!el) return;
+  const names = S.settings.personNames || [];
+  if (names.length <= 1) { el.innerHTML = ''; _billPersonIdx = -1; return; }
+  const allPeople = ['Household', ...names];
+  el.innerHTML = allPeople.map((p, i) => {
+    const idx = i === 0 ? -1 : i - 1;
+    const active = _billPersonIdx === idx;
+    return `<button class="person-btn ${active ? 'active' : ''}" onclick="switchBillPerson(${idx})">${i === 0 ? '📊 ' + p : p}</button>`;
+  }).join('');
 }
 
-function selectEmoji(emoji) {
-  const id = billEmojiTarget === 'add' ? 'billEmojiBtn' : 'eb-emoji';
-  const btn = document.getElementById(id);
-  if (btn) { btn.textContent = emoji; btn.dataset.emoji = emoji; }
-  closeModal('emojiPickerModal');
+function _buildBillsPageStructure(pageEl) {
+  // Clear old content but keep the page-header
+  const header = pageEl.querySelector('.page-header');
+  pageEl.innerHTML = '';
+  if (header) pageEl.appendChild(header);
+
+  // Rebuild header with Add button
+  if (header) {
+    header.innerHTML = `
+      <div class="bills-page-header">
+        <div>
+          <h2>Bills</h2>
+          <p>Track recurring payments, subscriptions & one-off expenses</p>
+        </div>
+        <button class="btn btn-primary" onclick="toggleAddBillForm()" id="addBillToggleBtn">+ Add bill</button>
+      </div>`;
+  } else {
+    const h = document.createElement('div');
+    h.className = 'page-header';
+    h.innerHTML = `<div class="bills-page-header"><div><h2>Bills</h2><p>Track recurring payments, subscriptions & one-off expenses</p></div><button class="btn btn-primary" onclick="toggleAddBillForm()" id="addBillToggleBtn">+ Add bill</button></div>`;
+    pageEl.insertBefore(h, pageEl.firstChild);
+  }
+
+  const structure = document.createElement('div');
+  structure.id = 'billsPageStructure';
+  structure.innerHTML = `
+    <!-- Person tabs -->
+    <div id="billsPersonTabs" class="bills-person-tabs"></div>
+
+    <!-- Add bill drawer -->
+    <div id="addBillDrawer" class="bills-add-drawer hidden">
+      <h3>Add bill</h3>
+      <div class="form-section-label">Basic details</div>
+      <div class="form-grid">
+        <div class="ff">
+          <label>Icon</label>
+          <button id="billEmojiTrigger" class="emoji-trigger-btn" data-emoji="" onclick="_openEmojiPicker('add')" title="Choose emoji">📋</button>
+        </div>
+        <div class="ff"><label>Bill name</label><input type="text" id="billName" placeholder="e.g. Electricity" oninput="_autoSetBillEmoji()"/></div>
+        <div class="ff"><label>Category</label>
+          <select id="billCategory">
+            <option value="Utilities">Utilities</option>
+            <option value="Subscriptions">Subscriptions</option>
+            <option value="Insurance">Insurance</option>
+            <option value="Transport">Transport</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="ff"><label>Provider / Company</label><input type="text" id="billCompany" placeholder="e.g. Octopus Energy"/></div>
+        <div class="ff money-field"><label>Amount</label><input type="text" id="billAmount" placeholder="120.00" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+        <div class="ff"><label>Assigned to</label>
+          <select id="billPerson">
+            <option value="">Household</option>
+          </select>
+        </div>
+        <div class="ff"><label>Link to property</label>
+          <select id="billProperty">
+            <option value="">— none —</option>
+          </select>
+        </div>
+        <div class="ff"><label>Payment mode</label>
+          <select id="billPayMode">
+            <option value="auto">🔄 Automatic (Direct Debit / Standing Order)</option>
+            <option value="manual">✋ Manual (Pay each time)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section-label">When does it occur?</div>
+      <div class="form-grid">
+        <div class="ff"><label>Occurrence</label>
+          <select id="billOccurrence" onchange="_toggleBillOccurrenceFields()">
+            <option value="monthly">Monthly</option>
+            <option value="weekly">Weekly</option>
+            <option value="fortnightly">Fortnightly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="annually">Annually</option>
+            <option value="one-off">One-off</option>
+          </select>
+        </div>
+        <div class="ff" id="addBillDayField">
+          <label>Day of month (1–28)</label>
+          <input type="number" id="billPaymentDay" min="1" max="28" value="1" placeholder="1"/>
+        </div>
+        <div class="ff hidden" id="addBillMonthField">
+          <label>Month</label>
+          <select id="billPaymentMonth">
+            ${MONTH_NAMES.map((m, i) => `<option value="${i}">${m}</option>`).join('')}
+          </select>
+        </div>
+        <div class="ff hidden" id="addBillWeekdayField">
+          <label>Day of week</label>
+          <select id="billPaymentWeekday">
+            ${WEEK_DAYS.map((d, i) => `<option value="${i}">${d}</option>`).join('')}
+          </select>
+        </div>
+        <div class="ff hidden" id="addBillDateField">
+          <label>Date</label>
+          <input type="date" id="billPaymentDate"/>
+        </div>
+      </div>
+
+      <div class="form-section-label">Amount options</div>
+      <div class="form-grid">
+        <div class="ff" style="grid-column:1/-1;">
+          <div class="first-payment-row">
+            <label class="toggle"><input type="checkbox" id="billDiffFirst" onchange="_toggleFirstPayment('add')"><span class="toggle-track"></span></label>
+            <span style="font-size:12.5px;color:var(--muted2);">First payment is a different amount</span>
+          </div>
+        </div>
+        <div class="ff money-field hidden" id="addFirstPaymentField">
+          <label>First payment amount</label>
+          <input type="text" id="billFirstPayment" placeholder="0.00" oninput="formatMoney(this)"/>
+          <span class="currency">£</span>
+        </div>
+      </div>
+
+      <div class="form-section-label">Notes</div>
+      <div class="form-grid">
+        <div class="ff full-col"><textarea id="billNotes" placeholder="Any notes about this bill…" rows="2"></textarea></div>
+      </div>
+
+      <div class="form-actions" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="addBill()">Save bill</button>
+        <button class="btn btn-secondary" onclick="toggleAddBillForm()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div id="billsStatsGrid" class="bills-stats-grid"></div>
+
+    <!-- Totals bar -->
+    <div id="billsTotalBar" class="bills-total-bar"></div>
+
+    <!-- Upcoming Bills ticker -->
+    <div class="bills-ticker-wrapper" id="billsTickerWrapper">
+      <div class="bills-ticker-header">Upcoming Bills</div>
+      <div id="billsTicker" class="bills-upcoming-strip"></div>
+    </div>
+
+    <!-- Category tabs -->
+    <div class="bills-tabs-row" id="billsCategoryTabs">
+      <button class="bills-tab-btn active" onclick="switchBillTab('All',this)">All</button>
+      <button class="bills-tab-btn" onclick="switchBillTab('Utilities',this)">Utilities</button>
+      <button class="bills-tab-btn" onclick="switchBillTab('Subscriptions',this)">Subscriptions</button>
+      <button class="bills-tab-btn" onclick="switchBillTab('Insurance',this)">Insurance</button>
+      <button class="bills-tab-btn" onclick="switchBillTab('Transport',this)">Transport</button>
+      <button class="bills-tab-btn" onclick="switchBillTab('Other',this)">Other</button>
+    </div>
+
+    <!-- Bills grid -->
+    <div id="billsGridV2" class="bills-grid-v2"></div>
+
+    <!-- Quick add -->
+    <p class="section-label" id="billTemplatesHeading">Quick add</p>
+    <div id="billTemplates"></div>
+  `;
+  pageEl.appendChild(structure);
+
+  // Also add edit modal if not present
+  if (!document.getElementById('editBillModalV2')) {
+    const modal = document.createElement('div');
+    modal.innerHTML = `
+      <div class="modal-overlay hidden" id="editBillModalV2">
+        <div class="modal" style="max-width:600px;">
+          <h3>Edit bill</h3>
+          <div class="form-section-label" style="border-top:none;padding-top:0;margin-top:0;">Basic details</div>
+          <div class="form-grid">
+            <div class="ff">
+              <label>Icon</label>
+              <button id="editBillEmojiTrigger" class="emoji-trigger-btn" data-emoji="" onclick="_openEmojiPicker('edit')" title="Choose emoji">📋</button>
+            </div>
+            <div class="ff"><label>Name</label><input type="text" id="eb-name"/></div>
+            <div class="ff"><label>Category</label>
+              <select id="eb-category">
+                <option value="Utilities">Utilities</option>
+                <option value="Subscriptions">Subscriptions</option>
+                <option value="Insurance">Insurance</option>
+                <option value="Transport">Transport</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="ff"><label>Provider / Company</label><input type="text" id="eb-company" placeholder="e.g. Octopus Energy"/></div>
+            <div class="ff money-field"><label>Amount</label><input type="text" id="eb-amount" oninput="formatMoney(this)"/><span class="currency">£</span></div>
+            <div class="ff"><label>Assigned to</label><select id="eb-person"><option value="">Household</option></select></div>
+            <div class="ff"><label>Link to property</label><select id="eb-property"><option value="">— none —</option></select></div>
+            <div class="ff"><label>Payment mode</label>
+              <select id="eb-paymode">
+                <option value="auto">🔄 Automatic</option>
+                <option value="manual">✋ Manual</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-section-label">When does it occur?</div>
+          <div class="form-grid">
+            <div class="ff"><label>Occurrence</label>
+              <select id="eb-occurrence" onchange="_toggleEditBillOccurrenceFields()">
+                <option value="monthly">Monthly</option>
+                <option value="weekly">Weekly</option>
+                <option value="fortnightly">Fortnightly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="annually">Annually</option>
+                <option value="one-off">One-off</option>
+              </select>
+            </div>
+            <div class="ff" id="editBillDayField"><label>Day of month (1–28)</label><input type="number" id="eb-day" min="1" max="28"/></div>
+            <div class="ff hidden" id="editBillMonthField"><label>Month</label><select id="eb-month">${MONTH_NAMES.map((m, i) => `<option value="${i}">${m}</option>`).join('')}</select></div>
+            <div class="ff hidden" id="editBillWeekdayField"><label>Day of week</label><select id="eb-weekday">${WEEK_DAYS.map((d, i) => `<option value="${i}">${d}</option>`).join('')}</select></div>
+            <div class="ff hidden" id="editBillDateField"><label>Date</label><input type="date" id="eb-date"/></div>
+          </div>
+          <div class="form-section-label">Amount options</div>
+          <div class="form-grid">
+            <div class="ff" style="grid-column:1/-1;">
+              <div class="first-payment-row">
+                <label class="toggle"><input type="checkbox" id="eb-diff-first" onchange="_toggleFirstPayment('edit')"><span class="toggle-track"></span></label>
+                <span style="font-size:12.5px;color:var(--muted2);">First payment is a different amount</span>
+              </div>
+            </div>
+            <div class="ff money-field hidden" id="editFirstPaymentField">
+              <label>First payment amount</label>
+              <input type="text" id="eb-first-amount" oninput="formatMoney(this)"/>
+              <span class="currency">£</span>
+            </div>
+          </div>
+
+          <!-- Cost history -->
+          <div class="form-section-label">Update cost (log a price change)</div>
+          <div class="form-grid">
+            <div class="ff money-field">
+              <label>New amount</label>
+              <input type="text" id="eb-new-cost" placeholder="new amount" oninput="formatMoney(this)"/>
+              <span class="currency">£</span>
+            </div>
+            <div class="ff"><label>Effective from</label><input type="date" id="eb-cost-date"/></div>
+            <div class="ff full-col"><label>Reason</label><input type="text" id="eb-cost-reason" placeholder="e.g. Price increased"/></div>
+            <div class="ff full-col">
+              <button class="btn btn-secondary btn-sm" onclick="_logCostChange()">Log cost change</button>
+            </div>
+          </div>
+
+          <div class="form-section-label">Notes</div>
+          <div class="form-grid">
+            <div class="ff full-col"><textarea id="eb-notes" rows="2"></textarea></div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('editBillModalV2')">Cancel</button>
+            <button class="btn btn-danger" onclick="_deleteCurrentEditBill()">Delete</button>
+            <button class="btn btn-primary" onclick="saveEditBillV2()">Save changes</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal.firstElementChild);
+  }
+}
+
+// ── Toggle add bill form ─────────────────────────────
+
+function toggleAddBillForm() {
+  addBillFormOpen = !addBillFormOpen;
+  const drawer = document.getElementById('addBillDrawer');
+  const btn = document.getElementById('addBillToggleBtn');
+  if (!drawer) return;
+  if (addBillFormOpen) {
+    drawer.classList.remove('hidden');
+    if (btn) btn.textContent = '✕ Close';
+    _populateBillFormDropdowns();
+    drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else {
+    drawer.classList.add('hidden');
+    if (btn) btn.textContent = '+ Add bill';
+  }
+}
+
+function _populateBillFormDropdowns() {
+  // Person dropdown
+  const personSel = document.getElementById('billPerson');
+  if (personSel) {
+    const names = S.settings.personNames || [];
+    personSel.innerHTML = '<option value="">Household</option>' +
+      names.map((n, i) => `<option value="${i}">${n}</option>`).join('');
+  }
+  // Property dropdown
+  const propSel = document.getElementById('billProperty');
+  if (propSel) {
+    const props = S.properties || [];
+    propSel.innerHTML = '<option value="">— none —</option>' +
+      props.map((p, i) => `<option value="${i}">${p.nickname || p.address || 'Property ' + (i + 1)}</option>`).join('');
+  }
+}
+
+// ── Occurrence field toggling ─────────────────────────
+
+function _toggleBillOccurrenceFields() {
+  const occ = document.getElementById('billOccurrence')?.value;
+  const show = (id, cond) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    cond ? el.classList.remove('hidden') : el.classList.add('hidden');
+  };
+  show('addBillDayField', ['monthly', 'quarterly', 'annually'].includes(occ));
+  show('addBillMonthField', occ === 'annually');
+  show('addBillWeekdayField', occ === 'weekly');
+  show('addBillDateField', ['one-off', 'fortnightly'].includes(occ));
+}
+
+function _toggleEditBillOccurrenceFields() {
+  const occ = document.getElementById('eb-occurrence')?.value;
+  const show = (id, cond) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    cond ? el.classList.remove('hidden') : el.classList.add('hidden');
+  };
+  show('editBillDayField', ['monthly', 'quarterly', 'annually'].includes(occ));
+  show('editBillMonthField', occ === 'annually');
+  show('editBillWeekdayField', occ === 'weekly');
+  show('editBillDateField', ['one-off', 'fortnightly'].includes(occ));
+}
+
+function _toggleFirstPayment(target) {
+  if (target === 'add') {
+    const checked = document.getElementById('billDiffFirst')?.checked;
+    const f = document.getElementById('addFirstPaymentField');
+    if (f) checked ? f.classList.remove('hidden') : f.classList.add('hidden');
+  } else {
+    const checked = document.getElementById('eb-diff-first')?.checked;
+    const f = document.getElementById('editFirstPaymentField');
+    if (f) checked ? f.classList.remove('hidden') : f.classList.add('hidden');
+  }
+}
+
+function _autoSetBillEmoji() {
+  const name = document.getElementById('billName')?.value || '';
+  const cat = document.getElementById('billCategory')?.value || '';
+  const btn = document.getElementById('billEmojiTrigger');
+  if (!btn || btn.dataset.userSet) return;
+  const emoji = autoEmoji(name, cat);
+  btn.textContent = emoji;
+  btn.dataset.emoji = emoji;
+}
+
+// ── Tab switching ─────────────────────────────────────
+
+function switchBillTab(tab, el) {
+  billsActiveTab = tab;
+  document.querySelectorAll('.bills-tab-btn').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderBills();
 }
 
 // ── Render bills grid ─────────────────────────────────
 
-function renderBills() {
-  const grid = document.getElementById('billsGrid');
+function _renderBillsGrid(bills) {
+  const grid = document.getElementById('billsGridV2');
   if (!grid) return;
+  const now = new Date(); now.setHours(0, 0, 0, 0);
 
-  const filtered = billsActiveTab === 'All'
-    ? S.bills
-    : S.bills.filter(b => billCategoryDisplay(b) === billsActiveTab);
-
-  if (!filtered.length) {
-    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
-      <div class="ei">⧗</div>
-      <p>${billsActiveTab === 'All' ? 'No bills tracked yet.' : `No ${billsActiveTab} bills.`}</p>
-    </div>`;
-    renderBillStats();
-    renderBillsTicker();
-    renderBillTemplates();
-    toggleOccurrenceFields();
+  if (!bills.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="ei">📋</div><p>No bills in this category yet.</p></div>`;
     return;
   }
 
-  const now = new Date(); now.setHours(0, 0, 0, 0);
-
-  grid.innerHTML = filtered.map(b => {
+  grid.innerHTML = bills.map(b => {
     const origIdx = S.bills.indexOf(b);
     const nextDate = getNextPaymentDate(b);
-    const daysLeft = Math.max(0, Math.floor((nextDate - now) / 86400000));
-    const isOneOff = billOccurrenceOf(b) === 'one-off';
-    const overdue = !isOneOff && nextDate < now;
+    const daysLeft = Math.floor((nextDate - now) / 86400000);
+    const isOneOff = b.occurrence === 'one-off';
+    const overdue = !isOneOff && daysLeft < 0;
     const dueSoon = !overdue && daysLeft <= 7;
-    const cat = billCategoryDisplay(b);
-    const emoji = b.emoji || autoEmoji(b.name, cat);
-    const freqLabel = FREQ_LABEL[billOccurrenceOf(b)] || '';
+    const emoji = b.emoji || autoEmoji(b.name, b.category);
+    const freqLabel = FREQ_LABEL[b.occurrence || 'monthly'] || '';
+    const isAuto = b.payMode === 'auto' || b.payMode === undefined;
+    const propName = (b.propertyIdx !== undefined && b.propertyIdx !== null && b.propertyIdx !== '')
+      ? (S.properties?.[b.propertyIdx]?.nickname || S.properties?.[b.propertyIdx]?.address || '')
+      : '';
+    const personName = (b.person !== undefined && b.person !== null && b.person !== '' && S.settings.personNames)
+      ? S.settings.personNames[parseInt(b.person)] || ''
+      : '';
 
     let dueLabel = '';
-    if (overdue) dueLabel = ` · <span class="neg">Overdue</span>`;
-    else if (dueSoon) dueLabel = ` · <span class="neg">${daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`
-      }</span>`;
+    if (overdue) dueLabel = `<span class="due-callout overdue">Overdue</span>`;
+    else if (daysLeft === 0) dueLabel = `<span class="due-callout today">Due today</span>`;
+    else if (dueSoon) dueLabel = `<span class="due-callout soon">Due in ${daysLeft}d</span>`;
+    else dueLabel = `<span class="due-callout ok">Due ${fmtDate(nextDate.toISOString().split('T')[0])}</span>`;
 
-    const subtitleParts = [];
-    if (b.company) subtitleParts.push(b.company);
-    subtitleParts.push(fmtOccurrence(b));
-    const metaLine = subtitleParts.join(' · ');
+    // Cost history
+    const history = b.costHistory || [];
+    const histHTML = history.length ? `
+      <div class="cost-history-section">
+        <button class="cost-history-toggle" onclick="_toggleCostHistory(${origIdx})">
+          <span id="chev-${origIdx}">▶</span>
+          ${history.length} cost change${history.length !== 1 ? 's' : ''}
+        </button>
+        <div id="cost-hist-${origIdx}" class="cost-history-list" style="display:none;">
+          ${[...history].reverse().map(h => `
+            <div class="cost-history-row">
+              <span style="color:var(--muted);">${h.date || ''}</span>
+              <span style="color:var(--muted2);">${h.reason || ''}</span>
+              <span style="font-variation-settings:'wght' 600;">${fmt(h.amount)}</span>
+            </div>`).join('')}
+        </div>
+      </div>` : '';
 
-    return `<div class="bill-card${overdue ? ' bill-overdue' : ''}${dueSoon && !overdue ? ' bill-due-soon' : ''}">
-      <div class="bill-top">
-        <div class="bill-title-row">
-          <span class="bill-emoji" aria-hidden="true">${emoji}</span>
-          <div class="bill-title-block">
-            <div class="bill-title">${b.name}</div>
-            <div class="bill-meta"><span class="bill-cat-pill">${cat}</span>${metaLine}</div>
+    return `<div class="bill-card-v2 ${overdue ? 'overdue' : dueSoon ? 'due-soon' : ''} ${isAuto ? 'auto-pay' : 'manual-pay'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+          <span style="font-size:22px;flex-shrink:0;">${emoji}</span>
+          <div style="min-width:0;">
+            <div style="font-size:14px;font-variation-settings:'wght' 700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.name}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px;">${[b.category, b.company].filter(Boolean).join(' · ')}</div>
           </div>
         </div>
-        <div class="bill-actions">
-          <button type="button" class="icon-btn edit" onclick="openEditBill(${origIdx})" aria-label="Edit bill">✎</button>
-          <button type="button" class="icon-btn del"  onclick="deleteBill(${origIdx})" aria-label="Delete bill">✕</button>
+        <div style="display:flex;gap:5px;flex-shrink:0;align-items:center;margin-left:8px;">
+          <button class="icon-btn edit" onclick="openEditBillV2(${origIdx})">✎</button>
+          <button class="icon-btn del" onclick="deleteBill(${origIdx})">✕</button>
         </div>
       </div>
 
-      <div class="bill-amt-row">
-        <div class="bill-amt val" style="color: var(--red);">${fmt(b.amount)}</div>
-        ${freqLabel ? `<div class="bill-freq">${freqLabel}</div>` : ''}
+      <div style="display:flex;align-items:baseline;gap:5px;margin-bottom:6px;">
+        <span style="font-size:18px;font-variation-settings:'wght' 700;color:var(--red);" class="val">${fmt(b.amount)}</span>
+        ${freqLabel ? `<span style="font-size:11px;color:var(--muted);">${freqLabel}</span>` : ''}
+        ${b.firstPaymentAmount ? `<span style="font-size:10px;color:var(--muted2);">(first: ${fmt(b.firstPaymentAmount)})</span>` : ''}
       </div>
 
-      ${b.firstPaymentAmount
-        ? `<div class="bill-first-pay">First payment: ${fmt(b.firstPaymentAmount)}</div>`
-        : ''}
-
-      <div class="bill-date-line">
-        ${isOneOff ? 'Date' : 'Next'}: ${fmtDate(nextDate.toISOString().split('T')[0])}${dueLabel}
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+        <span class="pay-mode-badge ${isAuto ? 'auto' : 'manual'}">${isAuto ? '🔄 Auto' : '✋ Manual'}</span>
+        ${dueLabel}
+        ${propName ? `<span class="prop-pill">🏠 ${propName}</span>` : ''}
+        ${personName ? `<span class="pill" style="font-size:10px;background:var(--accent-dim);color:var(--accent);">${personName}</span>` : ''}
       </div>
-      ${b.notes ? `<div class="bill-notes">📝 ${b.notes}</div>` : ''}
+
+      <div style="font-size:11px;color:var(--muted2);">${fmtOccurrence(b)}</div>
+
+      ${b.notes ? `<div style="font-size:10px;color:var(--muted2);margin-top:6px;padding:5px 8px;background:var(--surface2);border-radius:5px;">📝 ${b.notes}</div>` : ''}
+      ${histHTML}
     </div>`;
   }).join('');
-
-  renderBillStats();
-  renderBillsTicker();
-  renderBillTemplates();
-  toggleOccurrenceFields();
 }
 
-// ── Template chips ─────────────────────────────────
-
-function renderBillTemplates() {
-  const container = document.getElementById('billTemplates');
-  const heading = document.getElementById('billTemplatesHeading');
-  if (!container) return;
-  const existingNames = new Set(S.bills.map(b => b.name.toLowerCase()));
-  container.innerHTML = BILL_TEMPLATES
-    .filter(t => !existingNames.has(t.name.toLowerCase()))
-    .map(t => {
-      const safe = t.name.replace(/'/g, "\\'");
-      return `<button type="button" class="template-chip"
-        onclick="quickAddBill('${safe}','${t.category}','${t.emoji}','${t.occurrence}')">
-        ${t.emoji} ${t.name}
-      </button>`;
-    }).join('');
-  if (heading) {
-    heading.style.display = container.innerHTML.trim() ? '' : 'none';
-  }
+function _toggleCostHistory(idx) {
+  const el = document.getElementById(`cost-hist-${idx}`);
+  const chev = document.getElementById(`chev-${idx}`);
+  if (!el) return;
+  const open = el.style.display === 'none';
+  el.style.display = open ? 'flex' : 'none';
+  el.style.flexDirection = 'column';
+  if (chev) chev.textContent = open ? '▼' : '▶';
 }
 
-function quickAddBill(name, category, emoji, occurrence) {
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-  set('billName', name);
-  set('billCategory', category);
-  set('billOccurrence', occurrence);
-  const emojiBtn = document.getElementById('billEmojiBtn');
-  if (emojiBtn) { emojiBtn.textContent = emoji; emojiBtn.dataset.emoji = emoji; }
-  toggleOccurrenceFields();
-  document.getElementById('billName')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  document.getElementById('billAmount')?.focus();
-}
-
-// ── Form field toggling ─────────────────────────────
-
-function toggleOccurrenceFields() {
-  const occ = document.getElementById('billOccurrence')?.value;
-  const show = (id, cond) => { const el = document.getElementById(id); if (el) el.style.display = cond ? '' : 'none'; };
-  show('billPaymentDayField', ['monthly', 'quarterly', 'annually'].includes(occ));
-  show('billPaymentDateField', ['one-off', 'fortnightly'].includes(occ));
-  show('billPaymentMonthField', occ === 'annually');
-  show('billPaymentWeekDayField', occ === 'weekly');
-  const dateLbl = document.getElementById('billPaymentDateLabel');
-  if (dateLbl) dateLbl.textContent = occ === 'one-off' ? 'Payment date' : 'Fortnight start date';
-}
-
-function toggleFirstPayment(checked) {
-  const fp = document.getElementById('billFirstPaymentField');
-  if (fp) fp.style.display = checked ? '' : 'none';
-}
-
-// ── Add bill ────────────────────────────────────────
+// ── Add bill ─────────────────────────────────────────
 
 function addBill() {
-  const name = (document.getElementById('billName').value || '').trim();
-  const category = document.getElementById('billCategory').value;
-  const emojiBtn = document.getElementById('billEmojiBtn');
+  const name = (document.getElementById('billName')?.value || '').trim();
+  const category = document.getElementById('billCategory')?.value;
+  const emojiBtn = document.getElementById('billEmojiTrigger');
   const emoji = emojiBtn?.dataset.emoji || autoEmoji(name, category);
   const company = (document.getElementById('billCompany')?.value || '').trim();
-  const amount = parseMoney(document.getElementById('billAmount').value);
-  const occurrence = document.getElementById('billOccurrence').value;
-  const notes = (document.getElementById('billNotes').value || '').trim();
+  const amount = parseMoney(document.getElementById('billAmount')?.value || '');
+  const occurrence = document.getElementById('billOccurrence')?.value || 'monthly';
+  const notes = (document.getElementById('billNotes')?.value || '').trim();
+  const payMode = document.getElementById('billPayMode')?.value || 'auto';
+  const personVal = document.getElementById('billPerson')?.value;
+  const propVal = document.getElementById('billProperty')?.value;
+  const person = personVal !== '' ? parseInt(personVal) : null;
+  const propertyIdx = propVal !== '' ? parseInt(propVal) : null;
 
   const paymentDay = parseInt(document.getElementById('billPaymentDay')?.value) || 1;
   const paymentMonth = parseInt(document.getElementById('billPaymentMonth')?.value) || 0;
   const paymentDate = document.getElementById('billPaymentDate')?.value || '';
-  const paymentDayOfWeek = parseInt(document.getElementById('billPaymentWeekDay')?.value) || 0;
+  const paymentDayOfWeek = parseInt(document.getElementById('billPaymentWeekday')?.value) || 0;
 
   const hasDiffFirst = document.getElementById('billDiffFirst')?.checked;
   const firstPaymentAmount = hasDiffFirst
-    ? (parseMoney(document.getElementById('billFirstPayment')?.value) || null)
+    ? (parseMoney(document.getElementById('billFirstPayment')?.value || '') || null)
     : null;
 
-  if (!name || !amount) {
+  if (!name || isNaN(amount) || !amount) {
     toast('Please fill in the bill name and amount');
-    return;
-  }
-  if (occurrence === 'one-off' && !paymentDate) {
-    toast('Please set a payment date');
     return;
   }
 
@@ -863,42 +914,32 @@ function addBill() {
     id: Date.now(),
     name, category, emoji, company, amount, occurrence,
     paymentDay, paymentMonth, paymentDate, paymentDayOfWeek,
-    firstPaymentAmount, notes,
+    firstPaymentAmount, notes, payMode, person, propertyIdx,
+    costHistory: [],
     createdDate: new Date().toISOString().split('T')[0],
   });
 
   save();
   toast(`Added: ${emoji} ${name}`);
-  renderBills();
 
-  // Reset add form
+  // Reset form
   ['billName', 'billAmount', 'billNotes', 'billCompany'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  const occSel = document.getElementById('billOccurrence');
-  if (occSel) occSel.value = 'monthly';
-  const dayIn = document.getElementById('billPaymentDay');
-  if (dayIn) dayIn.value = '1';
-  const pDate = document.getElementById('billPaymentDate');
-  if (pDate) pDate.value = '';
-  if (emojiBtn) { emojiBtn.textContent = '🔖'; delete emojiBtn.dataset.emoji; }
+  if (emojiBtn) { emojiBtn.textContent = '📋'; delete emojiBtn.dataset.emoji; delete emojiBtn.dataset.userSet; }
   const diffFirst = document.getElementById('billDiffFirst');
-  if (diffFirst) { diffFirst.checked = false; toggleFirstPayment(false); }
-  const firstPay = document.getElementById('billFirstPayment');
-  if (firstPay) firstPay.value = '';
-  toggleOccurrenceFields();
+  if (diffFirst) { diffFirst.checked = false; _toggleFirstPayment('add'); }
+  toggleAddBillForm();
+  renderBills();
 }
 
-// ── Delete bill ─────────────────────────────────────
+// ── Delete bill ───────────────────────────────────────
 
 function deleteBill(i) {
-  if (i == null || i < 0 || i >= S.bills.length) return;
   const deleted = S.bills.splice(i, 1)[0];
   window._lastDeletedBill = { item: deleted, index: i };
   updateUndoButton('billsUndoBtn', window._lastDeletedBill);
-  save();
-  renderBills();
-  toast('Bill removed');
+  save(); renderBills(); toast('Bill removed');
 }
 
 function undoLastBillDelete() {
@@ -907,203 +948,237 @@ function undoLastBillDelete() {
   S.bills.splice(index, 0, item);
   window._lastDeletedBill = null;
   updateUndoButton('billsUndoBtn', null);
-  save();
-  renderBills();
-  toast('Bill restored');
+  save(); renderBills(); toast('Restored');
 }
 
-// ── Edit bill ───────────────────────────────────────
+function _deleteCurrentEditBill() {
+  if (editingBillIdx === null) return;
+  if (!confirm('Delete this bill?')) return;
+  deleteBill(editingBillIdx);
+  closeModal('editBillModalV2');
+}
 
-function openEditBill(i) {
-  if (i == null || i < 0 || i >= S.bills.length) return;
+// ── Edit bill ─────────────────────────────────────────
+
+function openEditBillV2(i) {
   editingBillIdx = i;
   const b = S.bills[i];
-  const modal = document.getElementById('editBillModal');
-  if (!modal) { toast('Edit modal not found'); return; }
+  if (!b) return;
+  const modal = document.getElementById('editBillModalV2');
+  if (!modal) return;
 
-  const grid = document.getElementById('editBillGrid');
-  if (!grid) { toast('Edit form not found'); return; }
+  const emoji = b.emoji || autoEmoji(b.name, b.category);
+  const occ = b.occurrence || 'monthly';
 
-  const cat = billCategoryDisplay(b);
-  const emoji = b.emoji || autoEmoji(b.name, cat);
-  const occ = billOccurrenceOf(b);
-  const showDay = ['monthly', 'quarterly', 'annually'].includes(occ);
-  const showDate = ['one-off', 'fortnightly'].includes(occ);
-  const payDay = billPaymentDayFrom(b);
-  const dateVal = b.paymentDate || b.nextPaymentDate || '';
+  // Set basic fields
+  const emojiBtn = document.getElementById('editBillEmojiTrigger');
+  if (emojiBtn) { emojiBtn.textContent = emoji; emojiBtn.dataset.emoji = emoji; }
 
-  grid.innerHTML = `
-    <div class="ff">
-      <label>Icon</label>
-      <button type="button" id="eb-emoji" class="emoji-btn" data-emoji="${emoji}"
-              onclick="openEmojiPicker('edit')">${emoji}</button>
-    </div>
-    <div class="ff">
-      <label>Name</label>
-      <input type="text" id="eb-name" value="${b.name}"/>
-    </div>
-    <div class="ff">
-      <label>Category</label>
-      <select id="eb-category">
-        ${BILL_CATEGORIES.map(c =>
-    `<option value="${c}" ${cat === c ? 'selected' : ''}>${c}</option>`
-  ).join('')}
-      </select>
-    </div>
-    <div class="ff">
-      <label>Company / Provider</label>
-      <input type="text" id="eb-company"
-             value="${b.company || ''}" placeholder="e.g. Octopus Energy"/>
-    </div>
-    <div class="ff money-field">
-      <label>Amount</label>
-      <input type="text" id="eb-amount"
-             value="${b.amount.toLocaleString('en-GB')}" oninput="formatMoney(this)"/>
-      <span class="currency">£</span>
-    </div>
-    <div class="ff flex-row gap-8" style="padding-top:18px;">
-      <input type="checkbox" id="eb-diff-first"
-             ${b.firstPaymentAmount ? 'checked' : ''}
-             onchange="toggleEditFirstPayment(this.checked)"/>
-      <label for="eb-diff-first" class="text-sm" style="margin:0;">Different first payment amount</label>
-    </div>
-    <div class="ff money-field" id="eb-first-field"
-         style="display:${b.firstPaymentAmount ? '' : 'none'}">
-      <label>First payment</label>
-      <input type="text" id="eb-first-amount"
-             value="${b.firstPaymentAmount ? b.firstPaymentAmount.toLocaleString('en-GB') : ''}"
-             oninput="formatMoney(this)"/>
-      <span class="currency">£</span>
-    </div>
-    <div class="ff">
-      <label>Occurrence</label>
-      <select id="eb-occurrence" onchange="toggleEditOccurrenceFields()">
-        <option value="monthly"     ${occ === 'monthly' ? 'selected' : ''}>Monthly</option>
-        <option value="weekly"      ${occ === 'weekly' ? 'selected' : ''}>Weekly</option>
-        <option value="fortnightly" ${occ === 'fortnightly' ? 'selected' : ''}>Fortnightly</option>
-        <option value="quarterly"   ${occ === 'quarterly' ? 'selected' : ''}>Quarterly</option>
-        <option value="annually"    ${occ === 'annually' ? 'selected' : ''}>Annually</option>
-        <option value="one-off"     ${occ === 'one-off' ? 'selected' : ''}>One-off</option>
-      </select>
-    </div>
-    <div class="ff" id="eb-day-field" style="display:${showDay ? '' : 'none'}">
-      <label>Day of month (1–28)</label>
-      <input type="number" id="eb-day" min="1" max="28" value="${payDay}"/>
-    </div>
-    <div class="ff" id="eb-month-field" style="display:${occ === 'annually' ? '' : 'none'}">
-      <label>Month</label>
-      <select id="eb-month">
-        ${MONTH_NAMES.map((m, idx) =>
-    `<option value="${idx}" ${(b.paymentMonth || 0) === idx ? 'selected' : ''}>${m}</option>`
-  ).join('')}
-      </select>
-    </div>
-    <div class="ff" id="eb-weekday-field" style="display:${occ === 'weekly' ? '' : 'none'}">
-      <label>Day of week</label>
-      <select id="eb-weekday">
-        ${WEEK_DAYS.map((d, idx) =>
-    `<option value="${idx}" ${(b.paymentDayOfWeek || 0) === idx ? 'selected' : ''}>${d}</option>`
-  ).join('')}
-      </select>
-    </div>
-    <div class="ff" id="eb-date-field" style="display:${showDate ? '' : 'none'}">
-      <label>${occ === 'one-off' ? 'Payment date' : 'Start date'}</label>
-      <input type="date" id="eb-date" value="${dateVal}"/>
-    </div>
-    <div class="ff full-col">
-      <label>Notes</label>
-      <textarea id="eb-notes">${b.notes || ''}</textarea>
-    </div>`;
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  setVal('eb-name', b.name || '');
+  setVal('eb-category', b.category || 'Utilities');
+  setVal('eb-company', b.company || '');
+  setVal('eb-amount', b.amount ? b.amount.toLocaleString('en-GB') : '');
+  setVal('eb-occurrence', occ);
+  setVal('eb-day', b.paymentDay || 1);
+  setVal('eb-month', b.paymentMonth || 0);
+  setVal('eb-date', b.paymentDate || '');
+  setVal('eb-weekday', b.paymentDayOfWeek || 0);
+  setVal('eb-paymode', b.payMode || 'auto');
+  setVal('eb-notes', b.notes || '');
+  setVal('eb-new-cost', '');
+  setVal('eb-cost-date', new Date().toISOString().split('T')[0]);
+  setVal('eb-cost-reason', '');
+
+  // Person & property dropdowns
+  const personSel = document.getElementById('eb-person');
+  if (personSel) {
+    personSel.innerHTML = '<option value="">Household</option>' +
+      (S.settings.personNames || []).map((n, idx) => `<option value="${idx}" ${b.person === idx ? 'selected' : ''}>${n}</option>`).join('');
+  }
+  const propSel = document.getElementById('eb-property');
+  if (propSel) {
+    propSel.innerHTML = '<option value="">— none —</option>' +
+      (S.properties || []).map((p, idx) => `<option value="${idx}" ${b.propertyIdx === idx ? 'selected' : ''}>${p.nickname || p.address || 'Property ' + (idx + 1)}</option>`).join('');
+    if (b.propertyIdx !== null && b.propertyIdx !== undefined) propSel.value = b.propertyIdx;
+  }
+
+  // First payment
+  const diffFirst = document.getElementById('eb-diff-first');
+  if (diffFirst) {
+    diffFirst.checked = !!b.firstPaymentAmount;
+    _toggleFirstPayment('edit');
+  }
+  setVal('eb-first-amount', b.firstPaymentAmount ? b.firstPaymentAmount.toLocaleString('en-GB') : '');
+
+  // Toggle occurrence fields
+  _toggleEditBillOccurrenceFields();
 
   modal.classList.remove('hidden');
 }
 
-function toggleEditOccurrenceFields() {
-  const occ = document.getElementById('eb-occurrence')?.value;
-  const show = (id, cond) => { const el = document.getElementById(id); if (el) el.style.display = cond ? '' : 'none'; };
-  show('eb-day-field', ['monthly', 'quarterly', 'annually'].includes(occ));
-  show('eb-date-field', ['one-off', 'fortnightly'].includes(occ));
-  show('eb-month-field', occ === 'annually');
-  show('eb-weekday-field', occ === 'weekly');
-}
-
-function toggleEditFirstPayment(checked) {
-  const fp = document.getElementById('eb-first-field');
-  if (fp) fp.style.display = checked ? '' : 'none';
-}
-
-function saveEditBill() {
+function saveEditBillV2() {
   if (editingBillIdx === null) return;
   const b = S.bills[editingBillIdx];
-  const occ = document.getElementById('eb-occurrence').value;
-  const emojiBtn = document.getElementById('eb-emoji');
-  const hasDiffFirst = document.getElementById('eb-diff-first')?.checked;
+  const occ = document.getElementById('eb-occurrence')?.value || 'monthly';
+  const emojiBtn = document.getElementById('editBillEmojiTrigger');
+  const hasDiff = document.getElementById('eb-diff-first')?.checked;
+  const personVal = document.getElementById('eb-person')?.value;
+  const propVal = document.getElementById('eb-property')?.value;
 
-  b.name = (document.getElementById('eb-name').value || '').trim();
-  b.category = document.getElementById('eb-category').value;
+  b.name = (document.getElementById('eb-name')?.value || '').trim();
+  b.category = document.getElementById('eb-category')?.value || b.category;
   b.emoji = emojiBtn?.dataset.emoji || autoEmoji(b.name, b.category);
   b.company = (document.getElementById('eb-company')?.value || '').trim();
-  b.amount = parseMoney(document.getElementById('eb-amount').value) || b.amount;
+  b.amount = parseMoney(document.getElementById('eb-amount')?.value || '') || b.amount;
   b.occurrence = occ;
   b.paymentDay = parseInt(document.getElementById('eb-day')?.value) || 1;
   b.paymentMonth = parseInt(document.getElementById('eb-month')?.value) || 0;
   b.paymentDate = document.getElementById('eb-date')?.value || '';
   b.paymentDayOfWeek = parseInt(document.getElementById('eb-weekday')?.value) || 0;
-  b.firstPaymentAmount = hasDiffFirst
-    ? (parseMoney(document.getElementById('eb-first-amount')?.value) || null)
-    : null;
+  b.payMode = document.getElementById('eb-paymode')?.value || 'auto';
   b.notes = document.getElementById('eb-notes')?.value || '';
+  b.person = personVal !== '' ? parseInt(personVal) : null;
+  b.propertyIdx = propVal !== '' ? parseInt(propVal) : null;
+  b.firstPaymentAmount = hasDiff
+    ? (parseMoney(document.getElementById('eb-first-amount')?.value || '') || null)
+    : null;
 
-  delete b.nextPaymentDate;
-  delete b.frequency;
-  delete b.recurring;
-
-  save(); closeModal('editBillModal'); renderBills(); toast('Bill saved');
+  save();
+  closeModal('editBillModalV2');
+  renderBills();
+  toast('Bill saved');
 }
 
-// ── HTML fragments for reference ────────────────────
-//
-// Paste these into your bills tab HTML where needed.
-//
-// Stats panel (place above the tabs):
-//   <div id="billStatsPanel" class="bill-stats-panel"></div>
-//
-// Upcoming strip (place between stats and tab bar):
-//   <div id="billsUpcomingStrip" class="upcoming-strip" style="display:none"></div>
-//
-// Tab bar:
-//   <div class="bill-tabs">
-//     <button class="bill-tab active" data-tab="All"           onclick="switchBillTab('All')">All</button>
-//     <button class="bill-tab"        data-tab="Utilities"     onclick="switchBillTab('Utilities')">Utilities</button>
-//     <button class="bill-tab"        data-tab="Subscriptions" onclick="switchBillTab('Subscriptions')">Subscriptions</button>
-//     <button class="bill-tab"        data-tab="Insurance"     onclick="switchBillTab('Insurance')">Insurance</button>
-//     <button class="bill-tab"        data-tab="Transport"     onclick="switchBillTab('Transport')">Transport</button>
-//     <button class="bill-tab"        data-tab="Other"         onclick="switchBillTab('Other')">Other</button>
-//   </div>
-//
-// Add-form company field (add after category select):
-//   <div class="ff">
-//     <label>Company / Provider</label>
-//     <input type="text" id="billCompany" placeholder="e.g. Octopus Energy, Vodafone"/>
-//   </div>
-//
-// CSS additions needed in your stylesheet:
-//
-//   .bill-stats-panel { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; margin-bottom:16px; }
-//   .stat-card { background:var(--card); border-radius:10px; padding:14px; }
-//   .stat-card.stat-alert { border:1px solid var(--neg,#e55); }
-//   .stat-label { font-size:11px; color:var(--muted); margin-bottom:4px; }
-//   .stat-value { font-size:18px; font-weight:700; }
-//   .stat-sub   { font-size:11px; color:var(--muted); margin-top:2px; }
-//   .upcoming-strip { background:var(--card); border-radius:10px; padding:12px 14px; margin-bottom:12px; }
-//   .upcoming-header { font-size:11px; font-weight:600; color:var(--muted); margin-bottom:8px; }
-//   .upcoming-list { display:flex; flex-direction:column; gap:6px; }
-//   .upcoming-item { display:flex; justify-content:space-between; align-items:center; font-size:13px; }
-//   .upcoming-badge { font-size:10px; font-weight:600; padding:2px 7px; border-radius:20px;
-//                     background:var(--muted2,#555); color:#fff; }
-//   .upcoming-badge.today { background:var(--neg,#e55); }
-//   .bill-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
-//   .bill-tab { padding:5px 12px; border-radius:20px; border:1px solid var(--border);
-//               background:transparent; color:var(--muted); font-size:12px; cursor:pointer; }
-//   .bill-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-//   .bill-emoji { font-size:22px; line-height:1; flex-shrink:0; }
+function _logCostChange() {
+  if (editingBillIdx === null) return;
+  const b = S.bills[editingBillIdx];
+  const newAmt = parseMoney(document.getElementById('eb-new-cost')?.value || '');
+  const date = document.getElementById('eb-cost-date')?.value || new Date().toISOString().split('T')[0];
+  const reason = (document.getElementById('eb-cost-reason')?.value || '').trim();
+
+  if (isNaN(newAmt) || !newAmt) { toast('Please enter a new amount'); return; }
+
+  if (!b.costHistory) b.costHistory = [];
+  b.costHistory.push({ date, amount: newAmt, reason, previousAmount: b.amount });
+  b.amount = newAmt;
+
+  // Clear fields
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  setVal('eb-new-cost', '');
+  setVal('eb-cost-reason', '');
+  setVal('eb-amount', newAmt.toLocaleString('en-GB'));
+
+  save();
+  toast(`Cost updated to ${fmt(newAmt)}`);
+}
+
+// ── Render upcoming bills ticker ───────────────────────
+
+function _renderBillsTicker(bills) {
+  const ticker = document.getElementById('billsTicker');
+  if (!ticker) return;
+
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const upcoming = bills
+    .filter(b => b.occurrence !== 'one-off')
+    .map(b => {
+      const next = getNextPaymentDate(b);
+      const daysUntil = Math.ceil((next - now) / (1000 * 60 * 60 * 24));
+      return { ...b, next, daysUntil };
+    })
+    .filter(b => b.daysUntil >= 0)
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+    .slice(0, 10);
+
+  if (!upcoming.length) {
+    ticker.innerHTML = '<div class="bills-ticker-chips"><span style="font-size:11px;color:var(--muted2);">No upcoming bills</span></div>';
+    return;
+  }
+
+  ticker.innerHTML = '<div class="bills-ticker-chips">' + upcoming.map(b => {
+    const emoji = b.emoji || autoEmoji(b.name, b.category);
+    const urgency = b.daysUntil <= 3 ? 'urgent' : b.daysUntil <= 7 ? 'soon' : 'normal';
+    const daysText = b.daysUntil === 0 ? 'Today' : b.daysUntil === 1 ? 'Tomorrow' : `In ${b.daysUntil} days`;
+    return `<div class="bills-ticker-chip ${urgency}">
+      <span class="bills-ticker-emoji">${emoji}</span>
+      <span class="bills-ticker-label">${b.name}</span>
+      <span class="bills-ticker-days">${daysText}</span>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ── Render bill templates (quick add) ───────────────────
+
+function _renderBillTemplates() {
+  const container = document.getElementById('billTemplates');
+  if (!container) return;
+
+  const templates = [
+    { name: 'Electricity', category: 'Utilities', emoji: '⚡', amount: 120, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Gas', category: 'Utilities', emoji: '🔥', amount: 80, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Water', category: 'Utilities', emoji: '💧', amount: 35, occurrence: 'monthly', paymentDay: 15 },
+    { name: 'Internet', category: 'Utilities', emoji: '�', amount: 45, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Mobile Phone', category: 'Utilities', emoji: '📱', amount: 35, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'TV Licence', category: 'Utilities', emoji: '📺', amount: 169.50, occurrence: 'annually', paymentMonth: 0, paymentDay: 1 },
+    { name: 'Spotify', category: 'Subscriptions', emoji: '🎵', amount: 10.99, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Apple Music', category: 'Subscriptions', emoji: '🎵', amount: 10.99, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Sky', category: 'Subscriptions', emoji: '🎬', amount: 45, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Netflix', category: 'Subscriptions', emoji: '🎬', amount: 10.99, occurrence: 'monthly', paymentDay: 15 },
+    { name: 'Disney+', category: 'Subscriptions', emoji: '🎬', amount: 7.99, occurrence: 'monthly', paymentDay: 15 },
+    { name: 'Apple TV+', category: 'Subscriptions', emoji: '�', amount: 8.99, occurrence: 'monthly', paymentDay: 15 },
+    { name: 'Amazon Prime', category: 'Subscriptions', emoji: '📦', amount: 8.99, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'YouTube Premium', category: 'Subscriptions', emoji: '▶️', amount: 11.99, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'iCloud', category: 'Subscriptions', emoji: '☁️', amount: 0.99, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Google One', category: 'Subscriptions', emoji: '☁️', amount: 1.99, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Adobe Creative Cloud', category: 'Subscriptions', emoji: '🎨', amount: 54.99, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Gym Membership', category: 'Subscriptions', emoji: '�', amount: 40, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Life Insurance', category: 'Insurance', emoji: '❤️', amount: 25, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Pet Insurance', category: 'Insurance', emoji: '🐾', amount: 20, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Health Insurance', category: 'Insurance', emoji: '🏥', amount: 50, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Travel Insurance', category: 'Insurance', emoji: '✈️', amount: 80, occurrence: 'annually', paymentMonth: 0, paymentDay: 1 },
+    { name: 'Car Tax', category: 'Transport', emoji: '🚗', amount: 180, occurrence: 'annually', paymentMonth: 0, paymentDay: 1 },
+    { name: 'Train Season Ticket', category: 'Transport', emoji: '🚆', amount: 300, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Bus Pass', category: 'Transport', emoji: '�', amount: 60, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'Parking Permit', category: 'Transport', emoji: '🅿️', amount: 100, occurrence: 'annually', paymentMonth: 0, paymentDay: 1 },
+    { name: 'Childcare', category: 'Other', emoji: '👶', amount: 800, occurrence: 'monthly', paymentDay: 1 },
+    { name: 'School Fees', category: 'Other', emoji: '🎓', amount: 1200, occurrence: 'monthly', paymentDay: 1 },
+  ];
+
+  container.innerHTML = templates.map(t => `
+    <button class="pill bill-template-btn" onclick="_applyBillTemplate('${t.name}', '${t.category}', '${t.emoji}', ${t.amount}, '${t.occurrence}', ${t.paymentDay}, ${t.paymentMonth || 0})">
+      <span>${t.emoji}</span>
+      <span>${t.name}</span>
+    </button>
+  `).join('');
+}
+
+function _applyBillTemplate(name, category, emoji, amount, occurrence, paymentDay, paymentMonth) {
+  toggleAddBillForm();
+  setTimeout(() => {
+    document.getElementById('billName').value = name;
+    document.getElementById('billCategory').value = category;
+    const emojiBtn = document.getElementById('billEmojiTrigger');
+    if (emojiBtn) {
+      emojiBtn.textContent = emoji;
+      emojiBtn.dataset.emoji = emoji;
+      emojiBtn.dataset.userSet = 'true';
+    }
+    document.getElementById('billAmount').value = amount.toLocaleString('en-GB', { minimumFractionDigits: 2 });
+    document.getElementById('billOccurrence').value = occurrence;
+    _toggleBillOccurrenceFields();
+    if (occurrence === 'monthly' || occurrence === 'quarterly') {
+      document.getElementById('billPaymentDay').value = paymentDay;
+    } else if (occurrence === 'annually') {
+      document.getElementById('billPaymentDay').value = paymentDay;
+      document.getElementById('billPaymentMonth').value = paymentMonth;
+    }
+  }, 100);
+}
+
+// ── Legacy compatibility (called from HTML) ──────────
+// Keep these so existing HTML onclick handlers still work
+function openEditBill(i) { openEditBillV2(i); }
+function saveEditBill() { saveEditBillV2(); }

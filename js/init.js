@@ -3,6 +3,8 @@
 console.log('init.js loaded');
 loadState();
 _updateSidebarMeta();
+const privacyIcon = document.querySelector('#eyeBtn span');
+if (privacyIcon) privacyIcon.textContent = S.settings.privacyMode ? 'visibility_off' : 'visibility';
 renderOverview();
 if (typeof initInvestments === 'function') initInvestments();
 // Set the current month/year in PB win form
