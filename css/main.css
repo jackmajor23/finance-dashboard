@@ -3256,7 +3256,6 @@ th.sort-active {
   opacity: 1;
 }
 
-Transactions · CSS Copy
 /* ── Transactions page ───────────────────────────────────────────────────── */
 
 /* Header row: title left, actions right */
@@ -3281,46 +3280,16 @@ Transactions · CSS Copy
   gap: 6px;
 }
 
-/* Export icon buttons */
-.tx-export-btn {
-  font-size: 16px;
-}
-
-.tx-export-xls {
-  color: var(--green, #3fb950);
-}
-
-/* ── Table toolbar ───────────────────────────────────────────────────────── */
-.table-toolbar {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  margin-bottom: 14px;
-  padding: 10px 12px;
-}
-
-/* ── Date preset strip ───────────────────────────────────────────────────── */
+/* ── Date preset strip (inside table-wrap) ───────────────────────────────── */
 .tx-date-presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 6px;
-  /* 6px gap before the custom row / table */
+  border-top: none;
 }
 
-/* ── Custom date range row ───────────────────────────────────────────────── */
+/* ── Custom date range row (inline within date-presets toolbar) ───────────── */
 .tx-custom-date-row {
   display: none;
-  /* shown via JS when "Custom…" is active */
   align-items: center;
   gap: 8px;
-  margin-top: 6px;
-  margin-bottom: 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  width: fit-content;
 }
 
 .tx-custom-date-label {
@@ -3335,17 +3304,48 @@ Transactions · CSS Copy
 
 .tx-date-input {
   background: var(--bg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   color: var(--text);
-  padding: 4px 8px;
-  font-size: 13px;
-  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  outline: none;
+  transition: border .13s;
 }
 
 .tx-date-input:focus {
-  outline: none;
-  border-color: var(--accent, #58a6ff);
+  border-color: var(--accent);
+}
+
+/* ── Amount filter toolbar ───────────────────────────────────────────────── */
+.tx-amount-toolbar {
+  border-top: none;
+  justify-content: space-between;
+}
+
+.tx-advanced-filter {
+  cursor: pointer;
+}
+
+.tx-advanced-filter > summary {
+  list-style: none;
+}
+
+.tx-advanced-filter > summary::-webkit-details-marker {
+  display: none;
+}
+
+.tx-advanced-filter[open] > summary {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tx-amount-inputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 /* ── Sortable column headers ─────────────────────────────────────────────── */
@@ -3379,9 +3379,9 @@ Transactions · CSS Copy
 
 /* ── Result count ────────────────────────────────────────────────────────── */
 .tx-result-count {
-  display: block;
-  margin-top: 8px;
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto;
 }
 
 /* ── Generated transactions styling ───────────────────────────────────────── */
@@ -3392,10 +3392,6 @@ Transactions · CSS Copy
 .tx-generated:hover {
   background-color: rgba(80, 70, 229, 0.06);
 }
-
-color: var(--muted);
-}
-
 
 .icon-btn .material-symbols-outlined {
   font-size: 18px;

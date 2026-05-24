@@ -1318,83 +1318,74 @@
               <h2>Transaction history</h2>
               <p>All buys, sells, wins, income and payments</p>
             </div>
-          </div>
-        </div>
-
-        <!-- Undo button — above table on right -->
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
-          <button class="icon-btn undo-btn" title="Undo last deletion" id="txUndoBtn" onclick="undoLastTxDelete()">
-            ↺
-          </button>
-        </div>
-
-        <!-- Search + type filters -->
-        <div class="table-toolbar">
-          <div class="search-wrapper">
-            <input class="search-box" id="txSearch" placeholder="Search…"
-              oninput="renderTransactions(); toggleSearchClear('txSearch')" />
-            <button class="search-clear" onclick="clearSearch('txSearch')" aria-label="Clear search">×</button>
-          </div>
-          <button class="filter-btn active" id="toggleGeneratedTxs" onclick="toggleGeneratedTxs()">💳 All payments</button>
-          <button class="filter-btn active" data-filter="all" onclick="setTxFilter('all',this)">All</button>
-          <button class="filter-btn" data-filter="buy" onclick="setTxFilter('buy',this)">Buys</button>
-          <button class="filter-btn" data-filter="sell" onclick="setTxFilter('sell',this)">Sells</button>
-          <button class="filter-btn" data-filter="win" onclick="setTxFilter('win',this)">Wins</button>
-          <button class="filter-btn" data-filter="income" onclick="setTxFilter('income',this)">Income</button>
-          <button class="filter-btn" data-filter="payment" onclick="setTxFilter('payment',this)">Payments</button>
-        </div>
-
-        <!-- Date preset buttons -->
-        <div class="tx-date-presets">
-          <button class="date-preset-btn filter-btn active" data-preset="all" onclick="setTxDatePreset('all')">All
-            time</button>
-          <button class="date-preset-btn filter-btn" data-preset="7d" onclick="setTxDatePreset('7d')">7 days</button>
-          <button class="date-preset-btn filter-btn" data-preset="30d" onclick="setTxDatePreset('30d')">30 days</button>
-          <button class="date-preset-btn filter-btn" data-preset="3m" onclick="setTxDatePreset('3m')">3 months</button>
-          <button class="date-preset-btn filter-btn" data-preset="1y" onclick="setTxDatePreset('1y')">1 year</button>
-          <button class="date-preset-btn filter-btn" data-preset="month" onclick="setTxDatePreset('month')">This
-            month</button>
-          <button class="date-preset-btn filter-btn" data-preset="custom"
-            onclick="setTxDatePreset('custom')">Custom…</button>
-        </div>
-
-        <!-- Custom date range (hidden until "Custom…" is clicked) -->
-        <div id="txCustomDateRow" class="tx-custom-date-row">
-          <span class="tx-custom-date-label">From</span>
-          <input type="date" id="txDateFrom" class="tx-date-input" onchange="setTxCustomDate('from', this.value)">
-          <span class="tx-custom-date-sep">→</span>
-          <input type="date" id="txDateTo" class="tx-date-input" onchange="setTxCustomDate('to', this.value)">
-        </div>
-
-        <!-- Advanced filter dropdown -->
-        <div class="tx-advanced-filter">
-          <details>
-            <summary class="tx-advanced-filter-toggle">Filter by amount</summary>
-            <div class="tx-advanced-filter-content">
-              <div class="tx-amount-filter">
-                <label>Amount range (£)</label>
-                <div class="tx-amount-inputs">
-                  <div class="ff money-field">
-                    <label>Min</label>
-                    <input type="number" id="txAmountMin" placeholder="0" step="0.01" min="0"
-                      oninput="setTxAmountRange()">
-                    <span class="currency">£</span>
-                  </div>
-                  <div class="ff money-field">
-                    <label>Max</label>
-                    <input type="number" id="txAmountMax" placeholder="Any" step="0.01" min="0"
-                      oninput="setTxAmountRange()">
-                    <span class="currency">£</span>
-                  </div>
-                  <button class="btn btn-ghost btn-sm" onclick="clearTxAmountRange()">Clear</button>
-                </div>
-              </div>
+            <div class="tx-header-actions">
+              <button class="export-csv-btn btn-sm" onclick="exportTxCSV()">↓ CSV</button>
+              <button class="export-csv-btn btn-sm" onclick="exportTxExcel()">↓ Excel</button>
+              <button class="icon-btn undo-btn" title="Undo last deletion" id="txUndoBtn" onclick="undoLastTxDelete()">↺</button>
             </div>
-          </details>
+          </div>
         </div>
 
-        <!-- Table -->
         <div class="table-wrap">
+          <!-- Search + type filters -->
+          <div class="table-toolbar">
+            <div class="search-wrapper">
+              <input class="search-box" id="txSearch" placeholder="Search…"
+                oninput="renderTransactions(); toggleSearchClear('txSearch')" />
+              <button class="search-clear" onclick="clearSearch('txSearch')" aria-label="Clear search">×</button>
+            </div>
+            <button class="filter-btn active" id="toggleGeneratedTxs" onclick="toggleGeneratedTxs()">💳 All payments</button>
+            <button class="filter-btn active" data-filter="all" onclick="setTxFilter('all',this)">All</button>
+            <button class="filter-btn" data-filter="buy" onclick="setTxFilter('buy',this)">Buys</button>
+            <button class="filter-btn" data-filter="sell" onclick="setTxFilter('sell',this)">Sells</button>
+            <button class="filter-btn" data-filter="win" onclick="setTxFilter('win',this)">Wins</button>
+            <button class="filter-btn" data-filter="income" onclick="setTxFilter('income',this)">Income</button>
+            <button class="filter-btn" data-filter="payment" onclick="setTxFilter('payment',this)">Payments</button>
+          </div>
+
+          <!-- Date preset buttons -->
+          <div class="table-toolbar tx-date-presets">
+            <button class="date-preset-btn filter-btn active" data-preset="all" onclick="setTxDatePreset('all')">All time</button>
+            <button class="date-preset-btn filter-btn" data-preset="7d" onclick="setTxDatePreset('7d')">7 days</button>
+            <button class="date-preset-btn filter-btn" data-preset="30d" onclick="setTxDatePreset('30d')">30 days</button>
+            <button class="date-preset-btn filter-btn" data-preset="3m" onclick="setTxDatePreset('3m')">3 months</button>
+            <button class="date-preset-btn filter-btn" data-preset="1y" onclick="setTxDatePreset('1y')">1 year</button>
+            <button class="date-preset-btn filter-btn" data-preset="month" onclick="setTxDatePreset('month')">This month</button>
+            <button class="date-preset-btn filter-btn" data-preset="custom" onclick="setTxDatePreset('custom')">Custom…</button>
+
+            <!-- Custom date range (shown via JS when "Custom…" is active) -->
+            <div id="txCustomDateRow" class="tx-custom-date-row">
+              <span class="tx-custom-date-label">From</span>
+              <input type="date" id="txDateFrom" class="tx-date-input" onchange="setTxCustomDate('from', this.value)">
+              <span class="tx-custom-date-sep">→</span>
+              <input type="date" id="txDateTo" class="tx-date-input" onchange="setTxCustomDate('to', this.value)">
+            </div>
+          </div>
+
+          <!-- Amount filter -->
+          <div class="table-toolbar tx-amount-toolbar">
+            <details class="tx-advanced-filter">
+              <summary class="filter-btn">Filter by amount</summary>
+              <div class="tx-amount-inputs">
+                <div class="ff money-field">
+                  <label>Min</label>
+                  <input type="number" id="txAmountMin" placeholder="0" step="0.01" min="0"
+                    oninput="setTxAmountRange()">
+                  <span class="currency">£</span>
+                </div>
+                <div class="ff money-field">
+                  <label>Max</label>
+                  <input type="number" id="txAmountMax" placeholder="Any" step="0.01" min="0"
+                    oninput="setTxAmountRange()">
+                  <span class="currency">£</span>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="clearTxAmountRange()">Clear</button>
+              </div>
+            </details>
+            <span id="txResultCount" class="tx-result-count"></span>
+          </div>
+
+          <!-- Table -->
           <table>
             <thead>
               <tr>
@@ -1409,15 +1400,6 @@
             </thead>
             <tbody id="txBody"></tbody>
           </table>
-        </div>
-
-        <!-- Result count -->
-        <span id="txResultCount" class="tx-result-count"></span>
-
-        <!-- Export buttons — bottom right -->
-        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-          <button class="export-csv-btn btn-sm" onclick="exportTxCSV()">↓ Export CSV</button>
-          <button class="export-csv-btn btn-sm" onclick="exportTxExcel()">↓ Export Excel</button>
         </div>
 
       </div>

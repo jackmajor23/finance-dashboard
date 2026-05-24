@@ -115,7 +115,7 @@ function generateAllTransactions() {
   // 2. Bill payments
   if (S.bills && S.bills.length > 0) {
     S.bills.forEach(bill => {
-      const occurrence = billOccurrenceOf(bill);
+      const occurrence = bill.occurrence || 'monthly';
       if (occurrence === 'one-off') {
         // One-time bill
         const date = bill.paymentDate || bill.nextPaymentDate;
